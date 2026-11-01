@@ -555,6 +555,49 @@
         .reconhecimento-cabecalho-card { padding: 6px 10px !important; margin-bottom: 6px !important; }
         .reconhecimento-consolidado-card { padding: 6px 10px !important; margin-bottom: 6px !important; }
       }
+      /* Controle de Acesso / Modo Somente Leitura */
+      .badge-modo-acesso { font-size: 0.74rem; font-weight: 800; padding: 2.5px 10px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: all 0.2s ease; user-select: none; }
+      .badge-modo-acesso.admin { background: #dcfce7; color: #14532d; border: 1.5px solid #86efac; }
+      .badge-modo-acesso.admin:hover { background: #bbf7d0; }
+      .badge-modo-acesso.leitura { background: #e0f2fe; color: #0369a1; border: 1.5px solid #7dd3fc; box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15); }
+      .badge-modo-acesso.leitura:hover { background: #bae6fd; }
+      .banner-modo-leitura { background: linear-gradient(135deg, #075985 0%, #0369a1 100%); color: #ffffff; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); border-bottom: 2px solid #38bdf8; position: sticky; top: 0; z-index: 998; }
+      .banner-modo-leitura .banner-conteudo { display: flex; align-items: center; gap: 12px; font-size: 0.82rem; line-height: 1.35; }
+      .banner-modo-leitura .banner-icone { font-size: 1.4rem; flex-shrink: 0; }
+      .banner-modo-leitura .banner-acoes { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+      .btn-banner-login { background: #facc15; color: #713f12; font-weight: 800; font-size: 0.78rem; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; transition: background 0.15s ease; }
+      .btn-banner-login:hover { background: #fde047; }
+      .btn-banner-info { background: rgba(255, 255, 255, 0.15); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.35); font-weight: 700; font-size: 0.78rem; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+      .btn-banner-info:hover { background: rgba(255, 255, 255, 0.25); }
+      @media (max-width: 768px) { .banner-modo-leitura { flex-direction: column; align-items: flex-start; } }
+      body.modo-leitura-ativo .conteudo-aba input:not(#dashAno):not(#dashSemanaRef):not(#dashCiclo):not(.filtro-livre),
+      body.modo-leitura-ativo .conteudo-aba textarea,
+      body.modo-leitura-ativo .conteudo-aba select:not(#dashCiclo):not(#filtroCicloConsolidado):not(#selectFonte):not(.filtro-livre) {
+        pointer-events: none !important;
+        background-color: #f8fafc !important;
+        color: #334155 !important;
+        cursor: default !important;
+        user-select: text !important;
+      }
+      body.modo-leitura-ativo input[type="checkbox"] { pointer-events: none !important; cursor: not-allowed !important; }
+      body.modo-leitura-ativo #btnConfirmarDataDia,
+      body.modo-leitura-ativo #btnSalvarProg,
+      body.modo-leitura-ativo #btnCancelarEdicaoProg,
+      body.modo-leitura-ativo #btnAdicionarAgente,
+      body.modo-leitura-ativo #btnImportarJSON,
+      body.modo-leitura-ativo #btnDiagnosticoRecuperacao,
+      body.modo-leitura-ativo #btnPuxarNuvemAndamento,
+      body.modo-leitura-ativo #btnEnviarNuvemAndamento,
+      body.modo-leitura-ativo #btnColarJSONReconhecimento,
+      body.modo-leitura-ativo #btnSalvarReconhecimento,
+      body.modo-leitura-ativo #btnLimparReconhecimento,
+      body.modo-leitura-ativo .btn-excluir,
+      body.modo-leitura-ativo .btn-remover-agente,
+      body.modo-leitura-ativo .btn-acao-edicao,
+      body.modo-leitura-ativo .btn-editar-prog,
+      body.modo-leitura-ativo .btn-excluir-prog {
+        display: none !important;
+      }
     </style>
   </head>
   <body class="fonte-merriweather">
@@ -563,6 +606,7 @@
         <h1>🌿 Lançamentos de Campo</h1>
         <span id="dataHoje"></span>
         <span id="statusNuvem" class="badge-nuvem offline">🔄 Conectando...</span>
+        <span id="badgeModoAcesso" class="badge-modo-acesso admin" title="Clique para gerenciar permissões de acesso">👑 Modo Editor</span>
         <span style="font-size:0.75rem; background:#dcfce7; color:#14532d; font-weight:700; padding:2px 8px; border-radius:9999px; border:1px solid #86efac;">v5.5</span>
         <button onclick="recarregarAppCompleto()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; color:#334155; font-weight:600;">🔄 Atualizar Versão</button>
       </div>
@@ -580,6 +624,7 @@
           </select>
         </div>
         <div class="acoes-backup">
+          <button class="btn-backup" id="btnCompartilharAcesso" style="background:#0284c7; border-color:#38bdf8; color:#ffffff; font-weight:700;" title="Gerar link de somente leitura ou gerenciar acesso">👥 Compartilhar Acesso</button>
           <button class="btn-backup btn-baixar-html" id="btnBaixarCodigo">💻 Baixar index.html</button>
           <button class="btn-backup" id="btnExportarJSON">💾 Exportar JSON</button>
           <button class="btn-backup" id="btnImportarJSON">📂 Importar JSON</button>
@@ -623,6 +668,19 @@
         <span class="nav-status-badge" id="navStatusBadge">📝 Lançamentos Diários</span>
       </div>
     </nav>
+    <div id="bannerModoLeitura" class="banner-modo-leitura" style="display: none;">
+      <div class="banner-conteudo">
+        <span class="banner-icone">👀</span>
+        <div>
+          <strong>Modo Somente Leitura Ativado:</strong>
+          <span>Você pode navegar pelas telas, consultar dados, relatórios e gerar PDFs. Edições e lançamentos estão bloqueados.</span>
+        </div>
+      </div>
+      <div class="banner-acoes">
+        <button type="button" class="btn-banner-login" id="btnDesbloquearEditorBanner">🔑 Entrar como Editor</button>
+        <button type="button" class="btn-banner-info" id="btnCompartilharBanner">👥 Ver Links</button>
+      </div>
+    </div>
     <main>
       <section id="aba-dashboard" class="conteudo-aba">
         <h2>📈 Dashboard</h2>
@@ -1770,6 +1828,115 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Compartilhar Acesso e Permissões -->
+    <div id="modalCompartilharAcesso" class="modal">
+      <div class="modal-conteudo" style="max-width: 620px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px;">
+          <h3 style="margin: 0; color: #14532d; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+            👥 Compartilhar Acesso ao Aplicativo
+          </h3>
+          <button type="button" class="btn-fechar-modal" id="btnFecharModalCompartilhar">✕</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <!-- Opção 1: Somente Leitura (Recomendada) -->
+          <div style="background: #f0f9ff; border: 1.5px solid #7dd3fc; border-radius: 8px; padding: 12px 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <strong style="color: #0369a1; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+                👀 Link de Somente Leitura (Visualizador)
+              </strong>
+              <span style="background: #0284c7; color: #fff; font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 9999px;">RECOMENDADO</span>
+            </div>
+            <p style="margin: 0 0 8px; font-size: 0.78rem; color: #334155; line-height: 1.4;">
+              Envie este link para a outra pessoa. Ela poderá <strong>ver todos os lançamentos, relatórios, ciclos, semanas e gerar PDFs</strong>, mas <strong>não conseguirá alterar, digitar, salvar ou excluir nada</strong>.
+            </p>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="inputLinkLeitura" readonly style="flex: 1; padding: 7px 10px; font-size: 0.78rem; border: 1.5px solid #94a3b8; border-radius: 6px; background: #ffffff; color: #0f172a; font-family: monospace;" />
+              <button type="button" class="btn btn-verde" id="btnCopiarLinkLeitura" style="font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                📋 Copiar Link
+              </button>
+            </div>
+          </div>
+
+          <!-- Opção 2: Link de Editor (Administrador) -->
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 14px;">
+            <strong style="color: #14532d; font-size: 0.88rem; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              👑 Link de Administrador (Modo Editor)
+            </strong>
+            <p style="margin: 0 0 8px; font-size: 0.78rem; color: #475569; line-height: 1.4;">
+              Link direto para o seu uso pessoal de edição com todos os privilégios liberados:
+            </p>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="inputLinkAdmin" readonly style="flex: 1; padding: 7px 10px; font-size: 0.78rem; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #0f172a; font-family: monospace;" />
+              <button type="button" class="btn btn-cinza" id="btnCopiarLinkAdmin" style="font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                📋 Copiar Link
+              </button>
+            </div>
+          </div>
+
+          <!-- Opção 3: PIN / Senha de Administrador -->
+          <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 14px;">
+            <strong style="color: #92400e; font-size: 0.88rem; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              🔒 Senha / PIN de Proteção do Administrador
+            </strong>
+            <p style="margin: 0 0 8px; font-size: 0.78rem; color: #78350f; line-height: 1.4;">
+              Se alguém que está no modo somente leitura tentar clicar em "Entrar como Editor", precisará desta senha. Padrão inicial: <strong>pmcd2026</strong>.
+            </p>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label for="inputPinAdminConfig" style="font-size: 0.78rem; font-weight: 700; color: #92400e;">PIN Atual:</label>
+                <input type="text" id="inputPinAdminConfig" style="width: 120px; padding: 5px 8px; font-size: 0.82rem; font-weight: 800; border: 1.5px solid #f59e0b; border-radius: 6px; text-align: center; letter-spacing: 1px;" />
+              </div>
+              <button type="button" class="btn btn-verde" id="btnSalvarPinAdmin" style="font-size: 0.78rem; font-weight: 700; padding: 6px 12px;">
+                💾 Salvar Nova Senha
+              </button>
+            </div>
+          </div>
+
+          <!-- Alternar Modo Rápido -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 6px; border-top: 1px solid #e2e8f0;">
+            <div style="font-size: 0.8rem; color: #475569;">
+              Status neste navegador: <span id="txtModoAtualStatus" style="font-weight: 800; color: #14532d;">👑 Modo Editor</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-cinza" id="btnTestarModoLeitura" style="font-size: 0.78rem;">
+                👀 Ativar Modo Leitura Agora
+              </button>
+              <button type="button" class="btn btn-cinza" id="btnAtivarModoEditor" style="font-size: 0.78rem;">
+                👑 Ativar Modo Editor Agora
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          <button type="button" class="btn btn-cinza" id="btnFecharModalCompartilhar2">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Login Editor (Digitar PIN) -->
+    <div id="modalLoginEditor" class="modal">
+      <div class="modal-conteudo" style="max-width: 420px; text-align: center;">
+        <div style="font-size: 2.2rem; margin-bottom: 6px;">🔑</div>
+        <h3 style="margin: 0 0 6px; color: #14532d; font-size: 1.1rem;">Acesso de Administrador</h3>
+        <p style="margin: 0 0 14px; font-size: 0.8rem; color: #475569; line-height: 1.4;">
+          Digite o PIN do administrador para desbloquear as edições e novos lançamentos neste navegador:
+        </p>
+        <form id="formLoginEditor" onsubmit="event.preventDefault();">
+          <input type="password" id="inputPinLogin" placeholder="Digite o PIN (ex: pmcd2026)" autocomplete="current-password" style="width: 100%; padding: 8px 12px; font-size: 1rem; font-weight: 700; border: 2px solid #cbd5e1; border-radius: 6px; text-align: center; box-sizing: border-box; margin-bottom: 12px;" />
+          <div id="msgErroPin" style="color: #dc2626; font-size: 0.78rem; font-weight: 700; margin-bottom: 10px; display: none;">
+            ❌ PIN incorreto. Tente novamente.
+          </div>
+          <div style="display: flex; justify-content: center; gap: 10px;">
+            <button type="button" class="btn btn-cinza" id="btnCancelarLoginEditor">Cancelar</button>
+            <button type="submit" class="btn btn-verde" id="btnConfirmarLoginEditor" style="font-weight: 800; padding: 7px 18px;">Desbloquear</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyA1YbZ9uGY3WW5fiMLVpTC2_fC2qKB6vos",
@@ -1793,6 +1960,125 @@
         document.body.classList.add("fonte-" + (n || "merriweather"));
         try { localStorage.setItem("pmcd_fonte_preferida_v2", n || "merriweather"); } catch(e) {}
         const s = document.getElementById("selectFonte"); if (s && s.value !== n) s.value = n;
+      }
+      // Controle de Permissões e Modo de Acesso (Editor vs Somente Leitura)
+      const STORAGE_MODO_ACESSO = "pmcd_modo_acesso";
+      const STORAGE_PIN_ADMIN = "pmcd_pin_admin";
+      const PIN_PADRAO = "pmcd2026";
+      let _modoAcessoAtual = "admin";
+
+      function obterPinAdmin() {
+        try { return localStorage.getItem(STORAGE_PIN_ADMIN) || PIN_PADRAO; } catch(e) { return PIN_PADRAO; }
+      }
+      function salvarPinAdmin(novoPin) {
+        if (!novoPin || novoPin.trim() === "") return false;
+        try { localStorage.setItem(STORAGE_PIN_ADMIN, novoPin.trim()); return true; } catch(e) { return false; }
+      }
+      function estaModoLeitura() {
+        return _modoAcessoAtual === "leitura";
+      }
+      function aplicarModoAcesso(modo, persistir = true) {
+        _modoAcessoAtual = (modo === "leitura") ? "leitura" : "admin";
+        if (persistir) {
+          try { localStorage.setItem(STORAGE_MODO_ACESSO, _modoAcessoAtual); } catch(e) {}
+        }
+        const badge = document.getElementById("badgeModoAcesso");
+        const banner = document.getElementById("bannerModoLeitura");
+        const statusTxt = document.getElementById("txtModoAtualStatus");
+        if (_modoAcessoAtual === "leitura") {
+          document.body.classList.add("modo-leitura-ativo");
+          if (badge) {
+            badge.className = "badge-modo-acesso leitura";
+            badge.innerHTML = "👀 Somente Leitura";
+            badge.title = "Clique para desbloquear como Editor com o PIN";
+          }
+          if (banner) banner.style.display = "flex";
+          if (statusTxt) statusTxt.innerHTML = "<span style='color:#0284c7;'>👀 Somente Leitura</span>";
+        } else {
+          document.body.classList.remove("modo-leitura-ativo");
+          if (badge) {
+            badge.className = "badge-modo-acesso admin";
+            badge.innerHTML = "👑 Modo Editor";
+            badge.title = "Clique para gerenciar permissões e links de acesso";
+          }
+          if (banner) banner.style.display = "none";
+          if (statusTxt) statusTxt.innerHTML = "<span style='color:#14532d;'>👑 Modo Editor</span>";
+        }
+      }
+      function inicializarModoAcesso() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramModo = (urlParams.get("modo") || urlParams.get("m") || "").toLowerCase();
+        let modoInicial = "admin";
+        if (paramModo === "leitura" || paramModo === "visualizador" || paramModo === "readonly") {
+          modoInicial = "leitura";
+        } else if (paramModo === "admin" || paramModo === "editor") {
+          modoInicial = "admin";
+        } else {
+          try { modoInicial = localStorage.getItem(STORAGE_MODO_ACESSO) || "admin"; } catch(e) { modoInicial = "admin"; }
+        }
+        aplicarModoAcesso(modoInicial, true);
+      }
+      function gerarUrlModo(modo) {
+        try {
+          const loc = window.location;
+          const url = new URL(loc.href);
+          url.searchParams.set("modo", modo);
+          return url.toString();
+        } catch(e) {
+          return `${window.location.origin}${window.location.pathname}?modo=${modo}`;
+        }
+      }
+      function abrirModalCompartilharAcesso() {
+        const m = document.getElementById("modalCompartilharAcesso");
+        if (!m) return;
+        const inL = document.getElementById("inputLinkLeitura");
+        const inA = document.getElementById("inputLinkAdmin");
+        const inPin = document.getElementById("inputPinAdminConfig");
+        if (inL) inL.value = gerarUrlModo("leitura");
+        if (inA) inA.value = gerarUrlModo("admin");
+        if (inPin) inPin.value = obterPinAdmin();
+        const statusTxt = document.getElementById("txtModoAtualStatus");
+        if (statusTxt) {
+          statusTxt.innerHTML = estaModoLeitura() 
+            ? "<span style='color:#0284c7;'>👀 Somente Leitura</span>" 
+            : "<span style='color:#14532d;'>👑 Modo Editor</span>";
+        }
+        m.classList.add("ativo");
+      }
+      function fecharModalCompartilharAcesso() {
+        const m = document.getElementById("modalCompartilharAcesso");
+        if (m) m.classList.remove("ativo");
+      }
+      function abrirModalLoginEditor() {
+        const m = document.getElementById("modalLoginEditor");
+        const inP = document.getElementById("inputPinLogin");
+        const msg = document.getElementById("msgErroPin");
+        if (inP) { inP.value = ""; inP.style.borderColor = "#cbd5e1"; }
+        if (msg) msg.style.display = "none";
+        if (m) m.classList.add("ativo");
+        setTimeout(() => { if (inP) inP.focus(); }, 150);
+      }
+      function fecharModalLoginEditor() {
+        const m = document.getElementById("modalLoginEditor");
+        if (m) m.classList.remove("ativo");
+      }
+      function verificarEAtivarEditor() {
+        const inP = document.getElementById("inputPinLogin");
+        const msg = document.getElementById("msgErroPin");
+        const pinDigitado = inP?.value || "";
+        const pinCorreto = obterPinAdmin();
+        if (pinDigitado.trim() === pinCorreto.trim()) {
+          aplicarModoAcesso("admin", true);
+          fecharModalLoginEditor();
+          alert("🎉 Modo Editor desbloqueado com sucesso!");
+        } else {
+          if (msg) msg.style.display = "block";
+          if (inP) {
+            inP.style.borderColor = "#dc2626";
+            inP.focus();
+            inP.select();
+          }
+        }
       }
       const STORAGE_KEY = "lancamentos_campo_v27";
       const NUM_COLUNAS = 9;
@@ -2297,6 +2583,7 @@
         return { melhor, maxL, chaveEncontrada };
       }
       function salvarNuvem() {
+        if (estaModoLeitura()) return;
         if (!dbAtivo || !db) return;
         if (!sincronizadoInicial) {
           console.warn("[PMCD] Bloqueado salvarNuvem antes da sincronização inicial para proteger dados.");
@@ -2376,7 +2663,11 @@
           }
         });
       }
-      function salvar() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {} salvarNuvem(); }
+      function salvar() {
+        if (estaModoLeitura()) return;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+        salvarNuvem();
+      }
       function carregar() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) { try { const p = JSON.parse(raw); if (p && typeof p === "object") estado = p; } catch(e) {} }
@@ -4813,6 +5104,107 @@
           if (bFDiag1) bFDiag1.addEventListener("click", fecharModalDiagnostico);
           const bFDiag2 = document.getElementById("btnFecharModalDiagnostico2");
           if (bFDiag2) bFDiag2.addEventListener("click", fecharModalDiagnostico);
+
+          // Inicializar Modo de Acesso (Editor vs Somente Leitura)
+          inicializarModoAcesso();
+
+          const bBadgeModo = document.getElementById("badgeModoAcesso");
+          if (bBadgeModo) {
+            bBadgeModo.addEventListener("click", () => {
+              if (estaModoLeitura()) {
+                abrirModalLoginEditor();
+              } else {
+                abrirModalCompartilharAcesso();
+              }
+            });
+          }
+
+          const bComp = document.getElementById("btnCompartilharAcesso");
+          if (bComp) bComp.addEventListener("click", abrirModalCompartilharAcesso);
+
+          const bFComp = document.getElementById("btnFecharModalCompartilhar");
+          if (bFComp) bFComp.addEventListener("click", fecharModalCompartilharAcesso);
+          const bFComp2 = document.getElementById("btnFecharModalCompartilhar2");
+          if (bFComp2) bFComp2.addEventListener("click", fecharModalCompartilharAcesso);
+
+          const bCopL = document.getElementById("btnCopiarLinkLeitura");
+          if (bCopL) {
+            bCopL.addEventListener("click", () => {
+              const inL = document.getElementById("inputLinkLeitura");
+              if (!inL) return;
+              navigator.clipboard?.writeText(inL.value).then(() => {
+                bCopL.textContent = "✅ Link Copiado!";
+                setTimeout(() => { bCopL.textContent = "📋 Copiar Link"; }, 2500);
+              }).catch(() => {
+                inL.select();
+                document.execCommand("copy");
+                bCopL.textContent = "✅ Link Copiado!";
+                setTimeout(() => { bCopL.textContent = "📋 Copiar Link"; }, 2500);
+              });
+            });
+          }
+
+          const bCopA = document.getElementById("btnCopiarLinkAdmin");
+          if (bCopA) {
+            bCopA.addEventListener("click", () => {
+              const inA = document.getElementById("inputLinkAdmin");
+              if (!inA) return;
+              navigator.clipboard?.writeText(inA.value).then(() => {
+                bCopA.textContent = "✅ Link Copiado!";
+                setTimeout(() => { bCopA.textContent = "📋 Copiar Link"; }, 2500);
+              }).catch(() => {
+                inA.select();
+                document.execCommand("copy");
+                bCopA.textContent = "✅ Link Copiado!";
+                setTimeout(() => { bCopA.textContent = "📋 Copiar Link"; }, 2500);
+              });
+            });
+          }
+
+          const bSalvarPin = document.getElementById("btnSalvarPinAdmin");
+          if (bSalvarPin) {
+            bSalvarPin.addEventListener("click", () => {
+              const inPin = document.getElementById("inputPinAdminConfig");
+              const val = inPin?.value || "";
+              if (!val.trim()) { alert("⚠️ Digite um PIN válido."); return; }
+              if (salvarPinAdmin(val.trim())) {
+                alert("✅ Senha/PIN de administrador atualizada com sucesso!");
+              }
+            });
+          }
+
+          const bTestarL = document.getElementById("btnTestarModoLeitura");
+          if (bTestarL) {
+            bTestarL.addEventListener("click", () => {
+              aplicarModoAcesso("leitura", true);
+              fecharModalCompartilharAcesso();
+            });
+          }
+
+          const bAtivarEd = document.getElementById("btnAtivarModoEditor");
+          if (bAtivarEd) {
+            bAtivarEd.addEventListener("click", () => {
+              aplicarModoAcesso("admin", true);
+              fecharModalCompartilharAcesso();
+            });
+          }
+
+          const bDesbBanner = document.getElementById("btnDesbloquearEditorBanner");
+          if (bDesbBanner) bDesbBanner.addEventListener("click", abrirModalLoginEditor);
+
+          const bCompBanner = document.getElementById("btnCompartilharBanner");
+          if (bCompBanner) bCompBanner.addEventListener("click", abrirModalCompartilharAcesso);
+
+          const bCancLoginEd = document.getElementById("btnCancelarLoginEditor");
+          if (bCancLoginEd) bCancLoginEd.addEventListener("click", fecharModalLoginEditor);
+
+          const formLoginEd = document.getElementById("formLoginEditor");
+          if (formLoginEd) {
+            formLoginEd.addEventListener("submit", (e) => {
+              e.preventDefault();
+              verificarEAtivarEditor();
+            });
+          }
 
           atualizarTextoGeracao(); obterLocalizacao().then(() => atualizarTextoGeracao()).catch(() => {});
           renderizarTabelaProgramacao(); atualizarPreviewPeriodoCiclo();
