@@ -432,6 +432,12 @@
       #aba-relatorio-campo .area-impressao { width: 100%; max-width: 1000px; margin: 0 auto 14px; }
       #areaRelatorioCampo.capturando-pdf { padding: 20px 16px !important; display: block !important; }
       #areaImpressao.capturando-pdf { padding: 24px 22px 28px !important; display: block !important; }
+      #areaQuarteiroesDesignados.capturando-pdf { padding: 12px 14px 18px !important; display: block !important; overflow: visible !important; }
+      #areaQuarteiroesDesignados.capturando-pdf .resumo-wrapper { overflow: visible !important; margin: 4px 0 10px !important; }
+      #areaQuarteiroesDesignados.capturando-pdf .qd-total-card { padding: 6px 12px !important; margin-bottom: 6px !important; gap: 12px !important; }
+      #areaQuarteiroesDesignados.capturando-pdf .qd-total-item .qd-total-valor { font-size: 1.05rem !important; }
+      #areaQuarteiroesDesignados.capturando-pdf .cabecalho-resumo { margin-bottom: 6px !important; padding-bottom: 6px !important; }
+      #areaQuarteiroesDesignados.capturando-pdf .resumo-tabela th, #areaQuarteiroesDesignados.capturando-pdf .resumo-tabela td { padding: 3.5px 2px !important; font-size: 0.72rem !important; }
       .sup-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
       .sup-rotulo { font-weight: 800; color: #14532d; font-size: 0.74rem; white-space: nowrap; }
       .sup-sim-nao { padding: 2px 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.74rem; font-weight: 700; color: #14532d; background: #fff; outline: none; cursor: pointer; }
@@ -2349,22 +2355,19 @@
         if (wrapper) wrapper.scrollLeft = 0;
         void el.offsetWidth;
         let fw;
-        if (ehRetrato) {
-          if (elementoId === "areaResumoReconhecimento") { fw = 860; }
-          else { fw = 1000; }
-        }
-        else if (elementoId === "areaImpressao") { const baseW = Math.round(el.getBoundingClientRect().width); const wrapEl = el.querySelector(".resumo-wrapper"); const tableW = wrapEl ? wrapEl.scrollWidth : 0; const padH = 44; fw = Math.max(baseW, tableW + padH); }
+        if (elementoId === "areaImpressao") { const baseW = Math.round(el.getBoundingClientRect().width); const wrapEl = el.querySelector(".resumo-wrapper"); const tableW = wrapEl ? wrapEl.scrollWidth : 0; const padH = 44; fw = Math.max(baseW, tableW + padH); }
         else if (elementoId === "areaImpressaoCiclo") { fw = 1680; }
         else if (elementoId === "areaProducaoIndividual") { fw = 1400; }
         else if (elementoId === "areaImpressaoFad7") { fw = 1400; }
         else if (elementoId === "areaRelatorioCampo") { fw = 1400; }
-        else if (elementoId === "areaQuarteiroesDesignados") { fw = 1200; }
+        else if (elementoId === "areaQuarteiroesDesignados") { fw = 1050; }
         else if (elementoId === "areaConfigEstrato") { fw = 1100; }
         else if (elementoId === "areaResumoReconhecimento") { fw = 860; }
+        else if (ehRetrato) { fw = 1000; }
         else { fw = 1580; }
         el.style.width = fw + "px"; el.style.maxWidth = "none"; el.style.minWidth = fw + "px";
         void el.offsetWidth;
-        const ch = Math.max(el.scrollHeight || 0, el.offsetHeight || 0) + 4;
+        const ch = Math.max(el.scrollHeight || 0, el.offsetHeight || 0) + 10;
         const restaurar = () => { el.classList.remove("capturando-pdf"); el.style.width = ""; el.style.maxWidth = ""; el.style.minWidth = ""; if (wrapper) wrapper.scrollLeft = sc; atualizarStatusNuvem("☁️ Nuvem OK", "online"); };
         const h2c = window.html2canvas || null;
         const JsPDF = (window.jspdf?.jsPDF) || null;
@@ -2373,9 +2376,25 @@
             cd.documentElement.style.width = fw + 'px'; cd.documentElement.style.minWidth = fw + 'px';
             if (cd.body) { cd.body.style.width = fw + 'px'; cd.body.style.minWidth = fw + 'px'; cd.body.style.overflow = 'visible'; }
             const c = cd.getElementById(elementoId);
-            if (c) { c.style.width = fw + 'px'; c.style.maxWidth = 'none'; c.style.minWidth = fw + 'px'; }
+            if (c) {
+              c.style.width = fw + 'px'; c.style.maxWidth = 'none'; c.style.minWidth = fw + 'px'; c.style.overflow = 'visible';
+              c.querySelectorAll('.resumo-wrapper').forEach(w => { w.style.overflow = 'visible'; w.style.maxHeight = 'none'; });
+            }
             const cont = c || cd;
             cont.querySelectorAll('input').forEach(inp => {
+              if (inp.type === "checkbox") {
+                const rep = cd.createElement('div');
+                rep.textContent = inp.checked ? "☑" : "☐";
+                rep.style.cssText = "font-size:1.1rem;line-height:1;text-align:center;color:#166534;display:inline-block;";
+                const ptd = inp.closest('td');
+                if (ptd) {
+                  ptd.style.padding = '3.5px 2px';
+                  ptd.style.textAlign = 'center';
+                  ptd.style.verticalAlign = 'middle';
+                }
+                inp.parentNode.replaceChild(rep, inp);
+                return;
+              }
               const v = (inp.value !== undefined && inp.value !== null && inp.value !== "") ? inp.value : (inp.placeholder || "");
               const rep = cd.createElement('div'); rep.textContent = v; rep.className = inp.className;
               const ff = inp.style.getPropertyValue("font-family"); const fs = inp.style.getPropertyValue("font-size"); const lh = inp.style.getPropertyValue("line-height");
@@ -2388,7 +2407,7 @@
                   ptd.style.verticalAlign = 'middle';
                 } else {
                   rep.style.cssText = `width:100%;text-align:center;font-weight:700;font-size:0.78rem;line-height:1.3;padding:0;color:#14532d;display:block;`;
-                  ptd.style.padding = '10px 2px';
+                  ptd.style.padding = '4px 2px';
                   ptd.style.verticalAlign = 'middle';
                 }
               }
@@ -2396,15 +2415,65 @@
               if (ff) rep.style.setProperty("font-family", ff, "important");
               if (fs) rep.style.setProperty("font-size", fs, "important");
               if (lh) rep.style.setProperty("line-height", lh, "important");
-              if (inp.type === "checkbox") { rep.textContent = inp.checked ? "☑" : "☐"; }
               inp.parentNode.replaceChild(rep, inp);
             });
             cont.querySelectorAll('textarea').forEach(tx => { const rep = cd.createElement('div'); rep.textContent = tx.value || tx.placeholder || ""; rep.style.cssText = `width:100%;min-height:55px;font-size:0.82rem;padding:6px 10px;border:1.5px solid #94a3b8;border-radius:6px;background:#fff;line-height:1.4;white-space:pre-wrap;box-sizing:border-box;`; tx.parentNode.replaceChild(rep, tx); });
             cont.querySelectorAll("select").forEach(s => { if (s.classList.contains("font-assinatura-select")) return; const rep = cd.createElement('div'); rep.textContent = s.options[s.selectedIndex]?.text || ""; rep.style.cssText = `display:inline-block;border-bottom:1.5px solid #94a3b8;padding:1px 6px 3px;font-size:0.82rem;font-weight:600;color:#1e293b;`; s.parentNode.replaceChild(rep, s); });
           } catch(e) { console.warn('[clone]', e); }
         };
-        const direto = () => { if (!h2c || !JsPDF) return Promise.reject(new Error("libs")); return (document.fonts?.ready || Promise.resolve()).then(() => h2c(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: fw, height: ch, windowWidth: fw, windowHeight: ch, scrollX: 0, scrollY: 0, onclone: clone })).then(cv => { const img = cv.toDataURL('image/png'); const pdf = new JsPDF({ orientation: orientacao, unit: 'mm', format: 'a4', compress: true }); const pw = pdf.internal.pageSize.getWidth(); const ph = pdf.internal.pageSize.getHeight(); const ratio = Math.min((pw - 7) / cv.width, (ph - 8) / cv.height); const fW = cv.width * ratio; const fH = cv.height * ratio; pdf.addImage(img, 'PNG', (pw - fW) / 2, (ph - fH) / 2, fW, fH, undefined, 'FAST'); pdf.save(nomeArquivo); }); };
-        const fb = () => { if (typeof html2pdf === "undefined") return Promise.reject(new Error("html2pdf")); return html2pdf().set({ margin: [4, 3.5, 4, 3.5], filename: nomeArquivo, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, windowWidth: fw, windowHeight: ch, onclone: clone }, jsPDF: { unit: 'mm', format: 'a4', orientation: orientacao, compress: true } }).from(el).save(); };
+        const direto = () => {
+          if (!h2c || !JsPDF) return Promise.reject(new Error("libs"));
+          return (document.fonts?.ready || Promise.resolve())
+            .then(() => h2c(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: fw, scrollX: 0, scrollY: 0, onclone: clone }))
+            .then(cv => {
+              const pdf = new JsPDF({ orientation: orientacao, unit: 'mm', format: 'a4', compress: true });
+              const pw = pdf.internal.pageSize.getWidth();
+              const ph = pdf.internal.pageSize.getHeight();
+              const marginX = 4;
+              const marginY = 4;
+              const maxContentW = pw - (marginX * 2);
+              const maxContentH = ph - (marginY * 2);
+              const scale = maxContentW / cv.width;
+              const totalPdfHeight = cv.height * scale;
+
+              if (totalPdfHeight <= maxContentH) {
+                const posY = Math.max(marginY, (ph - totalPdfHeight) / 2);
+                const img = cv.toDataURL('image/png');
+                pdf.addImage(img, 'PNG', marginX, posY, maxContentW, totalPdfHeight, undefined, 'FAST');
+              } else {
+                const pageCanvasHeight = Math.floor(maxContentH / scale);
+                let sourceY = 0;
+                let pageIndex = 0;
+                while (sourceY < cv.height) {
+                  if (pageIndex > 0) pdf.addPage();
+                  const sliceH = Math.min(pageCanvasHeight, cv.height - sourceY);
+                  const pageCanvas = document.createElement('canvas');
+                  pageCanvas.width = cv.width;
+                  pageCanvas.height = sliceH;
+                  const pctx = pageCanvas.getContext('2d');
+                  pctx.fillStyle = '#ffffff';
+                  pctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+                  pctx.drawImage(cv, 0, sourceY, cv.width, sliceH, 0, 0, cv.width, sliceH);
+                  const sliceImg = pageCanvas.toDataURL('image/png');
+                  pdf.addImage(sliceImg, 'PNG', marginX, marginY, maxContentW, sliceH * scale, undefined, 'FAST');
+                  sourceY += sliceH;
+                  pageIndex++;
+                }
+              }
+              pdf.save(nomeArquivo);
+            });
+        };
+        const fb = () => {
+          if (typeof html2pdf === "undefined") return Promise.reject(new Error("html2pdf"));
+          return html2pdf().set({
+            margin: [4, 4, 4, 4],
+            filename: nomeArquivo,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, windowWidth: fw, scrollX: 0, scrollY: 0, onclone: clone },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: orientacao, compress: true },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          }).from(el).save();
+        };
         const fallbackImpressao = () => { restaurar(); if (ehRetrato) { let st = document.getElementById('pmcd-page-size-override'); if (!st) { st = document.createElement('style'); st.id = 'pmcd-page-size-override'; st.textContent = '@media print { @page { size: A4 portrait; margin: 6mm; } }'; document.head.appendChild(st); } const limpar = () => { const s = document.getElementById('pmcd-page-size-override'); if (s) s.remove(); window.removeEventListener('afterprint', limpar); }; window.addEventListener('afterprint', limpar); setTimeout(() => window.print(), 120); } else { window.print(); } };
         return direto().then(restaurar).catch(() => fb().then(restaurar).catch(fallbackImpressao));
       }
