@@ -8,6 +8,8 @@
     <meta property="og:title" content="PMCD - Lançamentos de Campo" />
     <meta property="og:description" content="Sistema de Lançamentos de Campo, SUGARBO e Resumos para agentes de combate às endemias (PMCD)" />
     <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/png" href="icon-192.png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
     <meta name="theme-color" content="#166534" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -26,19 +28,44 @@
       if ('caches' in window) {
         caches.keys().then((chaves) => {
           chaves.forEach((chave) => {
-            if (chave !== 'pmcd-sugarbo-v13') { caches.delete(chave); }
+            if (chave !== 'pmcd-sugarbo-v15') {
+              console.log('[Cache] Removendo cache antigo:', chave);
+              caches.delete(chave);
+            }
           });
         });
       }
       if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          for (let reg of regs) { reg.update(); }
+        });
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js?v=13').then((reg) => reg.update()).catch((err) => console.log('Aviso PWA:', err));
+          navigator.serviceWorker.register('./sw.js?v=15').then((reg) => {
+            reg.update();
+            reg.addEventListener('updatefound', () => {
+              const novoWorker = reg.installing;
+              if (novoWorker) {
+                novoWorker.addEventListener('statechange', () => {
+                  if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('[PWA] Nova versão instalada. Atualizando...');
+                    window.location.reload();
+                  }
+                });
+              }
+            });
+          }).catch((err) => console.log('Aviso PWA:', err));
         });
       }
       async function recarregarAppCompleto() {
-        if ('caches' in window) { const keys = await caches.keys(); for (const key of keys) { await caches.delete(key); } }
-        if ('serviceWorker' in navigator) { const regs = await navigator.serviceWorker.getRegistrations(); for (const reg of regs) { await reg.unregister(); } }
-        window.location.reload(true);
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          for (const key of keys) { await caches.delete(key); }
+        }
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const reg of regs) { await reg.unregister(); }
+        }
+        window.location.href = window.location.pathname + '?v=' + Date.now();
       }
     </script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -72,7 +99,8 @@
       .btn-backup { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 5px 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
       .btn-backup:hover { background: rgba(255,255,255,0.25); }
       .btn-baixar-html { background: #0284c7; border-color: #38bdf8; }
-      .barra-abas-horizontal { background: #14532d; border-bottom: 2px solid #166534; padding: 6px 14px 0 14px; overflow-x: auto; white-space: nowrap; scrollbar-width: thin; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+      /* Barra de Abas Horizontal */
+      .barra-abas-horizontal { background: #14532d; border-bottom: 2px solid #166534; padding: 6px 14px 0 14px; overflow-x: auto; white-space: nowrap; scrollbar-width: thin; box-shadow: 0 2px 4px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; }
       .barra-abas-horizontal::-webkit-scrollbar { height: 5px; }
       .barra-abas-horizontal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 9999px; }
       .abas-navegacao-lista { display: flex; align-items: flex-end; gap: 4px; min-width: max-content; }
@@ -265,8 +293,8 @@
       .campo-rodape { display: flex; align-items: center; gap: 6px; flex: 1; max-width: 380px; }
       .campo-rodape label { font-weight: 700; color: #14532d; font-size: 0.8rem; }
       .campo-rodape input { flex: 1; border: none; border-bottom: 1px solid #94a3b8; background: transparent; padding: 2px; font-size: 0.8rem; outline: none; }
-      .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; justify-content: center; align-items: center; padding: 14px; }
-      .modal-overlay.ativo { display: flex; }
+      .modal-overlay, .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; justify-content: center; align-items: center; padding: 14px; }
+      .modal-overlay.ativo, .modal.ativo { display: flex !important; }
       .modal-conteudo { background: #fff; border-radius: 8px; width: 100%; max-width: 920px; max-height: 90vh; overflow-y: auto; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 12px; }
       .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
       .btn-fechar-modal { background: transparent; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b; }
@@ -393,10 +421,10 @@
       @media print {
         @page { size: A4 landscape; margin: 4mm; }
         body { background: #fff; }
-        header, nav.barra-abas-horizontal, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao { display: none !important; }
+        header, nav.barra-navegacao-abas, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao { display: none !important; }
         main { padding: 0 !important; }
         .conteudo-aba { display: none !important; }
-        #aba-resumo.ativo, #aba-ciclo.ativo, #aba-producao-individual.ativo, #aba-fad7.ativo, #aba-relatorio-campo.ativo, #aba-quarteiroes-designados.ativo, #aba-config-estrato.ativo { display: block !important; }
+        #aba-resumo.ativo, #aba-ciclo.ativo, #aba-producao-individual.ativo, #aba-fad7.ativo, #aba-relatorio-campo.ativo, #aba-quarteiroes-designados.ativo, #aba-config-estrato.ativo, #aba-resumo-reconhecimento.ativo { display: block !important; }
         .area-impressao { border: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
@@ -430,7 +458,7 @@
       .dash-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.05); border-top: 4px solid #16a34a; display: flex; flex-direction: column; gap: 4px; }
       .dash-card.azul { border-top-color: #0284c7; } .dash-card.ambar { border-top-color: #d97706; }
       .dash-card.roxo { border-top-color: #7c3aed; } .dash-card.vermelho { border-top-color: #dc2626; }
-      .dash-card.rosa { border-top-color: #e11d48; } .dash-card.teal { border-top-color: #0d9488; }
+      .dash-card.rosa { border-top-color: #e11d48; } .dash-card.teal { border-top-color: #0d9488; } .dash-card.verde { border-top-color: #16a34a; }
       .dash-card .dash-label { font-size: 0.74rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: .4px; }
       .dash-card .dash-valor { font-size: 1.75rem; font-weight: 900; color: #14532d; line-height: 1.1; }
       .dash-card .dash-sub { font-size: 0.74rem; color: #64748b; font-weight: 600; }
@@ -526,20 +554,97 @@
         .reconhecimento-cabecalho-card { padding: 6px 10px !important; margin-bottom: 6px !important; }
         .reconhecimento-consolidado-card { padding: 6px 10px !important; margin-bottom: 6px !important; }
       }
-      /* Controle de Acesso / Modo Somente Leitura */
-      .badge-modo-acesso { font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s ease; user-select: none; }
-      .badge-modo-acesso.admin { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
-      .badge-modo-acesso.admin:hover { background: #f1f5f9; color: #1e293b; border-color: #94a3b8; }
-      .badge-modo-acesso.leitura { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
-      .badge-modo-acesso.leitura:hover { background: #bae6fd; }
-      .banner-modo-leitura { background: #f0f9ff; color: #0369a1; padding: 6px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid #bae6fd; }
-      .banner-modo-leitura .banner-conteudo { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; line-height: 1.3; }
-      .banner-modo-leitura .banner-icone { font-size: 1rem; flex-shrink: 0; }
+      .capturando-pdf#areaResumoReconhecimento,
+      .capturando-pdf #areaResumoReconhecimento {
+        width: 860px !important;
+        max-width: 860px !important;
+        min-width: 860px !important;
+        padding: 10px 14px !important;
+        background: #ffffff !important;
+        box-sizing: border-box !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-tabelas-wrap,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-tabelas-wrap {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        width: 100% !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-tabela-bloco,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-tabela-bloco {
+        flex: 1 !important;
+        min-width: 0 !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-tabela,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-tabela {
+        font-size: 0.64rem !important;
+        width: 100% !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-tabela th,
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-tabela td,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-tabela th,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-tabela td {
+        padding: 1.5px 2px !important;
+        font-size: 0.64rem !important;
+        line-height: 1.15 !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-tabela input,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-tabela input {
+        font-size: 0.66rem !important;
+        padding: 1px 0 !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-tabela-titulo,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-tabela-titulo {
+        padding: 3px 6px !important;
+        font-size: 0.68rem !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-cabecalho-card,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-cabecalho-card {
+        padding: 5px 8px !important;
+        margin-bottom: 6px !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-cabecalho-grid,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-cabecalho-grid {
+        gap: 3px 6px !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-cabecalho-grid .rc-item label,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-cabecalho-grid .rc-item label {
+        font-size: 0.62rem !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-cabecalho-grid .rc-item input,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-cabecalho-grid .rc-item input {
+        padding: 2px 4px !important;
+        font-size: 0.72rem !important;
+        min-height: 18px !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-consolidado-card,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-consolidado-card {
+        padding: 5px 8px !important;
+        margin-bottom: 6px !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-consolidado-item .rc-lbl,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-consolidado-item .rc-lbl {
+        font-size: 0.6rem !important;
+      }
+      .capturando-pdf#areaResumoReconhecimento .reconhecimento-consolidado-item .rc-val,
+      .capturando-pdf #areaResumoReconhecimento .reconhecimento-consolidado-item .rc-val {
+        font-size: 0.9rem !important;
+      }
+      /* Controle de Acesso / Modo Somente Leitura (Discreto) */
+      .badge-modo-acesso { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s ease; user-select: none; opacity: 0.85; }
+      .badge-modo-acesso:hover { opacity: 1; }
+      .badge-modo-acesso.admin { background: rgba(255,255,255,0.12); color: #f0fdf4; border: 1px solid rgba(255,255,255,0.25); }
+      .badge-modo-acesso.admin:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.45); }
+      .badge-modo-acesso.leitura { background: #0284c7; color: #ffffff; border: 1px solid #38bdf8; box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
+      .badge-modo-acesso.leitura:hover { background: #0369a1; }
+      .banner-modo-leitura { background: #0f172a; color: #cbd5e1; padding: 5px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 998; font-size: 0.75rem; }
+      .banner-modo-leitura .banner-conteudo { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; line-height: 1.3; }
+      .banner-modo-leitura .banner-icone { font-size: 1.1rem; flex-shrink: 0; }
       .banner-modo-leitura .banner-acoes { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-      .btn-banner-login { background: #fef08a; color: #713f12; font-weight: 700; font-size: 0.74rem; border: 1px solid #fde047; border-radius: 4px; padding: 3px 8px; cursor: pointer; }
-      .btn-banner-login:hover { background: #fde047; }
-      .btn-banner-info { background: #ffffff; color: #0369a1; border: 1px solid #7dd3fc; font-weight: 600; font-size: 0.74rem; border-radius: 4px; padding: 3px 8px; cursor: pointer; }
-      .btn-banner-info:hover { background: #e0f2fe; }
+      .btn-banner-login { background: #f59e0b; color: #0f172a; font-weight: 800; font-size: 0.72rem; border: none; border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: background 0.15s ease; }
+      .btn-banner-login:hover { background: #fbbf24; }
+      .btn-banner-info { background: rgba(255, 255, 255, 0.12); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.25); font-weight: 700; font-size: 0.72rem; border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+      .btn-banner-info:hover { background: rgba(255, 255, 255, 0.22); }
       @media (max-width: 768px) { .banner-modo-leitura { flex-direction: column; align-items: flex-start; } }
       body.modo-leitura-ativo .conteudo-aba input:not(#dashAno):not(#dashSemanaRef):not(#dashCiclo):not(.filtro-livre),
       body.modo-leitura-ativo .conteudo-aba textarea,
@@ -577,8 +682,8 @@
         <h1>🌿 Lançamentos de Campo</h1>
         <span id="dataHoje"></span>
         <span id="statusNuvem" class="badge-nuvem offline">🔄 Conectando...</span>
-        <span id="badgeModoAcesso" class="badge-modo-acesso admin" title="Permissão de acesso: clique para gerenciar">👑 Editor</span>
-        <span style="font-size:0.75rem; background:#dcfce7; color:#14532d; font-weight:700; padding:2px 8px; border-radius:9999px; border:1px solid #86efac;">v5.5</span>
+        <span id="badgeModoAcesso" class="badge-modo-acesso admin" style="display: none;" title="Permissão de acesso">👑 Editor</span>
+        <span style="font-size:0.75rem; background:#dcfce7; color:#14532d; font-weight:700; padding:2px 8px; border-radius:9999px; border:1px solid #86efac;">v5.6</span>
         <button onclick="recarregarAppCompleto()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; color:#334155; font-weight:600;">🔄 Atualizar Versão</button>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -595,11 +700,11 @@
           </select>
         </div>
         <div class="acoes-backup">
-          <button class="btn-backup" id="btnCompartilharAcesso" title="Gerenciar permissões e link de somente leitura">👥 Compartilhar</button>
           <button class="btn-backup btn-baixar-html" id="btnBaixarCodigo">💻 Baixar index.html</button>
           <button class="btn-backup" id="btnExportarJSON">💾 Exportar JSON</button>
           <button class="btn-backup" id="btnImportarJSON">📂 Importar JSON</button>
           <button class="btn-backup" id="btnDiagnosticoRecuperacao" style="background:#059669; border-color:#34d399;" title="Verificar e restaurar lançamentos salvos no navegador">🔍 Recuperar Dados</button>
+          <button class="btn-backup" id="btnCompartilharAcesso" style="display: none;"></button>
           <input type="file" id="inputImportarJSON" accept=".json,application/json" style="display: none;" />
         </div>
       </div>
@@ -966,13 +1071,8 @@
             <span id="badgeReconhecimentoStatus" class="badge-aviso-atividade ciclo" style="font-size: 0.78rem;">💾 Salvo automaticamente</span>
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-verde" id="btnPuxarRapidoAndamento" style="background:#0284c7; border-color:#0284c7; font-weight:700; display:flex; align-items:center; gap:5px;" title="Buscar lançamentos atualizados do outro aplicativo no Firebase">
-              <span>📥 Puxar do Outro App</span>
-            </button>
-            <button type="button" class="btn btn-cinza" id="btnSincronizarAndamentoApp" style="color:#0369a1; border-color:#7dd3fc; display:flex; align-items:center; gap:5px;" title="Configurar conexão e diagnosticar nuvem compartilhada">
-              <span>⚙️ Sincronização & Diagnóstico</span>
-            </button>
-            <button type="button" class="btn btn-cinza" id="btnSincronizarReconhecimento" title="Preencher UF, Município e Bairro a partir da Configuração da Equipe">🔄 Sincronizar com Equipe</button>
+            <button type="button" class="btn btn-verde" id="btnSincronizarAndamentoApp" style="background:#0284c7; border-color:#0284c7;">🔄 Sincronizar c/ "Andamento dos quarteirões"</button>
+            <button type="button" class="btn btn-cinza" id="btnSincronizarReconhecimento">🔄 Sincronizar com Equipe</button>
             <button type="button" class="btn btn-cinza" id="btnLimparReconhecimento" style="color: #dc2626;">🧹 Limpar Tabela</button>
             <button type="button" class="btn btn-pdf" id="btnImprimirPDFReconhecimento">🖨️ Baixar PDF</button>
           </div>
@@ -1510,6 +1610,15 @@
               </table>
             </div>
           </div>
+          <div class="config-card">
+            <div class="config-card-header">
+              <h3>🔒 Compartilhamento & Acesso</h3>
+              <p>Gerencie o link de somente leitura (para visualizadores externos) e a senha/PIN de administrador.</p>
+            </div>
+            <div style="padding: 12px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-verde" id="btnGerenciarAcessoConfig" style="font-size: 0.8rem; font-weight: 700;">👥 Compartilhar Acesso ao Aplicativo</button>
+            </div>
+          </div>
         </div>
       </section>
       <section id="aba-config-estrato" class="conteudo-aba">
@@ -1735,65 +1844,37 @@
       </div>
     </div>
     <div class="modal-overlay" id="modalSincronizarAndamento">
-      <div class="modal-conteudo" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-conteudo" style="max-width: 650px;">
         <div class="modal-header">
           <h3 style="display: flex; align-items: center; gap: 8px;">🔄 Sincronização c/ "Andamento dos quarteirões"</h3>
           <button type="button" class="btn-fechar-modal" id="btnFecharModalSincronizarAndamento">&times;</button>
         </div>
         <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.85rem; color: #334155;">
           <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-              <strong style="color: #14532d; font-size: 0.92rem;">☁️ Conexão em Tempo Real (Firebase)</strong>
-              <span id="syncModalStatusBadge" style="background:#dcfce7; color:#166534; padding:3px 8px; border-radius:12px; font-weight:700; font-size:0.75rem; border:1px solid #86efac;">🟢 Conectado</span>
-            </div>
+            <strong style="color: #14532d; font-size: 0.92rem;">☁️ Sincronização em Tempo Real (Firebase)</strong>
             <p style="margin: 4px 0 8px; color: #166534; font-size: 0.8rem;">
-              Os dois aplicativos compartilham dados de <strong>Resumo de Reconhecimento</strong> em tempo real. Qualquer lançamento salvo no outro aplicativo pode ser recebido automaticamente ou puxado sob demanda.
+              Os dois aplicativos podem se comunicar e atualizar a mesma tabela de <strong>Resumo de Reconhecimento</strong> automaticamente em tempo real através do Firebase!
             </p>
-            <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; font-size: 0.78rem; display:flex; flex-direction:column; gap:6px;">
+            <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 0.78rem;">
               <div><strong>Servidor Firebase:</strong> <code style="color:#0369a1;">https://tabela-de-lancamentos-default-rtdb.firebaseio.com/</code></div>
-              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <label for="selectChaveReconhecimento" style="font-weight:700; color:#0f172a;">Chave no Firebase:</label>
-                <select id="selectChaveReconhecimento" style="flex:1; min-width:260px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.78rem; font-family:monospace; background:#f8fafc;">
-                  <option value="andamento_quarteiroes/resumo_reconhecimento" selected>andamento_quarteiroes/resumo_reconhecimento (Padrão)</option>
-                  <option value="andamento_quarteiroes/resumoReconhecimento">andamento_quarteiroes/resumoReconhecimento</option>
-                  <option value="andamento_quarteiroes/dados">andamento_quarteiroes/dados</option>
-                  <option value="andamento_quarteiroes">andamento_quarteiroes (Raiz)</option>
-                  <option value="resumo_reconhecimento">resumo_reconhecimento (Raiz)</option>
-                  <option value="resumoReconhecimento">resumoReconhecimento (Raiz)</option>
-                  <option value="reconhecimento">reconhecimento (Raiz)</option>
-                  <option value="andamento_dos_quarteiroes/resumo_reconhecimento">andamento_dos_quarteiroes/resumo_reconhecimento</option>
-                  <option value="custom">✏️ Outra chave personalizada...</option>
-                </select>
-              </div>
-              <div id="containerChaveCustom" style="display:none; margin-top:4px;">
-                <input type="text" id="inputChaveCustom" placeholder="Ex: meu_app/resumo_reconhecimento" style="width:100%; padding:4px 8px; border:1px solid #0284c7; border-radius:4px; font-size:0.78rem; font-family:monospace;" />
-              </div>
+              <div style="margin-top: 4px;"><strong>Chave Compartilhada:</strong> <code style="color:#166534; font-weight:700;">andamento_quarteiroes/resumo_reconhecimento</code></div>
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button type="button" class="btn btn-verde" id="btnPuxarNuvemAndamento" style="padding: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; background:#0284c7; border-color:#0284c7;">
-              <span>📥 Puxar Dados do Outro App</span>
-              <small style="font-weight: 400; opacity: 0.9; font-size: 0.72rem;">Busca lançamentos no Firebase e atualiza a tabela</small>
+            <button type="button" class="btn btn-verde" id="btnPuxarNuvemAndamento" style="padding: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+              <span>📥 Puxar da Nuvem Compartilhada</span>
+              <small style="font-weight: 400; opacity: 0.9; font-size: 0.72rem;">Atualizar com os dados do Andamento</small>
             </button>
             <button type="button" class="btn btn-cinza" id="btnEnviarNuvemAndamento" style="padding: 10px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1; border-color: #7dd3fc;">
-              <span>📤 Enviar Tabela Atual para Nuvem</span>
-              <small style="font-weight: 400; opacity: 0.9; font-size: 0.72rem;">Gravar dados desta tabela no nó compartilhado</small>
+              <span>📤 Enviar para Nuvem Compartilhada</span>
+              <small style="font-weight: 400; opacity: 0.9; font-size: 0.72rem;">Gravar tabela atual no nó compartilhado</small>
             </button>
-          </div>
-
-          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-              <strong style="font-size: 0.82rem; color: #1e40af;">🔍 Diagnóstico Completo da Nuvem (Ver chaves existentes):</strong>
-              <button type="button" class="btn btn-cinza" id="btnEscanearChavesFirebase" style="font-size:0.75rem; padding:3px 8px; background:#ffffff; color:#1d4ed8; border-color:#93c5fd;">🔍 Escanear Banco</button>
-            </div>
-            <p style="margin: 4px 0 6px; font-size: 0.76rem; color: #3b82f6;">Verifique se o outro aplicativo gravou dados em alguma outra chave ou nó do Firebase.</p>
-            <div id="resultadoDiagnosticoNuvem" style="margin-top:6px; font-size:0.75rem; max-height:140px; overflow-y:auto; background:#ffffff; border:1px solid #dbeafe; border-radius:4px; padding:6px; display:none;"></div>
           </div>
 
           <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px;">
             <strong style="font-size: 0.82rem; color: #0f172a;">📋 Transferência Direta (Copiar / Colar):</strong>
-            <p style="margin: 3px 0 6px; font-size: 0.76rem; color: #64748b;">Se preferir transferir os dados sem internet ou entre abas, você pode copiar ou colar o JSON estruturado abaixo:</p>
+            <p style="margin: 3px 0 6px; font-size: 0.76rem; color: #64748b;">Se preferir transferir os dados sem internet ou entre arquivos, você pode copiar ou colar os dados estruturados abaixo:</p>
             <textarea id="txtSyncReconhecimentoJSON" style="width: 100%; height: 60px; font-size: 0.72rem; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px; background: #ffffff;"></textarea>
             <div style="display: flex; gap: 8px; margin-top: 6px;">
               <button type="button" class="btn btn-cinza" id="btnCopiarJSONReconhecimento" style="font-size: 0.78rem;">📋 Copiar Dados</button>
@@ -1804,7 +1885,7 @@
           <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px; font-size: 0.78rem; color: #92400e;">
             <strong>💡 Como conectar o outro aplicativo ("Andamento dos quarteirões")?</strong>
             <p style="margin: 4px 0 0; line-height: 1.4;">
-              O aplicativo "Andamento dos quarteirões" pode salvar em <code>andamento_quarteiroes/resumo_reconhecimento</code> ou em qualquer uma das chaves monitoradas. Este sistema agora escuta todas as chaves comuns simultaneamente e mescla os dados automaticamente sem perder o que você já preencheu!
+              Basta que o aplicativo "Andamento dos quarteirões" leia e salve na mesma chave <code>andamento_quarteiroes/resumo_reconhecimento</code> no Firebase Realtime Database. Qualquer alteração feita lá reflete aqui automaticamente!
             </p>
           </div>
         </div>
@@ -1815,13 +1896,13 @@
     </div>
 
     <!-- Modal Compartilhar Acesso e Permissões -->
-    <div class="modal-overlay" id="modalCompartilharAcesso">
+    <div id="modalCompartilharAcesso" class="modal-overlay modal">
       <div class="modal-conteudo" style="max-width: 620px;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px;">
           <h3 style="margin: 0; color: #14532d; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
             👥 Compartilhar Acesso ao Aplicativo
           </h3>
-          <button type="button" class="btn-fechar-modal" id="btnFecharModalCompartilhar">✕</button>
+          <button type="button" class="btn-fechar-modal" id="btnFecharModalCompartilhar" onclick="fecharModalCompartilharAcesso()" aria-label="Fechar" title="Fechar (Esc)">✕</button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -1882,7 +1963,7 @@
           <!-- Alternar Modo Rápido -->
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 6px; border-top: 1px solid #e2e8f0;">
             <div style="font-size: 0.8rem; color: #475569;">
-              Status neste navegador: <span id="txtModoAtualStatus" style="font-weight: 800; color: #14532d;">👑 Editor</span>
+              Status neste navegador: <span id="txtModoAtualStatus" style="font-weight: 800; color: #14532d;">👑 Modo Editor</span>
             </div>
             <div style="display: flex; gap: 8px;">
               <button type="button" class="btn btn-cinza" id="btnTestarModoLeitura" style="font-size: 0.78rem;">
@@ -1896,13 +1977,13 @@
         </div>
 
         <div style="display: flex; justify-content: flex-end; margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
-          <button type="button" class="btn btn-cinza" id="btnFecharModalCompartilhar2">Fechar</button>
+          <button type="button" class="btn btn-cinza" id="btnFecharModalCompartilhar2" onclick="fecharModalCompartilharAcesso()">Fechar</button>
         </div>
       </div>
     </div>
 
     <!-- Modal Login Editor (Digitar PIN) -->
-    <div class="modal-overlay" id="modalLoginEditor">
+    <div id="modalLoginEditor" class="modal-overlay modal">
       <div class="modal-conteudo" style="max-width: 420px; text-align: center;">
         <div style="font-size: 2.2rem; margin-bottom: 6px;">🔑</div>
         <h3 style="margin: 0 0 6px; color: #14532d; font-size: 1.1rem;">Acesso de Administrador</h3>
@@ -1915,7 +1996,7 @@
             ❌ PIN incorreto. Tente novamente.
           </div>
           <div style="display: flex; justify-content: center; gap: 10px;">
-            <button type="button" class="btn btn-cinza" id="btnCancelarLoginEditor">Cancelar</button>
+            <button type="button" class="btn btn-cinza" id="btnCancelarLoginEditor" onclick="fecharModalLoginEditor()">Cancelar</button>
             <button type="submit" class="btn btn-verde" id="btnConfirmarLoginEditor" style="font-weight: 800; padding: 7px 18px;">Desbloquear</button>
           </div>
         </form>
@@ -1973,21 +2054,20 @@
         if (_modoAcessoAtual === "leitura") {
           document.body.classList.add("modo-leitura-ativo");
           if (badge) {
+            badge.style.display = "inline-flex";
             badge.className = "badge-modo-acesso leitura";
-            badge.innerHTML = "👀 Somente Leitura";
-            badge.title = "Clique para desbloquear como Editor com o PIN";
+            badge.innerHTML = "👀 Leitura";
+            badge.title = "Modo Somente Leitura (clique para autenticar como editor)";
           }
           if (banner) banner.style.display = "flex";
           if (statusTxt) statusTxt.innerHTML = "<span style='color:#0284c7;'>👀 Somente Leitura</span>";
         } else {
           document.body.classList.remove("modo-leitura-ativo");
           if (badge) {
-            badge.className = "badge-modo-acesso admin";
-            badge.innerHTML = "👑 Editor";
-            badge.title = "Permissão de acesso: clique para gerenciar";
+            badge.style.display = "none";
           }
           if (banner) banner.style.display = "none";
-          if (statusTxt) statusTxt.innerHTML = "<span style='color:#14532d;'>👑 Editor</span>";
+          if (statusTxt) statusTxt.innerHTML = "<span style='color:#14532d;'>👑 Modo Editor</span>";
         }
       }
       function inicializarModoAcesso() {
@@ -2026,13 +2106,17 @@
         if (statusTxt) {
           statusTxt.innerHTML = estaModoLeitura() 
             ? "<span style='color:#0284c7;'>👀 Somente Leitura</span>" 
-            : "<span style='color:#14532d;'>👑 Editor</span>";
+            : "<span style='color:#14532d;'>👑 Modo Editor</span>";
         }
         m.classList.add("ativo");
+        m.style.display = "flex";
       }
       function fecharModalCompartilharAcesso() {
         const m = document.getElementById("modalCompartilharAcesso");
-        if (m) m.classList.remove("ativo");
+        if (m) {
+          m.classList.remove("ativo");
+          m.style.display = "none";
+        }
       }
       function abrirModalLoginEditor() {
         const m = document.getElementById("modalLoginEditor");
@@ -2040,12 +2124,18 @@
         const msg = document.getElementById("msgErroPin");
         if (inP) { inP.value = ""; inP.style.borderColor = "#cbd5e1"; }
         if (msg) msg.style.display = "none";
-        if (m) m.classList.add("ativo");
+        if (m) {
+          m.classList.add("ativo");
+          m.style.display = "flex";
+        }
         setTimeout(() => { if (inP) inP.focus(); }, 150);
       }
       function fecharModalLoginEditor() {
         const m = document.getElementById("modalLoginEditor");
-        if (m) m.classList.remove("ativo");
+        if (m) {
+          m.classList.remove("ativo");
+          m.style.display = "none";
+        }
       }
       function verificarEAtivarEditor() {
         const inP = document.getElementById("inputPinLogin");
@@ -2120,7 +2210,7 @@
       const COLUNAS_6_11 = ["R","C","TB","PE","O","TOTAL"];
       const COLUNAS_12_20 = ["Trat.","Fec.","Recp.","Recs.","Aband.","Inf.","Pend.","IP","Rend."];
       const COLUNAS_21_28 = ["A1","A2","B","C","D1","D2","E","TOTAL"];
-      const COLUNAS_29_34 = ["Trat.","Lit.","g.","elim.","Foc.","Sup."];
+      const COLUNAS_29_34 = ["Trat.","Lit.","g.","Elim.","Foc.","Sup."];
       const LARGURAS_TABELA_SEMANA = ["165px","44px","44px","44px","38px","38px","38px","38px","38px","52px","44px","42px","44px","42px","44px","46px","46px","48px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
       const LARGURAS_TABELA_CICLO = ["100px","160px","44px","44px","44px","38px","38px","38px","38px","38px","52px","44px","42px","44px","42px","44px","46px","46px","48px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
       const CAMPOS_CABECALHO = ["bairro","estrato","equipe","agentesEquipe","supervisor","mes","ciclo","cicloInicio","cicloTermino","semana","semanaInicio","semanaTermino"];
@@ -2259,7 +2349,10 @@
         if (wrapper) wrapper.scrollLeft = 0;
         void el.offsetWidth;
         let fw;
-        if (ehRetrato) { fw = 1000; }
+        if (ehRetrato) {
+          if (elementoId === "areaResumoReconhecimento") { fw = 860; }
+          else { fw = 1000; }
+        }
         else if (elementoId === "areaImpressao") { const baseW = Math.round(el.getBoundingClientRect().width); const wrapEl = el.querySelector(".resumo-wrapper"); const tableW = wrapEl ? wrapEl.scrollWidth : 0; const padH = 44; fw = Math.max(baseW, tableW + padH); }
         else if (elementoId === "areaImpressaoCiclo") { fw = 1680; }
         else if (elementoId === "areaProducaoIndividual") { fw = 1400; }
@@ -2267,7 +2360,7 @@
         else if (elementoId === "areaRelatorioCampo") { fw = 1400; }
         else if (elementoId === "areaQuarteiroesDesignados") { fw = 1200; }
         else if (elementoId === "areaConfigEstrato") { fw = 1100; }
-        else if (elementoId === "areaResumoReconhecimento") { fw = 1400; }
+        else if (elementoId === "areaResumoReconhecimento") { fw = 860; }
         else { fw = 1580; }
         el.style.width = fw + "px"; el.style.maxWidth = "none"; el.style.minWidth = fw + "px";
         void el.offsetWidth;
@@ -2287,7 +2380,18 @@
               const rep = cd.createElement('div'); rep.textContent = v; rep.className = inp.className;
               const ff = inp.style.getPropertyValue("font-family"); const fs = inp.style.getPropertyValue("font-size"); const lh = inp.style.getPropertyValue("line-height");
               const ptd = inp.closest('td');
-              if (ptd) { rep.style.cssText = `width:100%;text-align:center;font-weight:700;font-size:0.78rem;line-height:1.3;padding:0;color:#14532d;display:block;`; ptd.style.padding = '10px 2px'; ptd.style.verticalAlign = 'middle'; }
+              if (ptd) {
+                const ehRec = ptd.closest('.reconhecimento-tabela');
+                if (ehRec) {
+                  rep.style.cssText = `width:100%;text-align:center;font-weight:700;font-size:0.65rem;line-height:1.2;padding:0;color:#14532d;display:block;`;
+                  ptd.style.padding = '1.5px 1px';
+                  ptd.style.verticalAlign = 'middle';
+                } else {
+                  rep.style.cssText = `width:100%;text-align:center;font-weight:700;font-size:0.78rem;line-height:1.3;padding:0;color:#14532d;display:block;`;
+                  ptd.style.padding = '10px 2px';
+                  ptd.style.verticalAlign = 'middle';
+                }
+              }
               else { rep.style.cssText = `display:inline-block;border-bottom:1.5px solid #94a3b8;padding:1px 6px 3px;font-size:0.82rem;font-weight:600;color:#1e293b;min-height:20px;`; }
               if (ff) rep.style.setProperty("font-family", ff, "important");
               if (fs) rep.style.setProperty("font-size", fs, "important");
@@ -2567,404 +2671,34 @@
         });
         return { melhor, maxL, chaveEncontrada };
       }
-
-      // --- MÓDULO DE SINCRONIZAÇÃO RESUMO DE RECONHECIMENTO COM "ANDAMENTO DOS QUARTEIRÕES" ---
-      const CHAVE_STORAGE_RECONHECIMENTO_CUSTOM = "pmcd_chave_reconhecimento_customizada";
-      const CHAVES_RECONHECIMENTO_MONITORADAS = [
-        "andamento_quarteiroes/resumo_reconhecimento",
-        "andamento_quarteiroes/resumoReconhecimento",
-        "andamento_quarteiroes/dados",
-        "andamento_quarteiroes/quarteiroes",
-        "andamento_quarteiroes",
-        "resumo_reconhecimento",
-        "resumoReconhecimento",
-        "reconhecimento",
-        "andamento_dos_quarteiroes/resumo_reconhecimento",
-        "andamento_dos_quarteiroes",
-        "quarteiroes/resumo_reconhecimento"
-      ];
-
-      function obterChaveReconhecimentoAtiva() {
-        try {
-          const c = localStorage.getItem(CHAVE_STORAGE_RECONHECIMENTO_CUSTOM);
-          if (c && c.trim()) return c.trim();
-        } catch(e) {}
-        return "andamento_quarteiroes/resumo_reconhecimento";
-      }
-
-      function definirChaveReconhecimentoAtiva(chave) {
-        if (!chave || !chave.trim()) chave = "andamento_quarteiroes/resumo_reconhecimento";
-        try { localStorage.setItem(CHAVE_STORAGE_RECONHECIMENTO_CUSTOM, chave.trim()); } catch(e) {}
-      }
-
-      function extrairLinhaReconhecimento(item, defQuart) {
-        const q = item.quarteirao ?? item.Quarteirao ?? item.q ?? item.numero ?? item.num ?? String(defQuart);
-        const valR = item.r ?? item.R ?? item.res ?? item.residencia ?? item.residencias ?? item.imoveis_r ?? "";
-        const valC = item.c ?? item.C ?? item.com ?? item.comercio ?? item.comercios ?? item.imoveis_c ?? "";
-        const valTB = item.tb ?? item.TB ?? item.terreno ?? item.terrenos ?? item.terrenobaldio ?? item.terreno_baldio ?? "";
-        const valPE = item.pe ?? item.PE ?? item.ponto ?? item.pontoestrategico ?? item.ponto_estrategico ?? "";
-        const valO = item.o ?? item.O ?? item.outro ?? item.outros ?? "";
-        return {
-          quarteirao: String(q),
-          r: (valR !== "" && valR !== undefined && valR !== null) ? String(valR) : "",
-          c: (valC !== "" && valC !== undefined && valC !== null) ? String(valC) : "",
-          tb: (valTB !== "" && valTB !== undefined && valTB !== null) ? String(valTB) : "",
-          pe: (valPE !== "" && valPE !== undefined && valPE !== null) ? String(valPE) : "",
-          o: (valO !== "" && valO !== undefined && valO !== null) ? String(valO) : ""
-        };
-      }
-
-      function obterResumoReconhecimentoPadrao() {
-        const t1 = [];
-        for (let i = 1; i <= 32; i++) t1.push({ quarteirao: String(i), r: "", c: "", tb: "", pe: "", o: "" });
-        const t2 = [];
-        for (let i = 33; i <= 64; i++) t2.push({ quarteirao: String(i), r: "", c: "", tb: "", pe: "", o: "" });
-        return {
-          cabecalho: { uf: "", distrito: "", municipio: "", localidade: "", subdistrito: "", sublocal: "", categoria: "" },
-          tabela1: t1,
-          tabela2: t2
-        };
-      }
-
-      function normalizarDadosReconhecimento(dados) {
-        if (!dados) return obterResumoReconhecimentoPadrao();
-        if (typeof dados === "string") {
-          try { dados = JSON.parse(dados); } catch(e) { return obterResumoReconhecimentoPadrao(); }
-        }
-        if (!dados || typeof dados !== "object") return obterResumoReconhecimentoPadrao();
-
-        // Desempacota potenciais contêineres aninhados enviados pelo outro aplicativo
-        if (dados.resumo_reconhecimento && typeof dados.resumo_reconhecimento === "object") dados = dados.resumo_reconhecimento;
-        else if (dados.resumoReconhecimento && typeof dados.resumoReconhecimento === "object") dados = dados.resumoReconhecimento;
-        else if (dados.reconhecimento && typeof dados.reconhecimento === "object") dados = dados.reconhecimento;
-
-        const res = obterResumoReconhecimentoPadrao();
-        const cab = dados.cabecalho || dados.header || dados.cab || dados.dadosGerais;
-        if (cab && typeof cab === "object") {
-          res.cabecalho.uf = cab.uf || cab.UF || cab.unidadeFederal || "";
-          res.cabecalho.distrito = cab.distrito || cab.Distrito || "";
-          res.cabecalho.municipio = cab.municipio || cab.Municipio || "";
-          res.cabecalho.localidade = cab.localidade || cab.Localidade || cab.bairro || "";
-          res.cabecalho.subdistrito = cab.subdistrito || cab.Subdistrito || "";
-          res.cabecalho.sublocal = cab.sublocal || cab.Sublocal || "";
-          res.cabecalho.categoria = cab.categoria || cab.Categoria || "";
-        }
-
-        function inserirLinha(item, idxFallback) {
-          if (!item || typeof item !== "object") return;
-          const qStr = item.quarteirao ?? item.Quarteirao ?? item.q ?? item.numero ?? item.num ?? String(idxFallback + 1);
-          const qNum = parseInt(qStr, 10);
-          const linha = extrairLinhaReconhecimento(item, qStr);
-          if (!isNaN(qNum) && qNum >= 1 && qNum <= 32) {
-            res.tabela1[qNum - 1] = linha;
-          } else if (!isNaN(qNum) && qNum >= 33 && qNum <= 64) {
-            res.tabela2[qNum - 33] = linha;
-          } else if (idxFallback < 32) {
-            res.tabela1[idxFallback] = linha;
-          } else if (idxFallback < 64) {
-            res.tabela2[idxFallback - 32] = linha;
-          }
-        }
-
-        if (dados.tabela1 || dados.tabela2) {
-          const t1 = Array.isArray(dados.tabela1) ? dados.tabela1 : Object.values(dados.tabela1 || {});
-          const t2 = Array.isArray(dados.tabela2) ? dados.tabela2 : Object.values(dados.tabela2 || {});
-          t1.forEach((item, i) => { if (item) inserirLinha(item, i); });
-          t2.forEach((item, i) => { if (item) inserirLinha(item, i + 32); });
-          return res;
-        }
-
-        const listaUnica = Array.isArray(dados) ? dados : (
-          Array.isArray(dados.tabela) ? dados.tabela :
-          Array.isArray(dados.quarteiroes) ? dados.quarteiroes :
-          Array.isArray(dados.linhas) ? dados.linhas :
-          Array.isArray(dados.dados) ? dados.dados : null
-        );
-
-        if (listaUnica) {
-          listaUnica.forEach((item, i) => { if (item) inserirLinha(item, i); });
-          return res;
-        }
-
-        const quarteiroesObj = (dados.quarteiroes && typeof dados.quarteiroes === "object") ? dados.quarteiroes : dados;
-        for (const [k, item] of Object.entries(quarteiroesObj)) {
-          if (item && typeof item === "object") {
-            const match = k.match(/^(?:quarteirao_?|q)?(\d+)$/i);
-            if (match) {
-              const qNum = parseInt(match[1], 10);
-              inserirLinha({ ...item, quarteirao: String(qNum) }, qNum - 1);
-            }
-          }
-        }
-
-        return res;
-      }
-
-      function contarCamposPreenchidosReconhecimento(rec) {
+      function contarPreenchidosReconhecimento(rec) {
         if (!rec || typeof rec !== "object") return 0;
         let count = 0;
-        const cab = rec.cabecalho || {};
-        for (const k of ["uf", "distrito", "municipio", "localidade", "subdistrito", "sublocal", "categoria"]) {
-          if (cab[k] && String(cab[k]).trim() !== "") count++;
-        }
-        const contarLinhas = (linhas) => {
-          if (!Array.isArray(linhas)) return;
-          linhas.forEach(l => {
-            if (!l) return;
-            if (l.r && String(l.r).trim() !== "") count++;
-            if (l.c && String(l.c).trim() !== "") count++;
-            if (l.tb && String(l.tb).trim() !== "") count++;
-            if (l.pe && String(l.pe).trim() !== "") count++;
-            if (l.o && String(l.o).trim() !== "") count++;
-          });
+        const checar = (l) => {
+          if (!l) return;
+          const tem = (l.r !== "" && l.r !== undefined && l.r !== null) ||
+                      (l.c !== "" && l.c !== undefined && l.c !== null) ||
+                      (l.tb !== "" && l.tb !== undefined && l.tb !== null) ||
+                      (l.pe !== "" && l.pe !== undefined && l.pe !== null) ||
+                      (l.o !== "" && l.o !== undefined && l.o !== null);
+          if (tem) count++;
         };
-        contarLinhas(rec.tabela1);
-        contarLinhas(rec.tabela2);
+        (rec.tabela1 || []).forEach(checar);
+        (rec.tabela2 || []).forEach(checar);
         return count;
       }
-
-      function mesclarDadosReconhecimento(baseLocal, dadosNovos) {
-        const normLocal = normalizarDadosReconhecimento(baseLocal);
-        const normNovo = normalizarDadosReconhecimento(dadosNovos);
-
-        const qtdLocal = contarCamposPreenchidosReconhecimento(normLocal);
-        const qtdNovo = contarCamposPreenchidosReconhecimento(normNovo);
-
-        if (qtdLocal === 0) return normNovo;
-        if (qtdNovo === 0) return normLocal;
-
-        const cabMerged = { ...normLocal.cabecalho };
-        for (const k of Object.keys(normNovo.cabecalho || {})) {
-          if (normNovo.cabecalho[k] && String(normNovo.cabecalho[k]).trim() !== "") {
-            cabMerged[k] = normNovo.cabecalho[k];
-          }
-        }
-
-        const mergeLinhas = (linhasLocal, linhasNovo) => {
-          return linhasLocal.map((lLocal, idx) => {
-            const lNovo = linhasNovo[idx];
-            if (!lNovo) return lLocal;
-            const temNovo = (lNovo.r !== "" || lNovo.c !== "" || lNovo.tb !== "" || lNovo.pe !== "" || lNovo.o !== "");
-            if (temNovo) {
-              return {
-                quarteirao: lNovo.quarteirao || lLocal.quarteirao,
-                r: lNovo.r !== "" ? lNovo.r : lLocal.r,
-                c: lNovo.c !== "" ? lNovo.c : lLocal.c,
-                tb: lNovo.tb !== "" ? lNovo.tb : lLocal.tb,
-                pe: lNovo.pe !== "" ? lNovo.pe : lLocal.pe,
-                o: lNovo.o !== "" ? lNovo.o : lLocal.o
-              };
-            }
-            return lLocal;
-          });
-        };
-
-        return {
-          cabecalho: cabMerged,
-          tabela1: mergeLinhas(normLocal.tabela1, normNovo.tabela1),
-          tabela2: mergeLinhas(normLocal.tabela2, normNovo.tabela2)
-        };
-      }
-
-      function transmitirReconhecimentoLocalmente(dados) {
-        try {
-          const ch1 = new BroadcastChannel("pmcd_reconhecimento_sync");
-          ch1.postMessage({ tipo: "reconhecimento_atualizado", dados });
-          ch1.close();
-        } catch(e) {}
-        try {
-          const ch2 = new BroadcastChannel("andamento_quarteiroes_channel");
-          ch2.postMessage({ tipo: "reconhecimento_atualizado", dados });
-          ch2.close();
-        } catch(e) {}
-      }
-
-      function salvarResumoReconhecimentoNuvem(forcar = false) {
-        if (estaModoLeitura()) return;
-        if (!dbAtivo || !db) return;
-        const rec = garantirResumoReconhecimento();
-        const preenchidos = contarCamposPreenchidosReconhecimento(rec);
-        if (!forcar && preenchidos === 0) return; // Não envia vazio para não sobrescrever o outro app
-
-        const chave = obterChaveReconhecimentoAtiva();
-        const payload = JSON.parse(JSON.stringify(rec));
-        db.ref(chave).set(payload)
-          .then(() => {
-            transmitirReconhecimentoLocalmente(payload);
-            const bdg = document.getElementById("badgeReconhecimentoStatus");
-            if (bdg) {
-              bdg.textContent = "☁️ Enviado à Nuvem!";
-              setTimeout(() => { bdg.textContent = "💾 Salvo automaticamente"; }, 2500);
-            }
-          })
-          .catch(e => console.warn("[PMCD] Erro ao sincronizar reconhecimento na nuvem:", e));
-      }
-
-      async function puxarDadosReconhecimentoNuvem(chaveEspecifica, feedbackVisual = true) {
-        if (!dbAtivo || !db) {
-          if (feedbackVisual) alert("⚠️ Conexão com Firebase não está ativa.");
-          return false;
-        }
-        const chaveAlvo = chaveEspecifica || obterChaveReconhecimentoAtiva();
-        const chavesParaTestar = [chaveAlvo, ...CHAVES_RECONHECIMENTO_MONITORADAS.filter(c => c !== chaveAlvo)];
-
-        let dadosEncontrados = null;
-        let chaveComDados = "";
-        let totalImoveis = 0;
-        let totalQuart = 0;
-
-        for (const ch of chavesParaTestar) {
+      let timeoutSalvarReconhecimentoNuvem = null;
+      function salvarReconhecimentoCompartilhado() {
+        if (estaModoLeitura() || !dbAtivo || !db) return;
+        const rec = estado.resumoReconhecimento;
+        if (!rec) return;
+        clearTimeout(timeoutSalvarReconhecimentoNuvem);
+        timeoutSalvarReconhecimentoNuvem = setTimeout(() => {
           try {
-            const snap = await db.ref(ch).once("value");
-            const val = snap.val();
-            if (val && typeof val === "object") {
-              const norm = normalizarDadosReconhecimento(val);
-              const preenchidos = contarCamposPreenchidosReconhecimento(norm);
-              if (preenchidos > 0) {
-                const tot1 = calcularTotaisTabelaReconhecimento(norm.tabela1);
-                const tot2 = calcularTotaisTabelaReconhecimento(norm.tabela2);
-                const qTotal = tot1.quartComDados + tot2.quartComDados;
-                const imovTotal = tot1.totGeral + tot2.totGeral;
-                if (qTotal > 0 || imovTotal > 0 || preenchidos > 0) {
-                  dadosEncontrados = norm;
-                  chaveComDados = ch;
-                  totalQuart = qTotal;
-                  totalImoveis = imovTotal;
-                  break;
-                }
-              }
-            }
-          } catch(e) {
-            console.warn("[PMCD] Testando chave:", ch, e);
-          }
-        }
-
-        if (dadosEncontrados) {
-          estado.resumoReconhecimento = mesclarDadosReconhecimento(estado.resumoReconhecimento, dadosEncontrados);
-          salvar();
-          renderizarResumoReconhecimento();
-          const bdg = document.getElementById("badgeReconhecimentoStatus");
-          if (bdg) {
-            bdg.textContent = `✅ Recebido da Nuvem (${totalQuart} quart.)!`;
-            setTimeout(() => { bdg.textContent = "💾 Salvo automaticamente"; }, 3500);
-          }
-          const txtSync = document.getElementById("txtSyncReconhecimentoJSON");
-          if (txtSync) txtSync.value = JSON.stringify(estado.resumoReconhecimento, null, 2);
-          if (feedbackVisual) {
-            alert(`✅ Sucesso! Recebidos lançamentos de ${totalQuart} quarteirões (${formatarNumeroMilhar(totalImoveis)} imóveis totais) da chave:\n'${chaveComDados}'`);
-          }
-          return true;
-        } else {
-          if (feedbackVisual) {
-            alert(`ℹ️ Nenhuma das chaves monitoradas no Firebase possui lançamentos de reconhecimento preenchidos no momento.\n\nChaves testadas:\n• ${chavesParaTestar.join("\n• ")}\n\n💡 Verifique se o outro aplicativo salvou os dados ou use o botão 'Escanear Banco' no painel de sincronização.`);
-          }
-          return false;
-        }
+            db.ref("andamento_quarteiroes/resumo_reconhecimento").set(JSON.parse(JSON.stringify(rec))).catch(() => {});
+          } catch(e) {}
+        }, 800);
       }
-
-      async function diagnosticarNuvemFirebase() {
-        const container = document.getElementById("resultadoDiagnosticoNuvem");
-        if (!container) return;
-        container.style.display = "block";
-        container.innerHTML = `<div style="color:#0369a1; padding:4px;">⏳ Escaneando banco Firebase em busca de lançamentos...</div>`;
-
-        if (!dbAtivo || !db) {
-          container.innerHTML = `<div style="color:#dc2626; padding:4px;">❌ Firebase não está conectado.</div>`;
-          return;
-        }
-
-        const chavesParaVerificar = [
-          "andamento_quarteiroes/resumo_reconhecimento",
-          "andamento_quarteiroes/resumoReconhecimento",
-          "andamento_quarteiroes/dados",
-          "andamento_quarteiroes/quarteiroes",
-          "andamento_quarteiroes",
-          "resumo_reconhecimento",
-          "resumoReconhecimento",
-          "reconhecimento",
-          "andamento_dos_quarteiroes/resumo_reconhecimento",
-          "andamento_dos_quarteiroes",
-          "quarteiroes/resumo_reconhecimento",
-          "pmcd_dados/principal/resumoReconhecimento"
-        ];
-
-        let htmlResultados = `<div style="font-weight:700; margin-bottom:6px; color:#1e3a8a;">Resultados da Verificação no Firebase:</div>`;
-        let encontrouAlgum = false;
-
-        for (const ch of chavesParaVerificar) {
-          try {
-            const snap = await db.ref(ch).once("value");
-            const val = snap.val();
-            if (val !== null && val !== undefined) {
-              const norm = normalizarDadosReconhecimento(val);
-              const preenchidos = contarCamposPreenchidosReconhecimento(norm);
-              const tot1 = calcularTotaisTabelaReconhecimento(norm.tabela1);
-              const tot2 = calcularTotaisTabelaReconhecimento(norm.tabela2);
-              const totGeral = tot1.totGeral + tot2.totGeral;
-              const totQuart = tot1.quartComDados + tot2.quartComDados;
-
-              if (totQuart > 0 || totGeral > 0) {
-                encontrouAlgum = true;
-                htmlResultados += `
-                  <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:4px; padding:6px 8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                      <strong style="color:#166534;">✅ ${ch}</strong><br/>
-                      <span style="color:#15803d; font-size:0.72rem;">${totQuart} quarteirões com dados • ${formatarNumeroMilhar(totGeral)} imóveis no total</span>
-                    </div>
-                    <button type="button" class="btn btn-verde" onclick="window.aplicarChaveDiagnostico('${ch}')" style="font-size:0.72rem; padding:3px 8px; font-weight:700;">📥 Importar</button>
-                  </div>
-                `;
-              } else {
-                htmlResultados += `
-                  <div style="color:#64748b; padding:2px 0; border-bottom:1px dashed #e2e8f0; font-size:0.72rem;">
-                    • <code>${ch}</code>: Chave existe, mas sem quarteirões preenchidos.
-                  </div>
-                `;
-              }
-            } else {
-              htmlResultados += `
-                <div style="color:#94a3b8; padding:2px 0; font-size:0.72rem;">
-                  • <code>${ch}</code>: Vazia (nó não existe no Firebase).
-                </div>
-              `;
-            }
-          } catch(e) {
-            htmlResultados += `<div style="color:#dc2626; font-size:0.72rem;">• <code>${ch}</code>: Erro ao ler: ${e.message}</div>`;
-          }
-        }
-
-        if (!encontrouAlgum) {
-          htmlResultados += `
-            <div style="margin-top:6px; color:#b45309; background:#fffbeb; padding:6px; border-radius:4px;">
-              ℹ️ Nenhuma das chaves contém quarteirões preenchidos no momento. Verifique se o outro aplicativo salvou os dados ou use o botão <strong>"Enviar Tabela Atual para Nuvem"</strong> caso queira transferir desta tabela para o outro aplicativo.
-            </div>
-          `;
-        }
-
-        container.innerHTML = htmlResultados;
-      }
-
-      window.aplicarChaveDiagnostico = function(chave) {
-        definirChaveReconhecimentoAtiva(chave);
-        const sel = document.getElementById("selectChaveReconhecimento");
-        if (sel) {
-          let opt = Array.from(sel.options).find(o => o.value === chave);
-          if (!opt) {
-            opt = document.createElement("option");
-            opt.value = chave;
-            opt.textContent = chave;
-            sel.appendChild(opt);
-          }
-          sel.value = chave;
-        }
-        puxarDadosReconhecimentoNuvem(chave, true).then(sucesso => {
-          if (sucesso) {
-            const modal = document.getElementById("modalSincronizarAndamento");
-            if (modal) modal.classList.remove("ativo");
-          }
-        });
-      };
-
       function salvarNuvem() {
         if (estaModoLeitura()) return;
         if (!dbAtivo || !db) return;
@@ -2981,25 +2715,42 @@
               .then(() => { sincronizadoInicial = true; atualizarStatusNuvem("☁️ Nuvem OK", "online"); })
               .catch(() => atualizarStatusNuvem("⚠️ Erro Nuvem", "offline"))
               .finally(() => setTimeout(() => { salvandoLocalmente = false; }, 400));
+            // Sincroniza no nó compartilhado SOMENTE se houver quarteirões preenchidos localmente
+            if (estado.resumoReconhecimento && contarPreenchidosReconhecimento(estado.resumoReconhecimento) > 0) {
+              salvarReconhecimentoCompartilhado();
+            }
           } catch (e) { salvandoLocalmente = false; atualizarStatusNuvem("⚠️ Erro Local", "offline"); }
         }, 500);
       }
-
+      function aplicarAtualizacaoReconhecimentoNuvem(dadosExternos, origem = "Andamento") {
+        if (!dadosExternos || typeof dadosExternos !== "object") return;
+        const normalizado = normalizarDadosReconhecimento(dadosExternos);
+        const qExt = contarPreenchidosReconhecimento(normalizado);
+        const qLoc = contarPreenchidosReconhecimento(estado.resumoReconhecimento);
+        const temCabExt = normalizado.cabecalho && (normalizado.cabecalho.municipio || normalizado.cabecalho.localidade || normalizado.cabecalho.distrito);
+        // Aplica se vier com dados ou se local estiver vazio
+        if (qExt > 0 || qLoc === 0 || temCabExt) {
+          const strAtual = JSON.stringify(estado.resumoReconhecimento || {});
+          const strNovo = JSON.stringify(normalizado);
+          if (strAtual !== strNovo) {
+            estado.resumoReconhecimento = normalizado;
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+            renderizarResumoReconhecimento();
+            const bdg = document.getElementById("badgeReconhecimentoStatus");
+            if (bdg) {
+              bdg.textContent = `🔄 Atualizado c/ ${origem} (${qExt} quart.)!`;
+              setTimeout(() => { bdg.textContent = "💾 Salvo automaticamente"; }, 4000);
+            }
+          }
+        }
+      }
       function iniciarSincronizacaoNuvem() {
         if (!dbAtivo && !inicializarFirebase()) { atualizarStatusNuvem("⚙️ Modo Local", "offline"); return; }
         atualizarStatusNuvem("🔄 Conectando...", "salvando");
         db.ref(".info/connected").on("value", snap => {
           const on = snap.val() === true;
           atualizarStatusNuvem(on ? (sincronizadoInicial ? "☁️ Nuvem OK" : "🔄 Sincronizando...") : "⚠️ Desconectado", on ? "online" : "offline");
-          const bdgModal = document.getElementById("syncModalStatusBadge");
-          if (bdgModal) {
-            bdgModal.textContent = on ? "🟢 Conectado" : "⚠️ Desconectado";
-            bdgModal.style.background = on ? "#dcfce7" : "#fee2e2";
-            bdgModal.style.color = on ? "#166534" : "#991b1b";
-            bdgModal.style.borderColor = on ? "#86efac" : "#fca5a5";
-          }
         });
-
         db.ref("pmcd_dados/principal").on("value", snapshot => {
           if (salvandoLocalmente) return;
           sincronizadoInicial = true;
@@ -3012,13 +2763,11 @@
               salvarNuvem();
               return;
             }
-            // Preserva e mescla resumoReconhecimento para não perder dados recebidos do outro app
-            if (estado.resumoReconhecimento && d.resumoReconhecimento) {
-              d.resumoReconhecimento = mesclarDadosReconhecimento(estado.resumoReconhecimento, d.resumoReconhecimento);
-            } else if (estado.resumoReconhecimento && !d.resumoReconhecimento) {
-              d.resumoReconhecimento = estado.resumoReconhecimento;
-            }
+            const recLocalPreenchidos = contarPreenchidosReconhecimento(estado.resumoReconhecimento);
+            const recNuvemPreenchidos = contarPreenchidosReconhecimento(d.resumoReconhecimento);
+            const recParaManter = (recLocalPreenchidos > recNuvemPreenchidos) ? estado.resumoReconhecimento : d.resumoReconhecimento;
             estado = d;
+            if (recParaManter) estado.resumoReconhecimento = recParaManter;
             if (estado._migracaoObsCiclo === undefined) estado._migracaoObsCiclo = false;
             if (!estado.quarteiroesConcluidos) estado.quarteiroesConcluidos = {};
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
@@ -3034,71 +2783,32 @@
           }
         }, () => atualizarStatusNuvem("⚠️ Offline", "offline"));
 
-        // Ouvintes em tempo real para todas as chaves monitoradas do "Andamento dos quarteirões"
-        CHAVES_RECONHECIMENTO_MONITORADAS.forEach(caminho => {
-          try {
-            db.ref(caminho).on("value", snapshot => {
-              if (salvandoLocalmente) return;
-              const dadosExternos = snapshot.val();
-              if (!dadosExternos || typeof dadosExternos !== "object") return;
-              const normalizado = normalizarDadosReconhecimento(dadosExternos);
-              const qtdNovos = contarCamposPreenchidosReconhecimento(normalizado);
-              if (qtdNovos === 0) return; // Ignora nós vazios
-
-              const mesclado = mesclarDadosReconhecimento(estado.resumoReconhecimento, normalizado);
-              const strAtual = JSON.stringify(estado.resumoReconhecimento || {});
-              const strNovo = JSON.stringify(mesclado);
-              if (strAtual !== strNovo) {
-                console.log(`[PMCD] Recebidos ${qtdNovos} dados de reconhecimento da chave: ${caminho}`);
-                estado.resumoReconhecimento = mesclado;
-                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
-                if (document.getElementById("aba-resumo-reconhecimento")?.classList.contains("ativo")) {
-                  renderizarResumoReconhecimento();
-                }
-                const bdg = document.getElementById("badgeReconhecimentoStatus");
-                if (bdg) {
-                  const nomeCurto = caminho.split("/").pop();
-                  bdg.textContent = `🔄 Atualizado da Nuvem (${nomeCurto})!`;
-                  setTimeout(() => { bdg.textContent = "💾 Salvo automaticamente"; }, 3500);
-                }
-              }
-            });
-          } catch(e) {}
+        // Ouvinte em tempo real para a chave compartilhada com o aplicativo "Andamento dos quarteirões"
+        db.ref("andamento_quarteiroes/resumo_reconhecimento").on("value", snapshot => {
+          aplicarAtualizacaoReconhecimentoNuvem(snapshot.val(), "Andamento");
         });
 
-        // Sincronização entre abas no mesmo navegador (BroadcastChannel & localStorage storage event)
-        try {
-          const bcRecon = new BroadcastChannel("pmcd_reconhecimento_sync");
-          bcRecon.onmessage = (ev) => {
-            if (ev.data && (ev.data.tipo === "reconhecimento_atualizado" || ev.data.tabela1)) {
-              const dados = ev.data.dados || ev.data;
-              const norm = normalizarDadosReconhecimento(dados);
-              if (contarCamposPreenchidosReconhecimento(norm) > 0) {
-                estado.resumoReconhecimento = mesclarDadosReconhecimento(estado.resumoReconhecimento, norm);
-                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
-                if (document.getElementById("aba-resumo-reconhecimento")?.classList.contains("ativo")) {
-                  renderizarResumoReconhecimento();
-                }
-              }
-            }
-          };
-        } catch(e) {}
-
-        window.addEventListener("storage", ev => {
-          if (ev.key && (ev.key.includes("reconhecimento") || ev.key.includes("andamento_quarteiroes")) && ev.newValue) {
-            try {
-              const p = JSON.parse(ev.newValue);
-              const norm = normalizarDadosReconhecimento(p);
-              if (contarCamposPreenchidosReconhecimento(norm) > 0) {
-                estado.resumoReconhecimento = mesclarDadosReconhecimento(estado.resumoReconhecimento, norm);
-                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
-                if (document.getElementById("aba-resumo-reconhecimento")?.classList.contains("ativo")) {
-                  renderizarResumoReconhecimento();
-                }
-              }
-            } catch(e) {}
+        // Ouvinte de apoio para andamento_quarteiroes
+        db.ref("andamento_quarteiroes").on("value", snapshot => {
+          const val = snapshot.val();
+          if (val && typeof val === "object") {
+            const dados = val.resumo_reconhecimento || (val.quarteiroes ? val : (val.tabela1 ? val : null));
+            if (dados) aplicarAtualizacaoReconhecimentoNuvem(dados, "Andamento");
           }
         });
+
+        // Consulta inicial imediata da chave compartilhada para garantir recebimento dos lançamentos
+        Promise.all([
+          db.ref("andamento_quarteiroes/resumo_reconhecimento").once("value"),
+          db.ref("andamento_quarteiroes").once("value")
+        ]).then(([snapResumo, snapGeral]) => {
+          const valResumo = snapResumo.val();
+          const valGeral = snapGeral.val();
+          const dados = (valResumo && typeof valResumo === "object") ? valResumo : (valGeral?.resumo_reconhecimento || (valGeral?.quarteiroes ? valGeral : (valGeral?.tabela1 ? valGeral : null)));
+          if (dados && typeof dados === "object") {
+            aplicarAtualizacaoReconhecimentoNuvem(dados, "Andamento");
+          }
+        }).catch(() => {});
       }
       function salvar() {
         if (estaModoLeitura()) return;
@@ -3398,15 +3108,15 @@
       }
       function dashAgregarCiclo(ano, ciclo) {
         const semanas = dashSemanasDoCiclo(ano, ciclo);
-        const agg = { semanas: semanas.length, diasProd: 0, PROGRAMADOS: 0, TRABALHADO: 0, TOTAL: 0, INFORMADOS: 0, PENDENCIAS: 0, TRATADOS_GERAL: 0, SUPERVISAO: 0, DEP: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_GRAMAS: 0, porSemana: [], porAgente: {} };
+        const agg = { semanas: semanas.length, diasProd: 0, PROGRAMADOS: 0, TRABALHADO: 0, TOTAL: 0, INFORMADOS: 0, PENDENCIAS: 0, RECUPERADOS: 0, TRATADOS_GERAL: 0, SUPERVISAO: 0, DEP: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_GRAMAS: 0, porSemana: [], porAgente: {} };
         TIPOS_DEPOSITOS.forEach(t => agg.DEP[t] = 0);
         semanas.forEach(sk => {
           const tS = calcularTotaisSemana(sk, estado.semanas);
           if (tS) {
-            agg.diasProd += tS.diasComProducao; agg.PROGRAMADOS += tS.PROGRAMADOS; agg.TRABALHADO += tS.TRABALHADO; agg.TOTAL += tS.TOTAL; agg.INFORMADOS += tS.INFORMADOS; agg.PENDENCIAS += tS.PENDENCIAS; agg.TRATADOS_GERAL += tS.TRATADOS_GERAL; agg.SUPERVISAO += tS.SUPERVISAO;
+            agg.diasProd += tS.diasComProducao; agg.PROGRAMADOS += tS.PROGRAMADOS; agg.TRABALHADO += tS.TRABALHADO; agg.TOTAL += tS.TOTAL; agg.INFORMADOS += tS.INFORMADOS; agg.PENDENCIAS += tS.PENDENCIAS; agg.RECUPERADOS += (tS.RECUPERADOS || 0); agg.TRATADOS_GERAL += tS.TRATADOS_GERAL; agg.SUPERVISAO += tS.SUPERVISAO;
             TIPOS_DEPOSITOS.forEach(t => agg.DEP[t] += tS.DEP[t] || 0);
             agg.DEP_TOTAL += tS.DEP_TOTAL || 0; agg.DEP_TRATADOS += tS.DEP_TRATADOS || 0; agg.DEP_GRAMAS += tS.DEP_GRAMAS || 0;
-            agg.porSemana.push({ semana: sk, total: tS.TOTAL, programados: tS.PROGRAMADOS, trabalhado: tS.TRABALHADO, rendimento: tS.RENDIMENTO, ip: tS.IP, pend: tS.PENDENCIAS });
+            agg.porSemana.push({ semana: sk, total: tS.TOTAL, programados: tS.PROGRAMADOS, trabalhado: tS.TRABALHADO, recuperados: (tS.RECUPERADOS || 0), rendimento: tS.RENDIMENTO, ip: tS.IP, pend: tS.PENDENCIAS });
           }
           const s = estado.semanas?.[sk];
           DIAS_SEMANA.forEach(dk => {
@@ -3430,7 +3140,8 @@
         return agg;
       }
       function dashCard(label, valor, sub, cor) {
-        return `<div class="dash-card ${cor || ''}"><span class="dash-label">${label}</span><span class="dash-valor">${valor}</span>${sub ? `<span class="dash-sub">${sub}</span>` : ""}</div>`;
+        const slug = String(label).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
+        return `<div class="dash-card ${cor || ''}" data-dash-campo="${slug}"><span class="dash-label">${label}</span><span class="dash-valor">${valor}</span>${sub ? `<span class="dash-sub">${sub}</span>` : ""}</div>`;
       }
       function dashBarra(valorPct, rotulo) {
         const p = valorPct == null ? 0 : Math.max(0, Math.min(100, valorPct));
@@ -3745,6 +3456,7 @@
               dashCard("Informados", formatarNumeroMilhar(agg.INFORMADOS), `Pendentes: <b>${formatarNumeroMilhar(agg.PENDENCIAS)}</b>`, "vermelho"),
               dashCard("Restam", restamImoveis == null ? "—" : formatarNumeroMilhar(restamImoveis), imoveisProgramados > 0 ? dashBarra(pctCobertura, "Cobertura sobre programados") : "Defina os imóveis programados", "ambar"),
               dashCard("Inspecionados", formatarNumeroMilhar(agg.TOTAL), "Imóveis inspecionados no ciclo", "roxo"),
+              dashCard("Recuperados", formatarNumeroMilhar(agg.RECUPERADOS), "Imóveis recuperados no ciclo", "verde"),
               dashCard("Rendimento", fmtRendimento(agg.rendimento), "Imóveis trabalhados / dia", "teal"),
               dashCard("Pendência", formatarNumeroMilhar(agg.PENDENCIAS), "Fechados + Recusados + Abandonados − Recuperados", "vermelho"),
               dashCard("Índice de Pendência (IP)", fmtPct(agg.ip), "100 × Pend / Inform.", "rosa")
@@ -4374,32 +4086,78 @@
           else { info.className = "badge-aviso-atividade alerta"; info.textContent = `${formatarCicloTexto(ctx.ciclo)} • sem programação cadastrada`; }
         }
         const st = calcularStatusQuarteiroes();
+        const agg = dashAgregarCiclo(ctx.ano, ctx.ciclo);
+        const imoveisEstimados = num(estado.configEstrato?.imoveisEstimados);
+        const imoveisProgramados = num(estado.configEstrato?.imoveisEstimadosLivres) + num(estado.configEstrato?.imoveisEstimadosParciais);
+        const baseImoveisProgramados = imoveisProgramados > 0 ? imoveisProgramados : imoveisEstimados;
+        const restamImoveis = baseImoveisProgramados > 0 ? Math.max(0, baseImoveisProgramados - agg.INFORMADOS) : null;
         const cardsEl = document.getElementById("qdResumoCards");
         if (cardsEl) {
           const pct = st.programados > 0 ? Math.min(100, (100 * st.concluidos) / st.programados) : 0;
           cardsEl.innerHTML = `
-            <div class="qd-total-card">
-              <div class="qd-total-item"><span class="qd-total-label">Programados</span><span class="qd-total-valor">${fmtIntCell(st.programados)}</span></div>
-              <div class="qd-total-item"><span class="qd-total-label">Concluídos</span><span class="qd-total-valor" style="color:#166534">${fmtIntCell(st.concluidos)}</span></div>
-              <div class="qd-total-item"><span class="qd-total-label">Em andamento</span><span class="qd-total-valor" style="color:#b45309">${fmtIntCell(st.emAndamento)}</span></div>
-              <div class="qd-total-item"><span class="qd-total-label">Restantes</span><span class="qd-total-valor" style="color:#7c3aed">${fmtIntCell(st.restantes)}</span></div>
-              <div class="qd-total-item"><span class="qd-total-label">Trabalhados</span><span class="qd-total-valor">${fmtIntCell(st.totalTrabalhados)}</span></div>
-              <div class="qd-total-item"><span class="qd-total-label">Progresso</span><span class="qd-total-valor">${pct.toFixed(1).replace(".", ",")}%</span></div>
-              ${st.precisaRevisao > 0 ? `<div class="qd-total-item"><span class="qd-total-label">⚠️ Revisão</span><span class="qd-total-valor" style="color:#b45309">${fmtIntCell(st.precisaRevisao)}</span></div>` : ""}
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+              <!-- Resumo dos Quarteirões -->
+              <div class="qd-total-card">
+                <div style="width: 100%; font-size: 0.76rem; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px dashed #86efac; margin-bottom: 2px;">
+                  🧱 Quarteirões (${formatarCicloTexto(ctx.ciclo)})
+                </div>
+                <div class="qd-total-item" data-qd-campo="quarteiroes-programados"><span class="qd-total-label">Programados</span><span class="qd-total-valor">${fmtIntCell(st.programados)}</span></div>
+                <div class="qd-total-item" data-qd-campo="quarteiroes-concluidos"><span class="qd-total-label">Concluídos</span><span class="qd-total-valor" style="color:#166534">${fmtIntCell(st.concluidos)}</span></div>
+                <div class="qd-total-item" data-qd-campo="quarteiroes-em-andamento"><span class="qd-total-label">Em andamento</span><span class="qd-total-valor" style="color:#b45309">${fmtIntCell(st.emAndamento)}</span></div>
+                <div class="qd-total-item" data-qd-campo="quarteiroes-restantes"><span class="qd-total-label">Restantes</span><span class="qd-total-valor" style="color:#7c3aed">${fmtIntCell(st.restantes)}</span></div>
+                <div class="qd-total-item" data-qd-campo="quarteiroes-trabalhados"><span class="qd-total-label">Trabalhados</span><span class="qd-total-valor">${fmtIntCell(st.totalTrabalhados)}</span></div>
+                <div class="qd-total-item" data-qd-campo="quarteiroes-progresso"><span class="qd-total-label">Progresso</span><span class="qd-total-valor">${pct.toFixed(1).replace(".", ",")}%</span></div>
+                ${st.precisaRevisao > 0 ? `<div class="qd-total-item"><span class="qd-total-label">⚠️ Revisão</span><span class="qd-total-valor" style="color:#b45309">${fmtIntCell(st.precisaRevisao)}</span></div>` : ""}
+              </div>
+
+              <!-- Resumo dos Imóveis (Campos Solicitados) -->
+              <div class="qd-total-card qd-total-card-imoveis" style="background: #f8fafc; border: 1.5px solid #cbd5e1;">
+                <div style="width: 100%; font-size: 0.76rem; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px dashed #cbd5e1; margin-bottom: 2px;">
+                  🏡 Imóveis (${formatarCicloTexto(ctx.ciclo)})
+                </div>
+                <div class="qd-total-item" data-qd-campo="imoveis-programados">
+                  <span class="qd-total-label">Imóveis Programados</span>
+                  <span class="qd-total-valor" style="color:#0284c7">${baseImoveisProgramados > 0 ? formatarNumeroMilhar(baseImoveisProgramados) : "—"}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="inspecionados">
+                  <span class="qd-total-label">Inspecionados</span>
+                  <span class="qd-total-valor" style="color:#7c3aed">${formatarNumeroMilhar(agg.TOTAL)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="recuperados">
+                  <span class="qd-total-label">Recuperados</span>
+                  <span class="qd-total-valor" style="color:#16a34a">${formatarNumeroMilhar(agg.RECUPERADOS)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="informados">
+                  <span class="qd-total-label">Informados</span>
+                  <span class="qd-total-valor" style="color:#0f172a">${formatarNumeroMilhar(agg.INFORMADOS)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="pendencia">
+                  <span class="qd-total-label">Pendência</span>
+                  <span class="qd-total-valor" style="color:#dc2626">${formatarNumeroMilhar(agg.PENDENCIAS)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="indice-pendencia">
+                  <span class="qd-total-label">Índice de Pendência</span>
+                  <span class="qd-total-valor" style="color:#e11d48">${fmtPct(agg.ip)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="restam">
+                  <span class="qd-total-label">Restam</span>
+                  <span class="qd-total-valor" style="color:#d97706">${restamImoveis != null ? formatarNumeroMilhar(restamImoveis) : "—"}</span>
+                </div>
+              </div>
             </div>
           `;
         }
         const t = document.createElement("table");
         t.className = "resumo-tabela";
-        t.style.minWidth = "820px";
+        t.style.minWidth = "920px";
         t.style.width = "100%";
         t.style.tableLayout = "fixed";
         const cg = document.createElement("colgroup");
-        ["80px","160px","260px","140px","140px","120px"].forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); });
+        ["80px","130px","240px","175px","175px","120px"].forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); });
         t.appendChild(cg);
         const th = document.createElement("thead");
         const trH = document.createElement("tr");
-        ["Concluído","Quarteirão","Agente(s)","Primeira Ocorrência","Última Ocorrência","Status"].forEach(x => { const e = document.createElement("th"); e.className = "cabecalho-titulo"; e.textContent = x; trH.appendChild(e); });
+        ["Concluído","Quarteirão","Agente(s)","Data do Primeiro Lançamento","Data do Último Lançamento","Status"].forEach(x => { const e = document.createElement("th"); e.className = "cabecalho-titulo"; e.textContent = x; trH.appendChild(e); });
         th.appendChild(trH); t.appendChild(th);
         const tb = document.createElement("tbody");
         if (st.detalhes.length === 0) {
@@ -4828,7 +4586,136 @@
         const b4 = document.getElementById("btnRcAutoPreencher"); if (b4) b4.addEventListener("click", () => { const r = obterRelatorioCampoAtivo(); const c = estado.configEquipe || {}; if (c.estrato && !r.estrato) r.estrato = c.estrato; if (c.bairro && !r.localidade) r.localidade = c.bairro; if (c.supervisor && !r.supervisorNome) r.supervisorNome = c.supervisor; if (c.responsavel && !r.agenteNome) r.agenteNome = c.responsavel; salvar(); renderizarRelatorioCampo(); const b = b4; const t = b.textContent; b.textContent = "✅ Preenchido!"; setTimeout(() => { b.textContent = t; }, 1500); });
       }
 
+      function obterResumoReconhecimentoPadrao() {
+        const t1 = [];
+        for (let i = 1; i <= 32; i++) {
+          t1.push({ quarteirao: String(i), r: "", c: "", tb: "", pe: "", o: "" });
+        }
+        const t2 = [];
+        for (let i = 33; i <= 64; i++) {
+          t2.push({ quarteirao: String(i), r: "", c: "", tb: "", pe: "", o: "" });
+        }
+        return {
+          cabecalho: {
+            uf: "",
+            distrito: "",
+            municipio: "",
+            localidade: "",
+            subdistrito: "",
+            sublocal: "",
+            categoria: ""
+          },
+          tabela1: t1,
+          tabela2: t2
+        };
+      }
 
+      function normalizarDadosReconhecimento(dados) {
+        if (!dados || typeof dados !== "object") return obterResumoReconhecimentoPadrao();
+        const res = obterResumoReconhecimentoPadrao();
+        const src = (dados.resumo_reconhecimento && typeof dados.resumo_reconhecimento === "object") ? dados.resumo_reconhecimento : dados;
+
+        const cab = src.cabecalho || src.header || src.cabecalhoReconhecimento || src;
+        if (cab && typeof cab === "object") {
+          res.cabecalho.uf = cab.uf || cab.UF || cab.unidadeFederal || cab.estado || "";
+          res.cabecalho.distrito = cab.distrito || cab.Distrito || "";
+          res.cabecalho.municipio = cab.municipio || cab.Municipio || cab.cidade || "";
+          res.cabecalho.localidade = cab.localidade || cab.Localidade || cab.bairro || "";
+          res.cabecalho.subdistrito = cab.subdistrito || cab.Subdistrito || "";
+          res.cabecalho.sublocal = cab.sublocal || cab.Sublocal || "";
+          res.cabecalho.categoria = cab.categoria || cab.Categoria || "";
+        }
+
+        function paraLista(col) {
+          if (!col) return [];
+          if (Array.isArray(col)) return col;
+          if (typeof col === "object") {
+            const keys = Object.keys(col);
+            const allNum = keys.length > 0 && keys.every(k => !isNaN(Number(k)));
+            if (allNum) {
+              return keys.sort((a,b) => Number(a) - Number(b)).map(k => col[k]);
+            }
+            return Object.values(col);
+          }
+          return [];
+        }
+
+        function extrair(item, ...campos) {
+          if (!item || typeof item !== "object") return "";
+          for (const c of campos) {
+            if (item[c] !== undefined && item[c] !== null && String(item[c]).trim() !== "") {
+              return String(item[c]).trim();
+            }
+          }
+          return "";
+        }
+
+        function mapearLinha(item, idxPadrao) {
+          if (!item) return { quarteirao: String(idxPadrao), r: "", c: "", tb: "", pe: "", o: "" };
+          const q = extrair(item, "quarteirao", "Quarteirao", "numero", "num", "q", "id") || String(idxPadrao);
+          const r = extrair(item, "r", "R", "residencia", "residencias", "residencial");
+          const c = extrair(item, "c", "C", "comercio", "comercios", "comercial");
+          const tb = extrair(item, "tb", "TB", "terrenoBaldio", "terrenosBaldios", "baldios", "baldio");
+          const pe = extrair(item, "pe", "PE", "pontoEstrategico", "pontosEstrategicos", "ponto_estrategico");
+          const o = extrair(item, "o", "O", "outros", "outro", "outras");
+          return { quarteirao: q, r, c, tb, pe, o };
+        }
+
+        const tab1Raw = src.tabela1 || src.tabela_1 || src.tab1;
+        const tab2Raw = src.tabela2 || src.tabela_2 || src.tab2;
+
+        if (tab1Raw || tab2Raw) {
+          const l1 = paraLista(tab1Raw);
+          const l2 = paraLista(tab2Raw);
+          for (let i = 0; i < 32; i++) {
+            if (l1[i] !== undefined) res.tabela1[i] = mapearLinha(l1[i], i + 1);
+          }
+          for (let i = 0; i < 32; i++) {
+            if (l2[i] !== undefined) res.tabela2[i] = mapearLinha(l2[i], i + 33);
+          }
+          return res;
+        }
+
+        const listaUnica = paraLista(src.tabela || src.linhas || src.quarteiroes || src.itens || src.dados || (Array.isArray(src) ? src : null));
+        if (listaUnica.length > 0) {
+          const porNum = {};
+          listaUnica.forEach((item, idx) => {
+            const qNum = Number(extrair(item, "quarteirao", "Quarteirao", "numero", "num", "q") || (idx + 1));
+            if (!isNaN(qNum) && qNum >= 1 && qNum <= 64) {
+              porNum[qNum] = item;
+            }
+          });
+
+          for (let i = 1; i <= 32; i++) {
+            const it = (porNum[i] !== undefined) ? porNum[i] : listaUnica[i - 1];
+            if (it !== undefined) res.tabela1[i - 1] = mapearLinha(it, i);
+          }
+          for (let i = 33; i <= 64; i++) {
+            const it = (porNum[i] !== undefined) ? porNum[i] : listaUnica[i - 1];
+            if (it !== undefined) res.tabela2[i - 33] = mapearLinha(it, i);
+          }
+          return res;
+        }
+
+        const chavesNum = Object.keys(src).filter(k => {
+          const n = Number(String(k).replace(/\D/g, ""));
+          return !isNaN(n) && n >= 1 && n <= 64;
+        });
+        if (chavesNum.length > 0) {
+          chavesNum.forEach(k => {
+            const n = Number(String(k).replace(/\D/g, ""));
+            const it = src[k];
+            if (n >= 1 && n <= 32) {
+              res.tabela1[n - 1] = mapearLinha(it, n);
+            } else if (n >= 33 && n <= 64) {
+              res.tabela2[n - 33] = mapearLinha(it, n);
+            }
+          });
+          return res;
+        }
+
+        return res;
+      }
 
       function garantirResumoReconhecimento() {
         if (!estado.resumoReconhecimento || typeof estado.resumoReconhecimento !== "object") {
@@ -4964,7 +4851,6 @@
             const rec = garantirResumoReconhecimento();
             rec.cabecalho[k] = inp.value;
             salvar();
-            salvarResumoReconhecimentoNuvem(false);
           });
         });
 
@@ -5024,7 +4910,7 @@
             `;
           }
           salvar();
-          salvarResumoReconhecimentoNuvem(false);
+          salvarReconhecimentoCompartilhado();
         };
 
         const tratarBlurTabela = (e) => {
@@ -5039,7 +4925,7 @@
             if (rec[tab]?.[row]) {
               rec[tab][row][col] = inp.value;
               salvar();
-              salvarResumoReconhecimentoNuvem(false);
+              salvarReconhecimentoCompartilhado();
             }
           }
         };
@@ -5050,7 +4936,7 @@
         const btnPdf = document.getElementById("btnImprimirPDFReconhecimento");
         if (btnPdf) {
           btnPdf.addEventListener("click", () => {
-            gerarPDF("areaResumoReconhecimento", `PMCD_Resumo_Reconhecimento_${hojeISO()}.pdf`, { orientacao: "landscape" })
+            gerarPDF("areaResumoReconhecimento", `PMCD_Resumo_Reconhecimento_${hojeISO()}.pdf`, { orientacao: "portrait" })
               .catch(e => alert("❌ " + (e?.message || e)));
           });
         }
@@ -5068,6 +4954,7 @@
             if (!cab.uf) cab.uf = "BA";
             if (!cab.categoria) cab.categoria = "Urbano";
             salvar();
+            salvarReconhecimentoCompartilhado();
             renderizarResumoReconhecimento();
             const bdg = document.getElementById("badgeReconhecimentoStatus");
             if (bdg) {
@@ -5083,6 +4970,7 @@
             if (!confirm("Deseja realmente limpar todos os números digitados nas tabelas de reconhecimento?")) return;
             estado.resumoReconhecimento = obterResumoReconhecimentoPadrao();
             salvar();
+            salvarReconhecimentoCompartilhado();
             renderizarResumoReconhecimento();
             const bdg = document.getElementById("badgeReconhecimentoStatus");
             if (bdg) {
@@ -5097,28 +4985,11 @@
         const btnCloseSync1 = document.getElementById("btnFecharModalSincronizarAndamento");
         const btnCloseSync2 = document.getElementById("btnFecharModalSincronizarAndamento2");
         const txtSyncJSON = document.getElementById("txtSyncReconhecimentoJSON");
-        const selChave = document.getElementById("selectChaveReconhecimento");
-        const containerCustom = document.getElementById("containerChaveCustom");
-        const inputCustom = document.getElementById("inputChaveCustom");
 
         const abrirModalSync = () => {
           if (!modalSync) return;
           const rec = garantirResumoReconhecimento();
           if (txtSyncJSON) txtSyncJSON.value = JSON.stringify(rec, null, 2);
-
-          const chaveAtual = obterChaveReconhecimentoAtiva();
-          if (selChave) {
-            let opt = Array.from(selChave.options).find(o => o.value === chaveAtual);
-            if (opt) {
-              selChave.value = chaveAtual;
-              if (containerCustom) containerCustom.style.display = "none";
-            } else {
-              selChave.value = "custom";
-              if (containerCustom) containerCustom.style.display = "block";
-              if (inputCustom) inputCustom.value = chaveAtual;
-            }
-          }
-
           modalSync.classList.add("ativo");
         };
 
@@ -5130,58 +5001,44 @@
         if (btnCloseSync1) btnCloseSync1.addEventListener("click", fecharModalSync);
         if (btnCloseSync2) btnCloseSync2.addEventListener("click", fecharModalSync);
 
-        if (selChave) {
-          selChave.addEventListener("change", () => {
-            if (selChave.value === "custom") {
-              if (containerCustom) containerCustom.style.display = "block";
-              if (inputCustom && inputCustom.value) definirChaveReconhecimentoAtiva(inputCustom.value);
-            } else {
-              if (containerCustom) containerCustom.style.display = "none";
-              definirChaveReconhecimentoAtiva(selChave.value);
-            }
-          });
-        }
-
-        if (inputCustom) {
-          inputCustom.addEventListener("input", () => {
-            if (inputCustom.value.trim()) definirChaveReconhecimentoAtiva(inputCustom.value.trim());
-          });
-        }
-
-        // Botão rápido na barra superior da aba
-        const btnPuxarRapido = document.getElementById("btnPuxarRapidoAndamento");
-        if (btnPuxarRapido) {
-          btnPuxarRapido.addEventListener("click", () => {
-            btnPuxarRapido.disabled = true;
-            const originalHTML = btnPuxarRapido.innerHTML;
-            btnPuxarRapido.innerHTML = "<span>⏳ Puxando...</span>";
-            puxarDadosReconhecimentoNuvem(null, true)
-              .finally(() => {
-                btnPuxarRapido.disabled = false;
-                btnPuxarRapido.innerHTML = originalHTML;
-              });
-          });
-        }
-
-        // Botão de puxar dentro do modal
         const btnPuxar = document.getElementById("btnPuxarNuvemAndamento");
         if (btnPuxar) {
           btnPuxar.addEventListener("click", () => {
+            if (!dbAtivo || !db) {
+              alert("⚠️ Conexão com Firebase não está ativa.");
+              return;
+            }
             btnPuxar.disabled = true;
-            const originalHTML = btnPuxar.innerHTML;
-            btnPuxar.innerHTML = "<span>⏳ Puxando dados do Firebase...</span>";
-            puxarDadosReconhecimentoNuvem(obterChaveReconhecimentoAtiva(), true)
-              .then(sucesso => {
-                if (sucesso) fecharModalSync();
+            btnPuxar.textContent = "⏳ Puxando dados...";
+            Promise.all([
+              db.ref("andamento_quarteiroes/resumo_reconhecimento").once("value"),
+              db.ref("andamento_quarteiroes").once("value")
+            ])
+              .then(([snapResumo, snapGeral]) => {
+                const valResumo = snapResumo.val();
+                const valGeral = snapGeral.val();
+                const val = (valResumo && typeof valResumo === "object") ? valResumo : (valGeral?.resumo_reconhecimento || valGeral);
+                if (val && typeof val === "object") {
+                  const normalizado = normalizarDadosReconhecimento(val);
+                  const q = contarPreenchidosReconhecimento(normalizado);
+                  estado.resumoReconhecimento = normalizado;
+                  salvar();
+                  renderizarResumoReconhecimento();
+                  if (txtSyncJSON) txtSyncJSON.value = JSON.stringify(normalizado, null, 2);
+                  alert(`✅ Dados sincronizados com sucesso do aplicativo 'Andamento dos quarteirões'!\n• Quarteirões preenchidos: ${q}\n• Localidade: ${normalizado.cabecalho.localidade || '—'}\n• Município: ${normalizado.cabecalho.municipio || '—'}`);
+                  fecharModalSync();
+                } else {
+                  alert("ℹ️ Ainda não há dados gravados na chave 'andamento_quarteiroes/resumo_reconhecimento'. Você pode usar o botão 'Enviar para Nuvem' para compartilhar a tabela atual pela primeira vez.");
+                }
               })
+              .catch(err => alert("❌ Erro ao puxar dados: " + (err?.message || err)))
               .finally(() => {
                 btnPuxar.disabled = false;
-                btnPuxar.innerHTML = originalHTML;
+                btnPuxar.innerHTML = "<span>📥 Puxar da Nuvem Compartilhada</span><small style='font-weight:400;opacity:0.9;font-size:0.72rem;'>Atualizar com os dados do Andamento</small>";
               });
           });
         }
 
-        // Botão de envio para a nuvem
         const btnEnviar = document.getElementById("btnEnviarNuvemAndamento");
         if (btnEnviar) {
           btnEnviar.addEventListener("click", () => {
@@ -5189,34 +5046,19 @@
               alert("⚠️ Conexão com Firebase não está ativa.");
               return;
             }
+            const rec = garantirResumoReconhecimento();
+            const q = contarPreenchidosReconhecimento(rec);
             btnEnviar.disabled = true;
-            const originalHTML = btnEnviar.innerHTML;
-            btnEnviar.innerHTML = "<span>⏳ Gravando na Nuvem...</span>";
-            try {
-              salvarResumoReconhecimentoNuvem(true);
-              const chave = obterChaveReconhecimentoAtiva();
-              const rec = garantirResumoReconhecimento();
-              const tot1 = calcularTotaisTabelaReconhecimento(rec.tabela1);
-              const tot2 = calcularTotaisTabelaReconhecimento(rec.tabela2);
-              const totGeral = tot1.totGeral + tot2.totGeral;
-              const totQuart = tot1.quartComDados + tot2.quartComDados;
-              setTimeout(() => {
-                alert(`✅ Tabela do Resumo de Reconhecimento gravada com sucesso no Firebase na chave:\n'${chave}'\n\nTotal: ${totQuart} quarteirões com dados (${formatarNumeroMilhar(totGeral)} imóveis). O outro aplicativo receberá os dados automaticamente!`);
-              }, 400);
-            } catch(e) {
-              alert("❌ Erro ao enviar: " + (e?.message || e));
-            } finally {
-              btnEnviar.disabled = false;
-              btnEnviar.innerHTML = originalHTML;
-            }
-          });
-        }
-
-        // Botão de diagnóstico
-        const btnScan = document.getElementById("btnEscanearChavesFirebase");
-        if (btnScan) {
-          btnScan.addEventListener("click", () => {
-            diagnosticarNuvemFirebase();
+            btnEnviar.textContent = "⏳ Enviando dados...";
+            db.ref("andamento_quarteiroes/resumo_reconhecimento").set(JSON.parse(JSON.stringify(rec)))
+              .then(() => {
+                alert(`✅ Tabela do Resumo de Reconhecimento enviada com sucesso para 'andamento_quarteiroes/resumo_reconhecimento'!\n• Quarteirões preenchidos: ${q}`);
+              })
+              .catch(err => alert("❌ Erro ao enviar: " + (err?.message || err)))
+              .finally(() => {
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = "<span>📤 Enviar para Nuvem Compartilhada</span><small style='font-weight:400;opacity:0.9;font-size:0.72rem;'>Gravar tabela atual no nó compartilhado</small>";
+              });
           });
         }
 
@@ -5245,11 +5087,13 @@
               if (!parsed || (typeof parsed !== "object")) {
                 throw new Error("Formato inválido de JSON de Resumo de Reconhecimento.");
               }
-              const norm = normalizarDadosReconhecimento(parsed);
-              estado.resumoReconhecimento = mesclarDadosReconhecimento(estado.resumoReconhecimento, norm);
+              const normalizado = normalizarDadosReconhecimento(parsed);
+              estado.resumoReconhecimento = normalizado;
               salvar();
+              salvarReconhecimentoCompartilhado();
               renderizarResumoReconhecimento();
-              alert("✅ Dados aplicados com sucesso na tabela!");
+              const q = contarPreenchidosReconhecimento(normalizado);
+              alert(`✅ Dados aplicados com sucesso! (${q} quarteirões preenchidos)`);
               fecharModalSync();
             } catch(e) {
               alert("❌ Erro ao processar dados: " + (e?.message || e));
@@ -5268,12 +5112,21 @@
           const inPA = document.getElementById("progAno"); if (inPA && !inPA.value) inPA.value = new Date().getFullYear();
           const MAPA = { "dashboard": { icone: "📈", titulo: "Dashboard" }, "sugarbo": { icone: "🍬", titulo: "SUGARBO" }, "config-equipe": { icone: "⚙️", titulo: "Configuração da Equipe" }, "config-estrato": { icone: "🗺️", titulo: "Configuração do Estrato" }, "lancamentos": { icone: "📝", titulo: "Lançamentos Diários" }, "resumo": { icone: "📊", titulo: "Resumo da Semana" }, "ciclo": { icone: "🔄", titulo: "Resumo do Ciclo" }, "producao-individual": { icone: "👤", titulo: "Produção Individual" }, "quarteiroes-designados": { icone: "🧱", titulo: "Quarteirões Designados" }, "resumo-reconhecimento": { icone: "🗺️", titulo: "Resumo de reconhecimento" }, "fad7": { icone: "📋", titulo: "FAD 7" }, "relatorio-campo": { icone: "📄", titulo: "Relatório de Campo" } };
           function alternarAba(id) {
-            if (!MAPA[id]) id = "lancamentos";
-            document.querySelectorAll(".btn-aba-nav").forEach(o => { if (o.dataset.aba === id) o.classList.add("ativa"); else o.classList.remove("ativa"); });
-            document.querySelectorAll(".conteudo-aba").forEach(c => c.classList.remove("ativo"));
-            const sec = document.getElementById("aba-" + id); if (sec) sec.classList.add("ativo");
+            if (!MAPA[id]) id = "lancamentos"; const m = MAPA[id];
+            document.querySelectorAll(".btn-aba-nav, .btn-aba").forEach(o => {
+              if (o.dataset.aba === id) {
+                o.classList.add("ativa");
+                o.setAttribute("aria-selected", "true");
+              } else {
+                o.classList.remove("ativa");
+                o.setAttribute("aria-selected", "false");
+              }
+            });
             const btnAtivo = document.querySelector(`.btn-aba-nav[data-aba="${id}"]`);
             if (btnAtivo) btnAtivo.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+            document.querySelectorAll(".menu-dropdown-opcao").forEach(o => { if (o.dataset.aba === id) o.classList.add("ativa"); else o.classList.remove("ativa"); });
+            document.querySelectorAll(".conteudo-aba").forEach(c => c.classList.remove("ativo"));
+            const sec = document.getElementById("aba-" + id); if (sec) sec.classList.add("ativo");
             if (id === "resumo") { renderizarResumo(); renderizarCabecalhoResumo(); sincronizarFontesAssinatura(); atualizarTextoGeracao(); }
             if (id === "ciclo") { estado.cicloFiltroConsolidado = identificarCicloAtivo(); sincronizarPeriodosSemanasCiclo(); renderizarCiclo(); sincronizarFontesAssinatura(); atualizarTextoGeracao(); }
             if (id === "sugarbo") { renderizarTabelaProgramacao(); atualizarPreviewPeriodoCiclo(); }
@@ -5282,7 +5135,22 @@
             if (id === "config-estrato") { renderizarConfigEstrato(); }
             if (id === "producao-individual") { renderizarProducaoIndividual(); }
             if (id === "quarteiroes-designados") { renderizarQuarteiroesDesignados(); }
-            if (id === "resumo-reconhecimento") { renderizarResumoReconhecimento(); puxarDadosReconhecimentoNuvem(null, false); }
+            if (id === "resumo-reconhecimento") {
+              renderizarResumoReconhecimento();
+              if (dbAtivo && db) {
+                Promise.all([
+                  db.ref("andamento_quarteiroes/resumo_reconhecimento").once("value"),
+                  db.ref("andamento_quarteiroes").once("value")
+                ]).then(([snapResumo, snapGeral]) => {
+                  const valResumo = snapResumo.val();
+                  const valGeral = snapGeral.val();
+                  const dados = (valResumo && typeof valResumo === "object") ? valResumo : (valGeral?.resumo_reconhecimento || (valGeral?.quarteiroes ? valGeral : (valGeral?.tabela1 ? valGeral : null)));
+                  if (dados && typeof dados === "object") {
+                    aplicarAtualizacaoReconhecimentoNuvem(dados, "Andamento");
+                  }
+                }).catch(() => {});
+              }
+            }
             if (id === "fad7") { if (estado.atividadeAtiva !== "liraa") { const s = semana(); const an = obterAnoSemana(s); const c = normalizarNumeroCiclo(s?.cabecalho?.ciclo || "1"); estado.atividadeAtiva = "liraa"; if (!estado.semanasLiraa) estado.semanasLiraa = {}; if (!estado.semanasLiraa[String(estado.semanaAtiva)]) { const p = obterPeriodoDaSemana(estado.semanaAtiva, an, c, "liraa"); estado.semanasLiraa[String(estado.semanaAtiva)] = criarSemana(p.inicioISO, String(estado.semanaAtiva), "liraa", c); } salvar(); renderizar(); atualizarTotais(); } renderizarFad7(); }
             if (id === "relatorio-campo") { renderizarRelatorioCampo(); }
             if (id === "dashboard") {
@@ -5294,7 +5162,8 @@
               renderizarDashboard();
             }
           }
-          document.querySelectorAll(".btn-aba-nav").forEach(o => o.addEventListener("click", e => { e.preventDefault(); const a = o.dataset.aba; if (a) alternarAba(a); }));
+          document.querySelectorAll(".btn-aba-nav, .btn-aba").forEach(o => o.addEventListener("click", e => { e.preventDefault(); const a = o.dataset.aba; if (a) alternarAba(a); }));
+          document.querySelectorAll(".menu-dropdown-opcao").forEach(o => o.addEventListener("click", e => { e.preventDefault(); const a = o.dataset.aba; if (a) alternarAba(a); }));
           const bBC = document.getElementById("btnConfirmarDataDia"); if (bBC) bBC.addEventListener("click", abrirModalConfirmacaoData);
           const bFC = document.getElementById("btnFecharModalConfirmacaoData"); if (bFC) bFC.addEventListener("click", fecharModalConfirmacaoData);
           const bCC = document.getElementById("btnCancelarConfirmacaoData"); if (bCC) bCC.addEventListener("click", fecharModalConfirmacaoData);
@@ -5518,6 +5387,8 @@
 
           const bComp = document.getElementById("btnCompartilharAcesso");
           if (bComp) bComp.addEventListener("click", abrirModalCompartilharAcesso);
+          const bCompCfg = document.getElementById("btnGerenciarAcessoConfig");
+          if (bCompCfg) bCompCfg.addEventListener("click", abrirModalCompartilharAcesso);
 
           const bFComp = document.getElementById("btnFecharModalCompartilhar");
           if (bFComp) bFComp.addEventListener("click", fecharModalCompartilharAcesso);
@@ -5603,12 +5474,25 @@
             });
           }
 
-          ["modalCompartilharAcesso", "modalLoginEditor"].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-              el.addEventListener("click", e => {
-                if (e.target === el) el.classList.remove("ativo");
-              });
+          // Fechar modais ao clicar no fundo escuro (backdrop)
+          const mCompEl = document.getElementById("modalCompartilharAcesso");
+          if (mCompEl) {
+            mCompEl.addEventListener("click", (e) => {
+              if (e.target === mCompEl) fecharModalCompartilharAcesso();
+            });
+          }
+          const mLoginEl = document.getElementById("modalLoginEditor");
+          if (mLoginEl) {
+            mLoginEl.addEventListener("click", (e) => {
+              if (e.target === mLoginEl) fecharModalLoginEditor();
+            });
+          }
+
+          // Fechar modais com tecla Esc
+          window.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+              fecharModalCompartilharAcesso();
+              fecharModalLoginEditor();
             }
           });
 

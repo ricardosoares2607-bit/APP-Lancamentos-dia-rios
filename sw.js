@@ -1,8 +1,10 @@
-const CACHE_NAME = 'pmcd-sugarbo-v13';
+const CACHE_NAME = 'pmcd-sugarbo-v17';
 const ARQUIVOS = [
   './',
   './index.html',
   './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js'
 ];
