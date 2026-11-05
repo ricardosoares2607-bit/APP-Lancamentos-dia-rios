@@ -2523,7 +2523,7 @@
           Object.keys(col).forEach(k => {
             const s = col[k]; if (!s) return;
             const sN = Number(k); if (isNaN(sN) || sN <= 0) return;
-            const ano = obterAnoSemana(s); const c = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"); const at = s.atividade || estado.atividadeAtiva;
+            const ano = obterAnoSemana(s); const c = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"); const at = s.atividade || (col === estado.semanasLiraa ? "liraa" : "ciclo");
             const p = obterPeriodoDaSemana(sN, ano, c, at);
             if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio();
             s.cabecalho.semanaInicio = p.inicioBR; s.cabecalho.semanaTermino = p.terminoBR;
@@ -2563,18 +2563,31 @@
       }
       function autoDetectarProgramacaoPorData(iso, persistir = true) {
         if (!iso) return false;
-        const ps = consultarProgramacaoPorData(iso); if (ps.length !== 1) return false;
+        const atAtual = (estado.atividadeAtiva === "liraa") ? "liraa" : "ciclo";
+        const ps = consultarProgramacaoPorData(iso).filter(p => p && (p.atividade || "ciclo") === atAtual);
+        if (ps.length !== 1) return false;
         const p = ps[0]; const se = identificarSemanaDaData(iso, p.ano, p.ciclo) || obterSemanaEpidemiologicaDeISO(iso) || String(p.cicloSemanaInicio || p.semana || 1);
-        const sk = String(se); const at = p.atividade || "ciclo"; const repo = at === "liraa" ? estado.semanasLiraa : estado.semanas;
-        if (!repo[sk]) { const pd = obterPeriodoDaSemana(sk, p.ano, p.ciclo, at); repo[sk] = criarSemana(pd.inicioISO, sk, at, p.ciclo, p.mes); }
+        const sk = String(se); const repo = atAtual === "liraa" ? estado.semanasLiraa : estado.semanas;
+        if (!repo[sk]) { const pd = obterPeriodoDaSemana(sk, p.ano, p.ciclo, atAtual); repo[sk] = criarSemana(pd.inicioISO, sk, atAtual, p.ciclo, p.mes); }
         const s = repo[sk]; if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio();
         s.cabecalho.ciclo = normalizarNumeroCiclo(p.ciclo); s.cabecalho.semana = sk; s.cabecalho.mes = p.mes || obterNomeMesDeData(iso);
         if (p.cicloDataInicio) s.cabecalho.cicloInicio = formatarDataBR(p.cicloDataInicio); if (p.cicloDataTermino) s.cabecalho.cicloTermino = formatarDataBR(p.cicloDataTermino);
-        s.ano = p.ano; estado.atividadeAtiva = at; estado.semanaAtiva = sk; const ch = chaveDiaDeISO(iso); if (ch) estado.diaAtivo = ch;
-        if (persistir) salvar(); renderizar(); atualizarTotais();
+        s.ano = p.ano;
+        // Não altera estado.atividadeAtiva: a atividade só é alterada por clique ou ação intencional do usuário
+        estado.semanaAtiva = sk; const ch = chaveDiaDeISO(iso); if (ch) estado.diaAtivo = ch;
+        if (persistir) { salvar(); renderizar(); atualizarTotais(); }
         return true;
       }
-      function alternarAtividade(na) { if (estado.atividadeAtiva === na) return; estado.atividadeAtiva = na; const r = repoAtivo(); const k = Object.keys(r); if (k.length === 0) { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, na, "1"); estado.semanaAtiva = s; } else if (!r[estado.semanaAtiva]) estado.semanaAtiva = k[0]; salvar(); renderizar(); atualizarTotais(); }
+      function alternarAtividade(na) {
+        if (estado.atividadeAtiva === na) return;
+        estado.atividadeAtiva = na;
+        estado.atividadeSelecionadaPeloUsuario = na;
+        try { localStorage.setItem("pmcd_atividade_usuario", na); } catch(e) {}
+        const r = repoAtivo(); const k = Object.keys(r);
+        if (k.length === 0) { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, na, "1"); estado.semanaAtiva = s; }
+        else if (!r[estado.semanaAtiva]) estado.semanaAtiva = k[0];
+        salvar(); renderizar(); atualizarTotais();
+      }
       function preencherDadosCicloNoModalProg(ano, c) { const at = (document.getElementById("progAtividade")?.value) || "ciclo"; const cfg = obterCicloConfig(ano, c, at); if (cfg && (cfg.inicio || cfg.termino)) { const a = document.getElementById("progCicloDataInicio"); if (a) a.value = cfg.inicio || ""; const b = document.getElementById("progCicloDataTermino"); if (b) b.value = cfg.termino || ""; const si = document.getElementById("progCicloSemanaInicio"); if (si) si.value = cfg.semanaInicio || ""; const sf = document.getElementById("progCicloSemanaTermino"); if (sf) sf.value = cfg.semanaTermino || ""; atualizarPreviewPeriodoCiclo(); } }
       function obterSemanaEpidemiologicaDeISO(iso) { if (!iso) return ""; const p = String(iso).split("-").map(Number); if (p.length !== 3 || p.some(isNaN)) return ""; const d = new Date(p[0], p[1]-1, p[2]); if (isNaN(d.getTime())) return ""; d.setHours(0,0,0,0); const t = new Date(d); t.setDate(t.getDate() + 3 - ((t.getDay()+6) % 7)); const w = new Date(t.getFullYear(), 0, 4); return String(1 + Math.round(((t - w) / 86400000 - 3 + ((w.getDay()+6) % 7)) / 7)); }
       function listarDatasEntre(iI, fI) { const l = []; if (!iI || !fI) return l; const p1 = String(iI).split("-").map(Number); const p2 = String(fI).split("-").map(Number); if (p1.length !== 3 || p2.length !== 3 || p1.some(isNaN) || p2.some(isNaN)) return l; let d = new Date(p1[0], p1[1]-1, p1[2]); const f = new Date(p2[0], p2[1]-1, p2[2]); if (isNaN(d.getTime()) || isNaN(f.getTime()) || d > f) return l; while (d <= f) { const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; l.push({ iso, br: formatarDataBR(iso), diaSemana: DIAS_SEMANA_PT[d.getDay()] }); d.setDate(d.getDate()+1); } return l; }
@@ -2682,6 +2695,8 @@
         sd.atividade = na; sd.ano = ano;
         if (ns !== ko || na !== ao) delete ro[ko];
         estado.atividadeAtiva = na; estado.semanaAtiva = ns;
+        estado.atividadeSelecionadaPeloUsuario = na;
+        try { localStorage.setItem("pmcd_atividade_usuario", na); } catch(e) {}
         salvar(); fecharModalCorrecao(); renderizar(); atualizarTotais(); try { renderizarQuarteiroesDesignados(); } catch(e) {}
         alert(`✅ Lançamento transferido para SE ${pad2(ns)}!`);
       }
@@ -2903,9 +2918,21 @@
         if (!estado.semanasLiraa) estado.semanasLiraa = {};
         if (!Array.isArray(estado.programacao)) estado.programacao = [];
         if (!estado.ciclosConfig) estado.ciclosConfig = {};
-        if (!estado.diaAtivo) estado.diaAtivo = "segunda";
-        if (!estado.atividadeAtiva) estado.atividadeAtiva = "ciclo";
         if (!estado.cicloFiltroConsolidado) estado.cicloFiltroConsolidado = "1";
+        if (!estado.diaAtivo) estado.diaAtivo = "segunda";
+        let ativUsuario = null;
+        try { ativUsuario = localStorage.getItem("pmcd_atividade_usuario"); } catch(e) {}
+        if (!ativUsuario && estado.atividadeSelecionadaPeloUsuario) {
+          ativUsuario = estado.atividadeSelecionadaPeloUsuario;
+        }
+        if (ativUsuario === "liraa") {
+          estado.atividadeAtiva = "liraa";
+          estado.atividadeSelecionadaPeloUsuario = "liraa";
+        } else {
+          estado.atividadeAtiva = "ciclo";
+          estado.atividadeSelecionadaPeloUsuario = "ciclo";
+          try { localStorage.setItem("pmcd_atividade_usuario", "ciclo"); } catch(e) {}
+        }
         if (!estado.ciclo) estado.ciclo = { cabecalho: {}, rodape: {} };
         if (!estado.ciclo.rodape) estado.ciclo.rodape = {};
         if (!Array.isArray(estado.relatoriosCampo)) estado.relatoriosCampo = [];
@@ -5220,7 +5247,7 @@
                 }).catch(() => {});
               }
             }
-            if (id === "fad7") { if (estado.atividadeAtiva !== "liraa") { const s = semana(); const an = obterAnoSemana(s); const c = normalizarNumeroCiclo(s?.cabecalho?.ciclo || "1"); estado.atividadeAtiva = "liraa"; if (!estado.semanasLiraa) estado.semanasLiraa = {}; if (!estado.semanasLiraa[String(estado.semanaAtiva)]) { const p = obterPeriodoDaSemana(estado.semanaAtiva, an, c, "liraa"); estado.semanasLiraa[String(estado.semanaAtiva)] = criarSemana(p.inicioISO, String(estado.semanaAtiva), "liraa", c); } salvar(); renderizar(); atualizarTotais(); } renderizarFad7(); }
+            if (id === "fad7") { renderizarFad7(); }
             if (id === "relatorio-campo") { renderizarRelatorioCampo(); }
             if (id === "dashboard") {
               const anoEl = document.getElementById("dashAno"), cicEl = document.getElementById("dashCiclo"), semEl = document.getElementById("dashSemanaRef");
