@@ -3259,17 +3259,19 @@
               for (let c = 1; c <= 7; c++) {
                 const rawQ = v[`b1-r0-c${c}`];
                 if (rawQ === undefined || rawQ === null) continue;
-                const concluido = v[`b1-r1-c${c}`] === "Sim";
+                const concluidosLista = extrairQuarteiroesConcluidosColuna(rawQ, v[`b1-r1-c${c}`]);
+                const concluidosSet = new Set(concluidosLista);
                 extrairQuarteiroesDeTexto(rawQ).forEach(qRaw => {
                   const q = normalizarQuarteirao(qRaw); if (!q) return;
                   const nome = (ag.nome || "").trim(); if (!nome) return;
+                  const estaConcluido = concluidosSet.has(q);
                   const atual = mapa.get(q);
-                  if (!atual) mapa.set(q, { quarteirao: q, agentes: new Set([nome]), primeira: iso, ultima: iso, temConcluido: concluido });
+                  if (!atual) mapa.set(q, { quarteirao: q, agentes: new Set([nome]), primeira: iso, ultima: iso, temConcluido: estaConcluido });
                   else {
                     atual.agentes.add(nome);
                     if (iso < atual.primeira) atual.primeira = iso;
                     if (iso > atual.ultima) atual.ultima = iso;
-                    if (concluido) atual.temConcluido = true;
+                    if (estaConcluido) atual.temConcluido = true;
                   }
                 });
               }
@@ -3945,8 +3947,37 @@
       }
       function criarSeparador() { const s = document.createElement("div"); s.className = "separador-bloco"; return s; }
       function aplicarColgroupBloco(t) { const cg = document.createElement("colgroup"); const c0 = document.createElement("col"); c0.style.width = "84px"; cg.appendChild(c0); for (let i = 1; i <= 8; i++) cg.appendChild(document.createElement("col")); t.insertBefore(cg, t.firstChild); }
-      function normalizarQuarteirao(q) { if (q === undefined || q === null) return ""; const t = String(q).trim(); if (!t) return ""; if (/^\d+$/.test(t)) return String(parseInt(t, 10)); return t.toUpperCase(); }
-      function extrairQuarteiroesDeTexto(txt) { if (txt === undefined || txt === null) return []; const s = String(txt).trim(); if (!s || s === "-" || s === "—") return []; const p = s.split(/[,;\/\n\r]+|\s+e\s+/i); const r = []; p.forEach(x => { const l = x.trim(); if (!l || l === "-" || l === "—") return; const sp = l.split(/\s+/); if (sp.length > 1 && sp.every(z => /^[0-9A-Za-z_-]+$/.test(z))) sp.forEach(z => { if (z && z !== "-" && z !== "—") r.push(z); }); else r.push(l); }); return r; }
+      function normalizarQuarteirao(q) { if (q === undefined || q === null) return ""; const t = String(q).trim().replace(/[()]/g, "").trim(); if (!t) return ""; if (/^\d+$/.test(t)) return String(parseInt(t, 10)); return t.toUpperCase(); }
+      function extrairQuarteiroesDeTexto(txt) { if (txt === undefined || txt === null) return []; const s = String(txt).trim().replace(/[()]/g, " "); if (!s || s === "-" || s === "—") return []; const p = s.split(/[,;\/\n\r]+|\s+e\s+/i); const r = []; p.forEach(x => { const l = x.trim(); if (!l || l === "-" || l === "—") return; const sp = l.split(/\s+/); if (sp.length > 1 && sp.every(z => /^[0-9A-Za-z_-]+$/.test(z))) sp.forEach(z => { if (z && z !== "-" && z !== "—") r.push(z); }); else r.push(l); }); return r; }
+      function extrairQuarteiroesConcluidosColuna(rawQ, concluidoSimNao) {
+        if (concluidoSimNao !== "Sim") return [];
+        if (rawQ === undefined || rawQ === null) return [];
+        const str = String(rawQ).trim();
+        if (!str || str === "-" || str === "—") return [];
+        const todos = extrairQuarteiroesDeTexto(str).map(normalizarQuarteirao).filter(Boolean);
+        if (todos.length === 0) return [];
+        if (todos.length === 1) {
+          return [todos[0]];
+        }
+        const concluidos = [];
+        const regex = /\(([^)]+)\)/g;
+        let match;
+        let encontrouParenteses = false;
+        while ((match = regex.exec(str)) !== null) {
+          encontrouParenteses = true;
+          const conteudo = match[1];
+          const dentro = extrairQuarteiroesDeTexto(conteudo).map(normalizarQuarteirao).filter(Boolean);
+          concluidos.push(...dentro);
+        }
+        if (!encontrouParenteses && str.includes("(") && !str.includes(")")) {
+          const parteApos = str.slice(str.indexOf("(") + 1);
+          if (parteApos) {
+            const dentro = extrairQuarteiroesDeTexto(parteApos).map(normalizarQuarteirao).filter(Boolean);
+            concluidos.push(...dentro);
+          }
+        }
+        return concluidos;
+      }
       function contarQuarteiroesLinha(vals) { const u = new Set(); vals.forEach(v => { if (v === undefined || v === null) return; extrairQuarteiroesDeTexto(v).forEach(q => { const n = normalizarQuarteirao(q); if (n) u.add(n); }); }); return u.size; }
       function criarInputQuarteirao(vals, ch, onChange) { const i = document.createElement("input"); i.type = "text"; i.placeholder = "0"; i.value = vals[ch] || ""; i.addEventListener("focus", () => { i.value = vals[ch] || ""; }); i.addEventListener("input", () => { vals[ch] = i.value; salvar(); onChange(); }); i.addEventListener("blur", () => { vals[ch] = (vals[ch] || "").trim(); i.value = vals[ch]; salvar(); onChange(); }); return i; }
       function criarInputInteiro(vals, ch, onChange) { const i = document.createElement("input"); i.type = "text"; i.inputMode = "numeric"; i.value = fmtIntCell(vals[ch]); i.addEventListener("focus", () => { i.value = vals[ch] || ""; }); i.addEventListener("input", () => { vals[ch] = i.value; salvar(); onChange(); }); i.addEventListener("blur", () => { i.value = fmtIntCell(vals[ch]); }); return i; }
@@ -4066,9 +4097,18 @@
           const v = valoresDoDia(ag);
           LINHAS_BLOCO_1.forEach((l, rIdx) => {
             if (l.tipo === "quarteirao") { const lst = []; for (let c = 1; c <= 7; c++) { const x = v[`b1-r${rIdx}-c${c}`]; if (x !== undefined && x !== null && String(x).trim() !== "") lst.push(x); } const cel = document.querySelector(`[data-total-linha="${ag.id}-b1-r${rIdx}"]`); if (cel) cel.textContent = fmtIntCell(contarQuarteiroesLinha(lst)); return; }
-            let res = 0, sim = 0;
-            for (let c = 1; c <= 7; c++) { const x = v[`b1-r${rIdx}-c${c}`]; if (x === undefined || x === "") continue; if (l.contaSim && x === "Sim") sim++; else if (!isNaN(Number(x))) res += Number(x); }
-            const cel = document.querySelector(`[data-total-linha="${ag.id}-b1-r${rIdx}"]`); if (cel) cel.textContent = fmtIntCell(l.contaSim ? sim : res);
+            if (l.tipo === "concluido") {
+              let totAg = 0;
+              for (let c = 1; c <= 7; c++) {
+                totAg += extrairQuarteiroesConcluidosColuna(v[`b1-r0-c${c}`], v[`b1-r1-c${c}`]).length;
+              }
+              const cel = document.querySelector(`[data-total-linha="${ag.id}-b1-r${rIdx}"]`);
+              if (cel) cel.textContent = fmtIntCell(totAg);
+              return;
+            }
+            let res = 0;
+            for (let c = 1; c <= 7; c++) { const x = v[`b1-r${rIdx}-c${c}`]; if (x === undefined || x === "") continue; if (!isNaN(Number(x))) res += Number(x); }
+            const cel = document.querySelector(`[data-total-linha="${ag.id}-b1-r${rIdx}"]`); if (cel) cel.textContent = fmtIntCell(res);
           });
           for (let c = 1; c <= 7; c++) { let s = 0; LINHAS_BLOCO_1.forEach((l, rIdx) => { if (l.somaNoTotal) s += num(v[`b1-r${rIdx}-c${c}`]); }); const cel = document.querySelector(`[data-total-dia-agente="${ag.id}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); }
           let tg = 0; for (let c = 1; c <= 7; c++) tg += num(document.querySelector(`[data-total-dia-agente="${ag.id}-c${c}"]`)?.textContent); const celG = document.querySelector(`[data-total-geral="${ag.id}"]`); if (celG) celG.textContent = fmtIntCell(tg);
@@ -4084,7 +4124,23 @@
         });
         LINHAS_BLOCO_1.forEach((l, rIdx) => {
           if (l.tipo === "quarteirao") { for (let c = 1; c <= 7; c++) { const vc = []; ativos.forEach(a => { const x = valoresDoDia(a)[`b1-r${rIdx}-c${c}`]; if (x !== undefined && x !== null && String(x).trim() !== "") vc.push(x); }); const cel = document.querySelector(`[data-total-equipe-dia="b1-r${rIdx}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(contarQuarteiroesLinha(vc)); } const vd = []; ativos.forEach(a => { for (let c = 1; c <= 7; c++) { const x = valoresDoDia(a)[`b1-r${rIdx}-c${c}`]; if (x !== undefined && x !== null && String(x).trim() !== "") vd.push(x); } }); const celL = document.querySelector(`[data-total-equipe-linha="b1-r${rIdx}"]`); if (celL) celL.textContent = fmtIntCell(contarQuarteiroesLinha(vd)); return; }
-          for (let c = 1; c <= 7; c++) { let s = 0, sim = 0; ativos.forEach(a => { const x = valoresDoDia(a)[`b1-r${rIdx}-c${c}`]; if (x === undefined || x === "") return; if (l.contaSim && x === "Sim") sim++; else if (!isNaN(Number(x))) s += Number(x); }); const cel = document.querySelector(`[data-total-equipe-dia="b1-r${rIdx}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(l.contaSim ? sim : s); }
+          if (l.tipo === "concluido") {
+            let totalEquipeLinha = 0;
+            for (let c = 1; c <= 7; c++) {
+              let totColEquipe = 0;
+              ativos.forEach(a => {
+                const vA = valoresDoDia(a);
+                totColEquipe += extrairQuarteiroesConcluidosColuna(vA[`b1-r0-c${c}`], vA[`b1-r1-c${c}`]).length;
+              });
+              const cel = document.querySelector(`[data-total-equipe-dia="b1-r${rIdx}-c${c}"]`);
+              if (cel) cel.textContent = fmtIntCell(totColEquipe);
+              totalEquipeLinha += totColEquipe;
+            }
+            const celL = document.querySelector(`[data-total-equipe-linha="b1-r${rIdx}"]`);
+            if (celL) celL.textContent = fmtIntCell(totalEquipeLinha);
+            return;
+          }
+          for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { const x = valoresDoDia(a)[`b1-r${rIdx}-c${c}`]; if (x === undefined || x === "") return; if (!isNaN(Number(x))) s += Number(x); }); const cel = document.querySelector(`[data-total-equipe-dia="b1-r${rIdx}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); }
           let tl = 0; for (let c = 1; c <= 7; c++) tl += num(document.querySelector(`[data-total-equipe-dia="b1-r${rIdx}-c${c}"]`)?.textContent); const celL = document.querySelector(`[data-total-equipe-linha="b1-r${rIdx}"]`); if (celL) celL.textContent = fmtIntCell(tl);
         });
         for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { LINHAS_BLOCO_1.forEach((l, rIdx) => { if (l.somaNoTotal) s += num(valoresDoDia(a)[`b1-r${rIdx}-c${c}`]); }); }); const cel = document.querySelector(`[data-total-equipe-dia-final="c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); }
@@ -4117,7 +4173,7 @@
         let qT = 0, qQ = 0;
         ativos.forEach(ag => {
           if (!ag) return; const v = ag.valores || {}; let sA = 0;
-          for (let c = 1; c <= 7; c++) { const r = num(v[`b1-r2-c${c}`]), cc = num(v[`b1-r3-c${c}`]), tb = num(v[`b1-r4-c${c}`]), o = num(v[`b1-r6-c${c}`]); somas.R += r; somas.C += cc; somas.TB += tb; somas.PE += num(v[`b1-r5-c${c}`]); somas.O += o; sA += r + cc + tb + o; somas.FECHADOS += num(v[`b2-r0-c${c}`]); somas.RECUPERADOS += num(v[`b2-r1-c${c}`]); somas.RECUSADOS += num(v[`b2-r2-c${c}`]); somas.ABANDONADOS += num(v[`b2-r3-c${c}`]); somas.ELIMINADOS += num(v[`b4-r0-c${c}`]); somas.TRATADOS_REAIS += num(v[`bTratados-r0-c${c}`]); if (v[`b1-r1-c${c}`] === "Sim") qQ++; }
+          for (let c = 1; c <= 7; c++) { const r = num(v[`b1-r2-c${c}`]), cc = num(v[`b1-r3-c${c}`]), tb = num(v[`b1-r4-c${c}`]), o = num(v[`b1-r6-c${c}`]); somas.R += r; somas.C += cc; somas.TB += tb; somas.PE += num(v[`b1-r5-c${c}`]); somas.O += o; sA += r + cc + tb + o; somas.FECHADOS += num(v[`b2-r0-c${c}`]); somas.RECUPERADOS += num(v[`b2-r1-c${c}`]); somas.RECUSADOS += num(v[`b2-r2-c${c}`]); somas.ABANDONADOS += num(v[`b2-r3-c${c}`]); somas.ELIMINADOS += num(v[`b4-r0-c${c}`]); somas.TRATADOS_REAIS += num(v[`bTratados-r0-c${c}`]); const cQ = extrairQuarteiroesConcluidosColuna(v[`b1-r0-c${c}`], v[`b1-r1-c${c}`]); qQ += cQ.length; }
           if (sA > 0) qT++;
           somas.SUPERVISAO_REAL += num(v["supTotal"]);
           TIPOS_DEPOSITOS.forEach((_, i) => { const e = num(v[`b5-r${i}-c${COL_ENCONTRADO}`]), ni = num(v[`b5-r${i}-c${COL_NAO_INSP}`]); somas.DEP[TIPOS_DEPOSITOS[i]] += (e - ni > 0 ? e - ni : e); somas.DEP_TRATADOS += num(v[`b5-r${i}-c${COL_TRATADOS}`]); somas.DEP_LITROS += num(v[`b5-r${i}-c${COL_LITROS}`]); somas.DEP_GRAMAS += num(v[`b5-r${i}-c${COL_GRAMAS}`]); somas.DEP_FOCADOS += num(v[`b5-r${i}-c${COL_FOCADOS}`]); });
