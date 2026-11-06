@@ -207,6 +207,146 @@
       .bloco-tabela th { background: #f1f5f9; color: #1e293b; }
       .linha-identificacao th { background: #dcfce7 !important; color: #14532d !important; font-weight: 700; font-size: 0.74rem; padding: 4px; }
       .linha-identificacao input.nome-agente { width: 100%; border: none; background: transparent; text-align: center; font-size: 0.74rem; font-weight: 700; color: #14532d; outline: none; }
+
+      /* Destaque piscante do nome do agente durante lançamentos */
+      .wrap-nome-agente { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 2px 4px; border-radius: 4px; transition: all 0.2s ease; box-sizing: border-box; }
+      .icone-lancando-agente { display: none; font-size: 0.85rem; line-height: 1; flex-shrink: 0; }
+
+      @keyframes piscarDestaqueNomeTabela {
+        0% {
+          background-color: #fef08a !important;
+          box-shadow: 0 0 0 2px #f59e0b, 0 0 10px rgba(245, 158, 11, 0.6) !important;
+          transform: scale(1);
+        }
+        50% {
+          background-color: #f59e0b !important;
+          box-shadow: 0 0 0 3px #d97706, 0 0 18px rgba(217, 119, 6, 0.9) !important;
+          transform: scale(1.05);
+        }
+        100% {
+          background-color: #fef08a !important;
+          box-shadow: 0 0 0 2px #f59e0b, 0 0 10px rgba(245, 158, 11, 0.6) !important;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes piscarTextoNomeTabela {
+        0%, 100% {
+          color: #78350f !important;
+          text-shadow: none;
+        }
+        50% {
+          color: #ffffff !important;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(245, 158, 11, 0.8);
+        }
+      }
+
+      @keyframes balancoIconeLancamento {
+        0% { transform: translateY(-1px) rotate(-10deg) scale(1); }
+        100% { transform: translateY(1px) rotate(10deg) scale(1.25); }
+      }
+
+      @keyframes piscarDestaqueCabecalhoAgente {
+        0% {
+          background-color: #fef08a;
+          color: #78350f;
+          box-shadow: 0 0 0 2px #f59e0b, 0 0 8px rgba(245, 158, 11, 0.5);
+          transform: scale(1);
+        }
+        50% {
+          background-color: #f59e0b;
+          color: #ffffff;
+          box-shadow: 0 0 0 3px #d97706, 0 0 16px rgba(217, 119, 6, 0.9);
+          transform: scale(1.06);
+        }
+        100% {
+          background-color: #fef08a;
+          color: #78350f;
+          box-shadow: 0 0 0 2px #f59e0b, 0 0 8px rgba(245, 158, 11, 0.5);
+          transform: scale(1);
+        }
+      }
+
+      @keyframes pulsoBadgeLancando {
+        0% { transform: scale(0.96); opacity: 0.9; background-color: #f59e0b; }
+        100% { transform: scale(1.04); opacity: 1; background-color: #dc2626; box-shadow: 0 0 12px rgba(220, 38, 38, 0.85); }
+      }
+
+      .badge-em-lancamento {
+        display: none;
+        font-size: 0.68rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 12px;
+        background: #f59e0b;
+        color: #fff;
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+        animation: pulsoBadgeLancando 0.85s infinite alternate ease-in-out;
+      }
+
+      /* Regras ativadas quando o agente está recebendo lançamento */
+      .coluna-agente:focus-within,
+      .coluna-agente.em-lancamento {
+        box-shadow: 0 0 0 3px #f59e0b, 0 10px 25px -5px rgba(245, 158, 11, 0.35) !important;
+        border-color: #f59e0b !important;
+      }
+
+      .coluna-agente:focus-within .badge-em-lancamento,
+      .coluna-agente.em-lancamento .badge-em-lancamento {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .coluna-agente:focus-within .cabecalho-agente h3,
+      .coluna-agente.em-lancamento .cabecalho-agente h3 {
+        animation: piscarDestaqueCabecalhoAgente 0.85s infinite ease-in-out !important;
+        padding: 3px 10px !important;
+        border-radius: 6px !important;
+        display: inline-block !important;
+        font-weight: 900 !important;
+      }
+
+      .coluna-agente:focus-within .th-nome-agente,
+      .coluna-agente.em-lancamento .th-nome-agente {
+        position: relative;
+        z-index: 4;
+        overflow: visible;
+      }
+
+      .coluna-agente:focus-within .wrap-nome-agente,
+      .coluna-agente.em-lancamento .wrap-nome-agente {
+        animation: piscarDestaqueNomeTabela 0.85s infinite ease-in-out !important;
+        border-radius: 6px;
+      }
+
+      .coluna-agente:focus-within .icone-lancando-agente,
+      .coluna-agente.em-lancamento .icone-lancando-agente {
+        display: inline-block;
+        animation: balancoIconeLancamento 0.6s infinite alternate ease-in-out;
+      }
+
+      .coluna-agente:focus-within input.nome-agente,
+      .coluna-agente.em-lancamento input.nome-agente {
+        animation: piscarTextoNomeTabela 0.85s infinite ease-in-out !important;
+        font-weight: 900 !important;
+        font-size: 0.84rem !important;
+        letter-spacing: 0.4px;
+      }
+
+      @media print, .capturando-pdf {
+        .badge-em-lancamento, .icone-lancando-agente { display: none !important; }
+        .coluna-agente:focus-within, .coluna-agente.em-lancamento { box-shadow: none !important; }
+        .coluna-agente:focus-within .th-nome-agente, .coluna-agente.em-lancamento .th-nome-agente,
+        .coluna-agente:focus-within .wrap-nome-agente, .coluna-agente.em-lancamento .wrap-nome-agente,
+        .coluna-agente:focus-within input.nome-agente, .coluna-agente.em-lancamento input.nome-agente,
+        .coluna-agente:focus-within .cabecalho-agente h3, .coluna-agente.em-lancamento .cabecalho-agente h3 {
+          animation: none !important;
+          background: transparent !important;
+          transform: none !important;
+          box-shadow: none !important;
+        }
+      }
       .col-total { background: #fef3c7 !important; font-weight: 700; color: #92400e; }
       .col-calculada { background: #dbeafe !important; font-weight: 700; color: #1e40af; }
       .celula-rotulo { background: #f8fafc; font-weight: 700; color: #14532d; text-align: left; padding-left: 5px !important; }
@@ -3767,7 +3907,7 @@
         const cab = document.createElement("div"); cab.className = "cabecalho-agente";
         const tm = TEMAS_CORES_AGENTES[t];
         const info = document.createElement("div"); info.style.display = "flex"; info.style.alignItems = "center"; info.style.gap = "8px"; info.style.flexWrap = "wrap";
-        info.innerHTML = `<h3>${ag.nome || "Agente"}</h3><span class="badge-tema-agente" title="Identificação visual do agente">${tm.icone} ${tm.nome}</span>`;
+        info.innerHTML = `<h3>${ag.nome || "Agente"}</h3><span class="badge-tema-agente" title="Identificação visual do agente">${tm.icone} ${tm.nome}</span><span class="badge-em-lancamento">✍️ LANÇANDO NESTE AGENTE</span>`;
         if (!ag.ativo) info.innerHTML += `<span class="tag-inativo">🔒 INATIVO</span>`;
         cab.appendChild(info);
         const ac = document.createElement("div"); ac.className = "acoes";
@@ -3782,6 +3922,25 @@
         corpo.appendChild(criarBlocoSimples(ag, "b4", LINHAS_BLOCO_4)); corpo.appendChild(criarSeparador());
         corpo.appendChild(criarBlocoDepositos(ag));
         col.appendChild(corpo);
+        col.addEventListener("focusin", () => {
+          document.querySelectorAll(".coluna-agente.em-lancamento").forEach(el => {
+            if (el !== col) el.classList.remove("em-lancamento");
+          });
+          col.classList.add("em-lancamento");
+        });
+        col.addEventListener("focusout", (e) => {
+          if (!col.contains(e.relatedTarget)) {
+            col.classList.remove("em-lancamento");
+          }
+        });
+        col.addEventListener("input", () => {
+          if (!col.classList.contains("em-lancamento")) {
+            document.querySelectorAll(".coluna-agente.em-lancamento").forEach(el => {
+              if (el !== col) el.classList.remove("em-lancamento");
+            });
+            col.classList.add("em-lancamento");
+          }
+        });
         return col;
       }
       function criarSeparador() { const s = document.createElement("div"); s.className = "separador-bloco"; return s; }
@@ -3794,7 +3953,7 @@
       function criarBlocoQuarteirao(ag) {
         const w = document.createElement("div"); w.className = "bloco-tabela"; const v = valoresDoDia(ag); const t = document.createElement("table"); aplicarColgroupBloco(t);
         const dA = diaAtual(); const dS = dA ? dA.data : hojeISO(); const th = document.createElement("thead"); const trId = document.createElement("tr"); trId.className = "linha-identificacao";
-        trId.innerHTML = `<th colspan="2">📅 ${formatarDataBR(dS)}</th><th colspan="2">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th><th colspan="2"><input type="text" class="nome-agente" value="${ag.nome}" /></th><th colspan="3" style="padding:2px 3px;"><div class="sup-cab"><span class="sup-rotulo">👁️ Supervisão?</span><select class="sup-sim-nao"><option value="">—</option><option value="Sim">Sim</option><option value="Não">Não</option></select><div class="sup-detalhes" style="display:none;"><label>D:</label><input type="text" inputmode="numeric" class="sup-input sup-direta" placeholder="0" /><label>I:</label><input type="text" inputmode="numeric" class="sup-input sup-indireta" placeholder="0" /><span class="sup-total-wrap"><strong>T:</strong> <span class="sup-total">0</span></span></div></div></th>`;
+        trId.innerHTML = `<th colspan="2">📅 ${formatarDataBR(dS)}</th><th colspan="2">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th><th colspan="2" class="th-nome-agente" title="Agente do lançamento"><div class="wrap-nome-agente"><span class="icone-lancando-agente">✍️</span><input type="text" class="nome-agente" value="${ag.nome}" /></div></th><th colspan="3" style="padding:2px 3px;"><div class="sup-cab"><span class="sup-rotulo">👁️ Supervisão?</span><select class="sup-sim-nao"><option value="">—</option><option value="Sim">Sim</option><option value="Não">Não</option></select><div class="sup-detalhes" style="display:none;"><label>D:</label><input type="text" inputmode="numeric" class="sup-input sup-direta" placeholder="0" /><label>I:</label><input type="text" inputmode="numeric" class="sup-input sup-indireta" placeholder="0" /><span class="sup-total-wrap"><strong>T:</strong> <span class="sup-total">0</span></span></div></div></th>`;
         th.appendChild(trId);
         trId.querySelector("input.nome-agente").addEventListener("input", e => { ag.nome = e.target.value; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(a => a.id === ag.id); if (c) c.nome = ag.nome; } const s = semana(); if (s?.cabecalho) { s.cabecalho.agentesEquipe = obterTextoAgentesEquipe(s); const eq = document.querySelector('[data-cab="agentesEquipe"]'); if (eq) eq.value = s.cabecalho.agentesEquipe; } salvar(); const h = document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"] .cabecalho-agente h3`); if (h) h.textContent = ag.nome || "Agente"; });
 
