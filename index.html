@@ -2159,7 +2159,7 @@
         messagingSenderId: "765398861975",
         appId: "1:765398861975:web:755041000a44ae269801d2"
       };
-      let db = null, dbAtivo = false, salvandoLocalmente = false, sincronizadoInicial = false;
+      let db = null, dbAtivo = false, salvandoLocalmente = false, sincronizadoInicial = false, firebaseConectado = false;
       function inicializarFirebase() {
         if (typeof firebase === "undefined") return false;
         try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); db = firebase.database(); dbAtivo = true; return true; }
@@ -2875,6 +2875,7 @@
           }
         } catch(e) {}
         const versoesPadrao = [
+          "pmcd_backup_offline_seguro",
           "lancamentos_campo_v27","lancamentos_campo_v26","lancamentos_campo_v25","lancamentos_campo_v24",
           "lancamentos_campo_v23","lancamentos_campo_v22","lancamentos_campo_v21",
           "lancamentos_campo_v20","lancamentos_campo_v19","lancamentos_campo_v18",
@@ -2923,28 +2924,68 @@
           } catch(e) {}
         }, 800);
       }
-      function salvarNuvem() {
+      function salvarNuvem(forcado = false) {
         if (estaModoLeitura()) return;
-        if (!dbAtivo || !db) return;
-        if (!sincronizadoInicial) {
-          console.warn("[PMCD] Bloqueado salvarNuvem antes da sincronização inicial para proteger dados.");
+        if (!dbAtivo || !db) {
+          atualizarStatusNuvem("💾 Salvo no aparelho (offline)", "offline");
           return;
         }
+
+        const online = (navigator.onLine !== false) && firebaseConectado;
+
+        // Se offline ou sem conexão ativa com o Firebase, mantém seguro no aparelho
+        if (!online) {
+          atualizarStatusNuvem("💾 Salvo no aparelho (offline)", "offline");
+          return;
+        }
+
+        // Se não houve sincronização inicial e não é um salvamento forçado, aguarda
+        if (!sincronizadoInicial && !forcado) {
+          console.warn("[PMCD] Aguardando conexão inicial da nuvem antes de salvar...");
+          return;
+        }
+
         atualizarStatusNuvem("⏳ Salvando...", "salvando");
         clearTimeout(timeoutSalvarNuvem);
+        const delay = forcado ? 50 : 500;
         timeoutSalvarNuvem = setTimeout(() => {
           try {
             salvandoLocalmente = true;
-            db.ref("pmcd_dados/principal").set(JSON.parse(JSON.stringify(estado)))
-              .then(() => { sincronizadoInicial = true; atualizarStatusNuvem("☁️ Nuvem OK", "online"); })
-              .catch(() => atualizarStatusNuvem("⚠️ Erro Nuvem", "offline"))
-              .finally(() => setTimeout(() => { salvandoLocalmente = false; }, 400));
+            const dadosParaEnviar = JSON.parse(JSON.stringify(estado));
+            dadosParaEnviar._pendenteSync = false;
+            dadosParaEnviar._atualizadoEm = estado._atualizadoEm || Date.now();
+
+            db.ref("pmcd_dados/principal").set(dadosParaEnviar)
+              .then(() => {
+                sincronizadoInicial = true;
+                if (estado) {
+                  estado._pendenteSync = false;
+                  estado._ultimoSyncNuvem = Date.now();
+                  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+                }
+                atualizarStatusNuvem("☁️ Nuvem OK", "online");
+              })
+              .catch((err) => {
+                console.warn("[PMCD] Falha temporária ao sincronizar com Firebase (mantido no aparelho):", err);
+                if (estado) {
+                  estado._pendenteSync = true;
+                  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+                }
+                atualizarStatusNuvem("💾 Salvo local (pendente)", "offline");
+              })
+              .finally(() => {
+                setTimeout(() => { salvandoLocalmente = false; }, 400);
+              });
+
             // Sincroniza no nó compartilhado SOMENTE se houver quarteirões preenchidos localmente
             if (estado.resumoReconhecimento && contarPreenchidosReconhecimento(estado.resumoReconhecimento) > 0) {
               salvarReconhecimentoCompartilhado();
             }
-          } catch (e) { salvandoLocalmente = false; atualizarStatusNuvem("⚠️ Erro Local", "offline"); }
-        }, 500);
+          } catch (e) {
+            salvandoLocalmente = false;
+            atualizarStatusNuvem("💾 Salvo no aparelho (offline)", "offline");
+          }
+        }, delay);
       }
       function aplicarAtualizacaoReconhecimentoNuvem(dadosExternos, origem = "Andamento") {
         if (!dadosExternos || typeof dadosExternos !== "object") return;
@@ -2968,44 +3009,248 @@
           }
         }
       }
+      // Mesclagem inteligente entre dados locais e dados da nuvem:
+      // Preserva rigorosamente os lançamentos feitos offline e não deixa dados antigos da nuvem sobrescreverem o trabalho local.
+      function mesclarEstados(local, nuvem) {
+        if (!nuvem || typeof nuvem !== "object") return local || {};
+        if (!local || typeof local !== "object") return nuvem;
+
+        const resultado = JSON.parse(JSON.stringify(nuvem));
+
+        resultado.atividadeAtiva = local.atividadeAtiva || nuvem.atividadeAtiva || "ciclo";
+        resultado.semanaAtiva = local.semanaAtiva || nuvem.semanaAtiva;
+        resultado.diaAtivo = local.diaAtivo || nuvem.diaAtivo || "segunda";
+        resultado.cicloFiltroConsolidado = local.cicloFiltroConsolidado || nuvem.cicloFiltroConsolidado || "1";
+
+        // 1. Semanas e SemanasLiraa
+        ["semanas", "semanasLiraa"].forEach(tipoCol => {
+          const colLoc = local[tipoCol] || {};
+          const colNuv = resultado[tipoCol] || {};
+          resultado[tipoCol] = { ...colNuv };
+
+          Object.keys(colLoc).forEach(sk => {
+            if (!resultado[tipoCol][sk]) {
+              resultado[tipoCol][sk] = JSON.parse(JSON.stringify(colLoc[sk]));
+              return;
+            }
+            const semLoc = colLoc[sk];
+            const semNuv = resultado[tipoCol][sk];
+
+            if (semLoc.cabecalho) {
+              semNuv.cabecalho = semNuv.cabecalho || {};
+              CAMPOS_CABECALHO.forEach(c => {
+                if (semLoc.cabecalho[c] !== undefined && semLoc.cabecalho[c] !== null && String(semLoc.cabecalho[c]).trim() !== "") {
+                  semNuv.cabecalho[c] = semLoc.cabecalho[c];
+                }
+              });
+            }
+
+            if (semLoc.rodape) {
+              semNuv.rodape = semNuv.rodape || {};
+              if (semLoc.rodape.responsavel) semNuv.rodape.responsavel = semLoc.rodape.responsavel;
+              if (semLoc.rodape.data) semNuv.rodape.data = semLoc.rodape.data;
+              if (semLoc.rodape.observacao) semNuv.rodape.observacao = semLoc.rodape.observacao;
+              if (semLoc.rodape.fontResponsavel) semNuv.rodape.fontResponsavel = semLoc.rodape.fontResponsavel;
+            }
+
+            if (semLoc.dias) {
+              semNuv.dias = semNuv.dias || {};
+              DIAS_SEMANA.forEach(dk => {
+                const diaLoc = semLoc.dias[dk];
+                if (!diaLoc) return;
+                if (!semNuv.dias[dk]) {
+                  semNuv.dias[dk] = JSON.parse(JSON.stringify(diaLoc));
+                  return;
+                }
+                const diaNuv = semNuv.dias[dk];
+                if (diaLoc.data) diaNuv.data = diaLoc.data;
+                if (diaLoc.programados !== undefined && diaLoc.programados !== null && diaLoc.programados !== "") {
+                  diaNuv.programados = diaLoc.programados;
+                }
+                if (diaLoc._dataConfirmada) diaNuv._dataConfirmada = diaLoc._dataConfirmada;
+
+                if (Array.isArray(diaLoc.agentes)) {
+                  diaNuv.agentes = Array.isArray(diaNuv.agentes) ? diaNuv.agentes : [];
+                  diaLoc.agentes.forEach(agLoc => {
+                    if (!agLoc) return;
+                    let agNuv = diaNuv.agentes.find(a => a && a.id === agLoc.id);
+                    if (!agNuv && agLoc.nome) {
+                      agNuv = diaNuv.agentes.find(a => a && a.nome === agLoc.nome);
+                    }
+                    if (!agNuv) {
+                      diaNuv.agentes.push(JSON.parse(JSON.stringify(agLoc)));
+                      return;
+                    }
+                    if (agLoc.ativo !== undefined) agNuv.ativo = agLoc.ativo;
+                    if (agLoc.nome) agNuv.nome = agLoc.nome;
+
+                    agNuv.valores = agNuv.valores || {};
+                    const vLoc = agLoc.valores || {};
+                    Object.keys(vLoc).forEach(vk => {
+                      const valLoc = vLoc[vk];
+                      if (valLoc !== undefined && valLoc !== null && String(valLoc).trim() !== "") {
+                        agNuv.valores[vk] = valLoc;
+                      }
+                    });
+                  });
+                }
+              });
+            }
+          });
+        });
+
+        // 2. Quarteirões Concluídos
+        if (local.quarteiroesConcluidos || nuvem.quarteiroesConcluidos) {
+          resultado.quarteiroesConcluidos = { ...(nuvem.quarteiroesConcluidos || {}) };
+          const qLoc = local.quarteiroesConcluidos || {};
+          Object.keys(qLoc).forEach(k => {
+            const rL = qLoc[k];
+            const rN = resultado.quarteiroesConcluidos[k];
+            if (!rN) {
+              resultado.quarteiroesConcluidos[k] = rL;
+            } else {
+              const concluido = (rL.concluido || rN.concluido) && !rL._desmarcadoManual && !rN._desmarcadoManual;
+              resultado.quarteiroesConcluidos[k] = {
+                ...rN,
+                ...rL,
+                concluido: concluido,
+                dataConclusao: rL.dataConclusao || rN.dataConclusao || ""
+              };
+            }
+          });
+        }
+
+        // 3. Resumo Reconhecimento
+        const recLocalPreenchidos = contarPreenchidosReconhecimento(local.resumoReconhecimento);
+        const recNuvemPreenchidos = contarPreenchidosReconhecimento(nuvem.resumoReconhecimento);
+        resultado.resumoReconhecimento = (recLocalPreenchidos >= recNuvemPreenchidos)
+          ? (local.resumoReconhecimento || nuvem.resumoReconhecimento)
+          : (nuvem.resumoReconhecimento || local.resumoReconhecimento);
+
+        // 4. Programação
+        if (Array.isArray(local.programacao) && local.programacao.length > 0) {
+          if (!Array.isArray(resultado.programacao)) resultado.programacao = [];
+          local.programacao.forEach(pLoc => {
+            if (!pLoc || !pLoc.id) return;
+            const idx = resultado.programacao.findIndex(p => p && p.id === pLoc.id);
+            if (idx >= 0) resultado.programacao[idx] = pLoc;
+            else resultado.programacao.push(pLoc);
+          });
+        }
+
+        // 5. CiclosConfig
+        if (local.ciclosConfig) {
+          resultado.ciclosConfig = { ...(resultado.ciclosConfig || {}), ...local.ciclosConfig };
+        }
+
+        // 6. Configuração da Equipe e Estrato
+        if (local.configEquipe && Array.isArray(local.configEquipe.agentes)) {
+          if (!resultado.configEquipe) resultado.configEquipe = local.configEquipe;
+          else {
+            local.configEquipe.agentes.forEach(ag => {
+              if (!resultado.configEquipe.agentes.find(a => a && (a.id === ag.id || a.nome === ag.nome))) {
+                resultado.configEquipe.agentes.push(ag);
+              }
+            });
+          }
+        }
+        if (local.configEstrato) {
+          resultado.configEstrato = { ...(resultado.configEstrato || {}), ...local.configEstrato };
+        }
+
+        // 7. Relatórios de Campo
+        if (Array.isArray(local.relatoriosCampo) && local.relatoriosCampo.length > 0) {
+          if (!Array.isArray(resultado.relatoriosCampo)) resultado.relatoriosCampo = [];
+          local.relatoriosCampo.forEach(rLoc => {
+            if (!rLoc || !rLoc.id) return;
+            const idx = resultado.relatoriosCampo.findIndex(r => r && r.id === rLoc.id);
+            if (idx >= 0) {
+              const isoLoc = rLoc.atualizadoEm || "";
+              const isoNuv = resultado.relatoriosCampo[idx].atualizadoEm || "";
+              if (isoLoc >= isoNuv) resultado.relatoriosCampo[idx] = rLoc;
+            } else {
+              resultado.relatoriosCampo.push(rLoc);
+            }
+          });
+        }
+
+        return resultado;
+      }
       function iniciarSincronizacaoNuvem() {
-        if (!dbAtivo && !inicializarFirebase()) { atualizarStatusNuvem("⚙️ Modo Local", "offline"); return; }
+        if (!dbAtivo && !inicializarFirebase()) {
+          atualizarStatusNuvem("💾 Modo Local (salvo no aparelho)", "offline");
+          return;
+        }
+
         atualizarStatusNuvem("🔄 Conectando...", "salvando");
+
+        // Ouvinte do status de conexão direta com o Firebase
         db.ref(".info/connected").on("value", snap => {
           const on = snap.val() === true;
-          atualizarStatusNuvem(on ? (sincronizadoInicial ? "☁️ Nuvem OK" : "🔄 Sincronizando...") : "⚠️ Desconectado", on ? "online" : "offline");
+          firebaseConectado = on;
+          if (on) {
+            console.log("[PMCD] Conexão com Firebase estabelecida.");
+            if (estado && estado._pendenteSync) {
+              console.log("[PMCD] Há lançamentos offline pendentes. Sincronizando com a nuvem...");
+              atualizarStatusNuvem("🔄 Enviando pendências...", "salvando");
+              salvarNuvem(true);
+            } else {
+              atualizarStatusNuvem(sincronizadoInicial ? "☁️ Nuvem OK" : "🔄 Sincronizando...", "online");
+            }
+          } else {
+            console.log("[PMCD] Conexão com Firebase inativa.");
+            atualizarStatusNuvem(estado && estado._pendenteSync ? "💾 Salvo local (pendente)" : "💾 Modo Offline (salvo no aparelho)", "offline");
+          }
         });
+
+        // Ouvinte em tempo real da base principal
         db.ref("pmcd_dados/principal").on("value", snapshot => {
           if (salvandoLocalmente) return;
           sincronizadoInicial = true;
           const d = snapshot.val();
-          if (d && typeof d === "object" && (d.semanas || d.semanasLiraa)) {
-            const qLocal = contarTotalLancamentos(estado);
-            const qNuvem = contarTotalLancamentos(d);
-            if (qLocal > 0 && qNuvem === 0) {
-              console.warn(`[PMCD] Nuvem vazia (${qNuvem}) enquanto local possui ${qLocal} lançamentos. Preservando dados locais e restaurando nuvem!`);
-              salvarNuvem();
-              return;
+          const temDadosNuvem = d && typeof d === "object" && (d.semanas || d.semanasLiraa);
+          const temPendenciaLocal = !!(estado && estado._pendenteSync);
+          const qLocal = contarTotalLancamentos(estado);
+          const qNuvem = contarTotalLancamentos(d);
+
+          if (!temDadosNuvem) {
+            if (qLocal > 0) {
+              console.log("[PMCD] Nuvem vazia enquanto local possui lançamentos. Enviando dados locais para a nuvem...");
+              salvarNuvem(true);
+            } else {
+              atualizarStatusNuvem("☁️ Nuvem OK", "online");
             }
-            const recLocalPreenchidos = contarPreenchidosReconhecimento(estado.resumoReconhecimento);
-            const recNuvemPreenchidos = contarPreenchidosReconhecimento(d.resumoReconhecimento);
-            const recParaManter = (recLocalPreenchidos > recNuvemPreenchidos) ? estado.resumoReconhecimento : d.resumoReconhecimento;
-            estado = d;
-            if (recParaManter) estado.resumoReconhecimento = recParaManter;
-            if (estado._migracaoObsCiclo === undefined) estado._migracaoObsCiclo = false;
-            if (!estado.quarteiroesConcluidos) estado.quarteiroesConcluidos = {};
+            return;
+          }
+
+          // Se há pendência local ou o local possui mais lançamentos que a nuvem, mescla preservando o trabalho local
+          if (temPendenciaLocal || qLocal > qNuvem) {
+            console.log(`[PMCD] Sincronização inteligente: preservando lançamentos locais (Local: ${qLocal}, Nuvem: ${qNuvem})...`);
+            atualizarStatusNuvem("🔄 Sincronizando...", "salvando");
+            estado = mesclarEstados(estado, d);
+            estado._pendenteSync = true;
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+            carregar();
+            sincronizarPeriodosSemanasCiclo();
+            renderizar();
+            atualizarTotais();
+            // Propaga os dados mesclados para a nuvem para que outros dispositivos também recebam
+            salvarNuvem(true);
+          } else {
+            console.log("[PMCD] Atualização recebida da nuvem aplicada.");
+            estado = mesclarEstados(estado, d);
+            estado._pendenteSync = false;
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
             carregar();
             sincronizarPeriodosSemanasCiclo();
             renderizar();
             atualizarTotais();
             atualizarStatusNuvem("☁️ Nuvem OK", "online");
-          } else if (!d) {
-            salvarNuvem();
-          } else {
-            atualizarStatusNuvem("☁️ Nuvem OK", "online");
           }
-        }, () => atualizarStatusNuvem("⚠️ Offline", "offline"));
+        }, err => {
+          console.warn("[PMCD] Erro na sincronização Firebase:", err);
+          atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
+        });
 
         // Ouvinte em tempo real para a chave compartilhada com o aplicativo "Andamento dos quarteirões"
         db.ref("andamento_quarteiroes/resumo_reconhecimento").on("value", snapshot => {
@@ -3036,7 +3281,16 @@
       }
       function salvar() {
         if (estaModoLeitura()) return;
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+        estado._atualizadoEm = Date.now();
+        estado._pendenteSync = true;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+          if (contarTotalLancamentos(estado) > 0) {
+            localStorage.setItem("pmcd_backup_offline_seguro", JSON.stringify(estado));
+          }
+        } catch(e) {
+          console.error("[PMCD] Erro ao salvar localmente:", e);
+        }
         salvarNuvem();
       }
       function carregar() {
@@ -5416,6 +5670,37 @@
       document.addEventListener("DOMContentLoaded", () => {
         try {
           inicializarFirebase(); carregar(); iniciarSincronizacaoNuvem();
+          window.addEventListener("online", () => {
+            console.log("[PMCD] Conexão com a internet restabelecida.");
+            if (db) {
+              try { firebase.database().goOnline(); } catch(e) {}
+            } else {
+              inicializarFirebase();
+            }
+            if (estado && estado._pendenteSync) {
+              atualizarStatusNuvem("🔄 Enviando pendências...", "salvando");
+              salvarNuvem(true);
+            }
+          });
+          window.addEventListener("offline", () => {
+            console.log("[PMCD] Conexão com a internet perdida.");
+            firebaseConectado = false;
+            atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
+          });
+          window.addEventListener("beforeunload", () => {
+            if (estado && !estaModoLeitura()) {
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+            }
+          });
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "hidden" && estado && !estaModoLeitura()) {
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+            } else if (document.visibilityState === "visible") {
+              if (navigator.onLine && estado && estado._pendenteSync) {
+                salvarNuvem(true);
+              }
+            }
+          });
           const dH = document.getElementById("dataHoje"); if (dH) dH.textContent = formatarDataBR(hojeISO());
           let fS = "merriweather"; try { fS = localStorage.getItem("pmcd_fonte_preferida_v2") || "merriweather"; } catch(e) {}
           aplicarFonte(fS);
