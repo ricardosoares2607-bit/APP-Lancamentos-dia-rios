@@ -578,14 +578,16 @@
       #areaQuarteiroesDesignados.capturando-pdf .qd-total-item .qd-total-valor { font-size: 1.05rem !important; }
       #areaQuarteiroesDesignados.capturando-pdf .cabecalho-resumo { margin-bottom: 6px !important; padding-bottom: 6px !important; }
       #areaQuarteiroesDesignados.capturando-pdf .resumo-tabela th, #areaQuarteiroesDesignados.capturando-pdf .resumo-tabela td { padding: 3.5px 2px !important; font-size: 0.72rem !important; }
-      .sup-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+      .sup-cab { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
       .sup-rotulo { font-weight: 800; color: #14532d; font-size: 0.74rem; white-space: nowrap; }
-      .sup-sim-nao { padding: 2px 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.74rem; font-weight: 700; color: #14532d; background: #fff; outline: none; cursor: pointer; }
+      .sup-sim-nao { padding: 2px 4px; border: 1.5px solid #cbd5e1; border-radius: 4px; font-size: 0.74rem; font-weight: 700; color: #14532d; background: #fff; outline: none; cursor: pointer; transition: all 0.2s ease; }
       .sup-sim-nao:focus { border-color: #16a34a; background: #fff; box-shadow: 0 0 0 2px rgba(22,163,74,0.15); }
+      .sup-sim-nao.sup-obrigatorio-pendente { border-color: #dc2626 !important; background-color: #fef2f2 !important; color: #991b1b !important; box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important; }
+      .sup-sim-nao.sup-obrigatorio-pendente:hover { border-color: #b91c1c !important; background-color: #fee2e2 !important; }
       .sup-detalhes { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
       .sup-detalhes label { font-weight: 700; color: #14532d; font-size: 0.68rem; }
       .sup-input { width: 42px; padding: 2px 3px; border: 1px solid #cbd5e1; border-radius: 3px; text-align: center; font-size: 0.72rem; font-weight: 700; color: #14532d; outline: none; }
-      .sup-input:focus { background: #fef9c3; }
+      .sup-input:focus { background: #fef9c3; border-color: #16a34a; }
       .sup-total-wrap { background: #dcfce7; padding: 2px 5px; border-radius: 3px; font-size: 0.72rem; color: #14532d; white-space: nowrap; }
       .sup-total-wrap strong { color: #14532d; }
       .grupo-data.campo-obrigatorio { background: #fef2f2; border: 1.5px solid #fca5a5; }
@@ -4059,6 +4061,16 @@
         if (!ag || !dia) return;
         const v = valoresDoDia(ag); const c = dia._dataConfirmada === dia.data;
         const col = document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"]`); if (!col) return;
+        const selSup = col.querySelector(".sup-sim-nao");
+        if (selSup) {
+          if (!v["supSimNao"]) {
+            selSup.classList.add("sup-obrigatorio-pendente");
+            selSup.title = "Campo obrigatório: selecione Sim ou Não";
+          } else {
+            selSup.classList.remove("sup-obrigatorio-pendente");
+            selSup.title = "";
+          }
+        }
         if (!c) {
           col.querySelectorAll('.corpo-tabelas-agente input:not(.nome-agente), .corpo-tabelas-agente select').forEach(i => {
             i.disabled = true;
@@ -4135,6 +4147,7 @@
         });
       }
       function renderizarRodape() {
+        atualizarObservacaoSupervisaoSemana();
         const s = semana(); const r = s ? s.rodape : {};
         document.querySelectorAll("[data-rodape]").forEach(el => {
           const k = el.dataset.rodape; const vd = (k === "responsavel" && estado.configEquipe?.responsavel) ? estado.configEquipe.responsavel : "";
@@ -4238,7 +4251,7 @@
       function criarBlocoQuarteirao(ag) {
         const w = document.createElement("div"); w.className = "bloco-tabela"; const v = valoresDoDia(ag); const t = document.createElement("table"); aplicarColgroupBloco(t);
         const dA = diaAtual(); const dS = dA ? dA.data : hojeISO(); const th = document.createElement("thead"); const trId = document.createElement("tr"); trId.className = "linha-identificacao";
-        trId.innerHTML = `<th colspan="2">📅 ${formatarDataBR(dS)}</th><th colspan="2">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th><th colspan="2" class="th-nome-agente" title="Agente do lançamento"><div class="wrap-nome-agente"><span class="icone-lancando-agente">✍️</span><input type="text" class="nome-agente" value="${ag.nome}" /></div></th><th colspan="3" style="padding:2px 3px;"><div class="sup-cab"><span class="sup-rotulo">👁️ Supervisão?</span><select class="sup-sim-nao"><option value="">—</option><option value="Sim">Sim</option><option value="Não">Não</option></select><div class="sup-detalhes" style="display:none;"><label>D:</label><input type="text" inputmode="numeric" class="sup-input sup-direta" placeholder="0" /><label>I:</label><input type="text" inputmode="numeric" class="sup-input sup-indireta" placeholder="0" /><span class="sup-total-wrap"><strong>T:</strong> <span class="sup-total">0</span></span></div></div></th>`;
+        trId.innerHTML = `<th colspan="2">📅 ${formatarDataBR(dS)}</th><th colspan="2">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th><th colspan="2" class="th-nome-agente" title="Agente do lançamento"><div class="wrap-nome-agente"><span class="icone-lancando-agente">✍️</span><input type="text" class="nome-agente" value="${ag.nome}" /></div></th><th colspan="3" style="padding:2px 3px;"><div class="sup-cab"><span class="sup-rotulo">👁️ Supervisão? <strong style="color:#dc2626;" title="Obrigatório">*</strong></span><select class="sup-sim-nao" required aria-required="true"><option value="">Selecione...</option><option value="Sim">Sim</option><option value="Não">Não</option></select><div class="sup-detalhes" style="display:none;"><label>D:</label><input type="text" inputmode="numeric" class="sup-input sup-direta" placeholder="0" /><label>I:</label><input type="text" inputmode="numeric" class="sup-input sup-indireta" placeholder="0" /><span class="sup-total-wrap"><strong>T:</strong> <span class="sup-total">0</span></span></div></div></th>`;
         th.appendChild(trId);
         trId.querySelector("input.nome-agente").addEventListener("input", e => { ag.nome = e.target.value; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(a => a.id === ag.id); if (c) c.nome = ag.nome; } const s = semana(); if (s?.cabecalho) { s.cabecalho.agentesEquipe = obterTextoAgentesEquipe(s); const eq = document.querySelector('[data-cab="agentesEquipe"]'); if (eq) eq.value = s.cabecalho.agentesEquipe; } salvar(); const h = document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"] .cabecalho-agente h3`); if (h) h.textContent = ag.nome || "Agente"; });
 
@@ -4251,13 +4264,71 @@
           sel.value = v["supSimNao"] || "";
           inpD.value = v["supDireta"] || "";
           inpI.value = v["supIndireta"] || "";
-          const calc = () => { const tt = num(inpD.value) + num(inpI.value); totEl.textContent = fmtIntCell(tt); v["supTotal"] = String(tt); };
-          const sinc = () => { det.style.display = (sel.value === "Sim") ? "flex" : "none"; calc(); };
-          sel.addEventListener("change", () => { v["supSimNao"] = sel.value; sinc(); salvar(); });
-          inpD.addEventListener("input", () => { v["supDireta"] = inpD.value; calc(); salvar(); });
-          inpD.addEventListener("blur", () => { inpD.value = fmtIntCell(inpD.value); });
-          inpI.addEventListener("input", () => { v["supIndireta"] = inpI.value; calc(); salvar(); });
-          inpI.addEventListener("blur", () => { inpI.value = fmtIntCell(inpI.value); });
+          const atualizarEstiloObrigatorio = () => {
+            if (!sel.value) {
+              sel.classList.add("sup-obrigatorio-pendente");
+              sel.title = "Campo obrigatório: selecione Sim ou Não";
+            } else {
+              sel.classList.remove("sup-obrigatorio-pendente");
+              sel.title = "";
+            }
+          };
+          const calc = () => {
+            if (sel.value === "Sim") {
+              const d = num(inpD.value);
+              const i = num(inpI.value);
+              const tt = d + i;
+              totEl.textContent = fmtIntCell(tt);
+              v["supDireta"] = inpD.value;
+              v["supIndireta"] = inpI.value;
+              v["supTotal"] = String(tt);
+            } else {
+              totEl.textContent = "0";
+              v["supDireta"] = "0";
+              v["supIndireta"] = "0";
+              v["supTotal"] = "0";
+            }
+          };
+          const sinc = () => {
+            det.style.display = (sel.value === "Sim") ? "flex" : "none";
+            atualizarEstiloObrigatorio();
+            calc();
+          };
+          sel.addEventListener("change", () => {
+            v["supSimNao"] = sel.value;
+            if (sel.value === "Não") {
+              inpD.value = "";
+              inpI.value = "";
+              v["supDireta"] = "0";
+              v["supIndireta"] = "0";
+              v["supTotal"] = "0";
+            }
+            sinc();
+            salvar();
+            atualizarTotais();
+            atualizarObservacaoSupervisaoSemana();
+            renderizarResumo();
+          });
+          inpD.addEventListener("input", () => {
+            calc();
+            salvar();
+            atualizarTotais();
+            atualizarObservacaoSupervisaoSemana();
+            renderizarResumo();
+          });
+          inpD.addEventListener("blur", () => {
+            if (inpD.value.trim() !== "") inpD.value = fmtIntCell(inpD.value);
+          });
+          inpI.addEventListener("input", () => {
+            calc();
+            salvar();
+            atualizarTotais();
+            atualizarObservacaoSupervisaoSemana();
+            renderizarResumo();
+          });
+          inpI.addEventListener("blur", () => {
+            if (inpI.value.trim() !== "") inpI.value = fmtIntCell(inpI.value);
+          });
           sinc();
         })();
 
@@ -4416,20 +4487,33 @@
           const cel = document.querySelector(`[data-total-equipe-deposito-final="b5-c${c}"]`); if (cel) { if (c === COL_GRAMAS) cel.textContent = fmtDecCell(s); else cel.textContent = fmtIntCell(s); }
         }
         const tEe = num(document.querySelector(`[data-total-equipe-deposito-final="b5-c${COL_ENCONTRADO}"]`)?.textContent), tNe = num(document.querySelector(`[data-total-equipe-deposito-final="b5-c${COL_NAO_INSP}"]`)?.textContent); const ciTe = document.querySelector(`[data-inspecionado-equipe-total="1"]`); if (ciTe) ciTe.textContent = fmtIntCell(tEe - tNe);
+        atualizarObservacaoSupervisaoSemana();
         try { if (document.getElementById("aba-quarteiroes-designados")?.classList.contains("ativo")) renderizarQuarteiroesDesignados(); } catch(e) {}
       }
       function calcularSomasDia(diaKey, sk = null, repoA = null) {
         const repo = repoA || repoAtivo(); const s = sk ? repo[sk] : semana();
         if (!s || !s.dias || !s.dias[diaKey]) return null;
         const dia = s.dias[diaKey]; const ativos = (dia.agentes || []).filter(a => a && a.ativo);
-        const somas = { R: 0, C: 0, TB: 0, PE: 0, O: 0, TOTAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, IP: 0, RENDIMENTO: null, TRABALHADO: 0, QUARTEIRAO: 0, DEP: {}, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, ELIMINADOS: 0, TRATADOS_REAIS: 0, SUPERVISAO_REAL: 0 };
+        const somas = { R: 0, C: 0, TB: 0, PE: 0, O: 0, TOTAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, IP: 0, RENDIMENTO: null, TRABALHADO: 0, QUARTEIRAO: 0, DEP: {}, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, ELIMINADOS: 0, TRATADOS_REAIS: 0, SUPERVISAO_REAL: 0, SUPERVISAO_DIRETA: 0, SUPERVISAO_INDIRETA: 0 };
         TIPOS_DEPOSITOS.forEach(t => somas.DEP[t] = 0);
         let qT = 0, qQ = 0;
         ativos.forEach(ag => {
           if (!ag) return; const v = ag.valores || {}; let sA = 0;
           for (let c = 1; c <= 7; c++) { const r = num(v[`b1-r2-c${c}`]), cc = num(v[`b1-r3-c${c}`]), tb = num(v[`b1-r4-c${c}`]), o = num(v[`b1-r6-c${c}`]); somas.R += r; somas.C += cc; somas.TB += tb; somas.PE += num(v[`b1-r5-c${c}`]); somas.O += o; sA += r + cc + tb + o; somas.FECHADOS += num(v[`b2-r0-c${c}`]); somas.RECUPERADOS += num(v[`b2-r1-c${c}`]); somas.RECUSADOS += num(v[`b2-r2-c${c}`]); somas.ABANDONADOS += num(v[`b2-r3-c${c}`]); somas.ELIMINADOS += num(v[`b4-r0-c${c}`]); somas.TRATADOS_REAIS += num(v[`bTratados-r0-c${c}`]); const cQ = extrairQuarteiroesConcluidosColuna(v[`b1-r0-c${c}`], v[`b1-r1-c${c}`]); qQ += cQ.length; }
           if (sA > 0) qT++;
-          somas.SUPERVISAO_REAL += num(v["supTotal"]);
+          if (v["supSimNao"] === "Sim") {
+            const dir = num(v["supDireta"]);
+            const ind = num(v["supIndireta"]);
+            somas.SUPERVISAO_DIRETA += dir;
+            somas.SUPERVISAO_INDIRETA += ind;
+            somas.SUPERVISAO_REAL += (dir + ind);
+          } else if (!v["supSimNao"] && num(v["supTotal"]) > 0) {
+            const dir = num(v["supDireta"]);
+            const ind = num(v["supIndireta"]);
+            somas.SUPERVISAO_DIRETA += dir;
+            somas.SUPERVISAO_INDIRETA += ind;
+            somas.SUPERVISAO_REAL += (dir + ind > 0 ? dir + ind : num(v["supTotal"]));
+          }
           TIPOS_DEPOSITOS.forEach((_, i) => { const e = num(v[`b5-r${i}-c${COL_ENCONTRADO}`]), ni = num(v[`b5-r${i}-c${COL_NAO_INSP}`]); somas.DEP[TIPOS_DEPOSITOS[i]] += (e - ni > 0 ? e - ni : e); somas.DEP_TRATADOS += num(v[`b5-r${i}-c${COL_TRATADOS}`]); somas.DEP_LITROS += num(v[`b5-r${i}-c${COL_LITROS}`]); somas.DEP_GRAMAS += num(v[`b5-r${i}-c${COL_GRAMAS}`]); somas.DEP_FOCADOS += num(v[`b5-r${i}-c${COL_FOCADOS}`]); });
         });
         somas.TRABALHADO = qT; somas.QUARTEIRAO = qQ;
@@ -4452,6 +4536,90 @@
         if (t.TRABALHADO !== 0) t.RENDIMENTO = t.TOTAL / t.TRABALHADO;
         return t;
       }
+      const REGEX_LINHA_SUPERVISAO = /^Dia\s+\d{2}\/\d{2}\/\d{4},\s+[^,]+,\s+fo(?:i|ram)\s+realizada/i;
+      function formatarFraseSupervisaoDia(dataBR, nomeDiaMinusculo, total, direta, indireta) {
+        if (total <= 0) return "";
+        const prefixoQtd = total === 1 ? "foi realizada 1 supervisão" : `foram realizadas ${total} supervisões`;
+        let complemento = "";
+        if (direta > 0 && indireta > 0) {
+          const textoDir = direta === 1 ? "1 direta" : `${direta} diretas`;
+          const textoInd = indireta === 1 ? "1 indireta" : `${indireta} indiretas`;
+          complemento = `, sendo ${textoDir} e ${textoInd}`;
+        } else if (direta > 0) {
+          complemento = total === 1 ? " direta" : " diretas";
+        } else if (indireta > 0) {
+          complemento = total === 1 ? " indireta" : " indiretas";
+        }
+        return `Dia ${dataBR}, ${nomeDiaMinusculo}, ${prefixoQtd}${complemento}.`;
+      }
+      function atualizarObservacaoSupervisaoSemana(sk = null) {
+        const repo = repoAtivo();
+        const s = sk ? repo[sk] : semana();
+        if (!s) return;
+        if (!s.rodape) s.rodape = criarRodapeVazio();
+
+        const textoAtual = String(s.rodape.observacao || "");
+        const linhas = textoAtual.split("\n");
+        const linhasManuais = linhas.filter(l => !REGEX_LINHA_SUPERVISAO.test(l.trim()));
+        const textoManual = linhasManuais.join("\n").replace(/\s+$/, "");
+
+        const novasFrases = [];
+        DIAS_SEMANA.forEach(dk => {
+          const dia = s.dias?.[dk];
+          if (!dia) return;
+          const sd = calcularSomasDia(dk, sk, repo);
+          if (!sd || sd.SUPERVISAO_REAL <= 0) return;
+          const dataISO = dia.data || "";
+          const dataBR = formatarDataBR(dataISO);
+          if (!dataBR) return;
+          const nomeDia = (diaSemanaDeISO(dataISO) || NOMES_DIAS[dk] || "").toLowerCase();
+          const frase = formatarFraseSupervisaoDia(dataBR, nomeDia, sd.SUPERVISAO_REAL, sd.SUPERVISAO_DIRETA, sd.SUPERVISAO_INDIRETA);
+          if (frase) novasFrases.push(frase);
+        });
+
+        let novoTextoObs = "";
+        if (textoManual && novasFrases.length > 0) {
+          novoTextoObs = textoManual + "\n" + novasFrases.join("\n");
+        } else if (novasFrases.length > 0) {
+          novoTextoObs = novasFrases.join("\n");
+        } else {
+          novoTextoObs = textoManual;
+        }
+
+        s.rodape.observacao = novoTextoObs;
+
+        const txtEl = document.getElementById("rodapeObservacao");
+        if (txtEl && document.activeElement !== txtEl && txtEl.value !== novoTextoObs) {
+          txtEl.value = novoTextoObs;
+        }
+      }
+      function obterPendenciasSupervisaoSemana(s) {
+        if (!s || !s.dias) return [];
+        const pendencias = [];
+        DIAS_SEMANA.forEach(dk => {
+          const d = s.dias[dk];
+          if (!d || !Array.isArray(d.agentes)) return;
+          d.agentes.filter(a => a && a.ativo).forEach(ag => {
+            const v = ag.valores || {};
+            let temLancamento = false;
+            for (let c = 1; c <= 7; c++) {
+              if (String(v[`b1-r0-c${c}`] || '').trim() !== '' ||
+                  String(v[`b1-r1-c${c}`] || '').trim() !== '' ||
+                  num(v[`b1-r2-c${c}`]) > 0 || num(v[`b1-r3-c${c}`]) > 0 ||
+                  num(v[`b1-r4-c${c}`]) > 0 || num(v[`b1-r5-c${c}`]) > 0 ||
+                  num(v[`b1-r6-c${c}`]) > 0) {
+                temLancamento = true;
+                break;
+              }
+            }
+            if (temLancamento && (!v["supSimNao"] || v["supSimNao"].trim() === "")) {
+              const diaNome = (nomeDiaExibido(d.data, dk) || NOMES_DIAS[dk]);
+              pendencias.push(`${ag.nome || "Agente"} (${diaNome})`);
+            }
+          });
+        });
+        return pendencias;
+      }
       function fmtRendimento(v) {
         if (v === null || v === undefined || isNaN(Number(v))) return "—";
         const n = Number(v);
@@ -4469,6 +4637,7 @@
         return intPart + "," + p[1] + "%";
       }
       function renderizarResumo() {
+        atualizarObservacaoSupervisaoSemana();
         const w = document.getElementById("resumoWrapper"); if (!w) return;
         w.innerHTML = ""; const t = document.createElement("table"); t.className = "resumo-tabela";
         const cg = document.createElement("colgroup"); LARGURAS_TABELA_SEMANA.forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); }); t.appendChild(cg);
@@ -5844,6 +6013,13 @@
           const bAA = document.getElementById("btnAdicionarAgente"); if (bAA) bAA.addEventListener("click", adicionarAgente);
           document.querySelectorAll("[data-cab]").forEach(inp => inp.addEventListener("input", () => { const s = semana(); if (s?.cabecalho) s.cabecalho[inp.dataset.cab] = inp.value; if (estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(inp.dataset.cab)) estado.configEquipe[inp.dataset.cab] = inp.value; salvar(); renderizarConfigEquipe(); }));
           document.querySelectorAll("[data-rodape]").forEach(inp => inp.addEventListener("input", () => { const s = semana(); if (s?.rodape) s.rodape[inp.dataset.rodape] = inp.value; if (estado.configEquipe && inp.dataset.rodape === "responsavel") estado.configEquipe.responsavel = inp.value; salvar(); renderizarConfigEquipe(); }));
+          const txtObsEl = document.getElementById("rodapeObservacao");
+          if (txtObsEl) {
+            txtObsEl.addEventListener("blur", () => {
+              atualizarObservacaoSupervisaoSemana();
+              salvar();
+            });
+          }
           document.querySelectorAll("[data-ciclocab]").forEach(inp => inp.addEventListener("input", () => { if (!estado.ciclo.cabecalho) estado.ciclo.cabecalho = {}; estado.ciclo.cabecalho[inp.dataset.ciclocab] = inp.value; if (estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(inp.dataset.ciclocab)) estado.configEquipe[inp.dataset.ciclocab] = inp.value; salvar(); renderizarConfigEquipe(); }));
           document.querySelectorAll("[data-ciclorodape]").forEach(inp => inp.addEventListener("input", () => { if (!estado.ciclo.rodape) estado.ciclo.rodape = {}; estado.ciclo.rodape[inp.dataset.ciclorodape] = inp.value; if (estado.configEquipe && inp.dataset.ciclorodape === "responsavel") estado.configEquipe.responsavel = inp.value; salvar(); renderizarConfigEquipe(); }));
           configurarListenersConfigEquipe(); configurarListenersConfigEstrato(); configurarListenersResumoReconhecimento(); configurarListenersFad7(); configurarListenersRelatorioCampo(); instalarNavegacaoSetas(); configurarDashboard();
@@ -5863,6 +6039,11 @@
             if (sAtiva && semanaTemProgPendente(sAtiva)) {
               const dias = DIAS_SEMANA.filter(d => { const dd = sAtiva.dias?.[d]; return dd && temDadosProducaoReais(dd) && !progDiaPreenchido(dd); }).map(d => NOMES_DIAS[d]);
               alert(`⚠️ A semana ${pad2(chaveAtiva)} tem produção lançada sem 👥 Prog. nos dias: ${dias.join(", ")}. Preencha antes de gerar o PDF.`);
+              return;
+            }
+            const pendSup = obterPendenciasSupervisaoSemana(sAtiva);
+            if (pendSup.length > 0) {
+              alert(`⚠️ O campo 'Supervisão?' é obrigatório e está pendente para:\n- ${pendSup.slice(0, 5).join("\n- ")}${pendSup.length > 5 ? `\n... e mais ${pendSup.length - 5}` : ""}\n\nPreencha com 'Sim' ou 'Não' na aba Lançamentos Diários antes de gerar o PDF.`);
               return;
             }
             gerarPDF("areaImpressao", `PMCD_Resumo_Semana_${pad2(chaveAtiva)}_${hojeISO()}.pdf`).catch(e => alert("❌ " + (e?.message || e)));
@@ -5886,6 +6067,11 @@
           if (bPPI) bPPI.addEventListener("click", () => {
             const sAtiva = semana();
             if (sAtiva && semanaTemProgPendente(sAtiva)) { alert("⚠️ Preencha o campo 👥 Prog. antes de gerar o PDF desta semana."); return; }
+            const pendSup = obterPendenciasSupervisaoSemana(sAtiva);
+            if (pendSup.length > 0) {
+              alert(`⚠️ O campo 'Supervisão?' é obrigatório e está pendente para:\n- ${pendSup.slice(0, 5).join("\n- ")}${pendSup.length > 5 ? `\n... e mais ${pendSup.length - 5}` : ""}\n\nPreencha com 'Sim' ou 'Não' na aba Lançamentos Diários antes de gerar o PDF.`);
+              return;
+            }
             gerarPDF("areaProducaoIndividual", `PMCD_Producao_Individual_SE${pad2(estado.semanaAtiva)}_${hojeISO()}.pdf`).catch(e => alert("❌ " + (e?.message || e)));
           });
           const bQdPdf = document.getElementById("btnImprimirPDFQuarteiroes"); if (bQdPdf) bQdPdf.addEventListener("click", () => gerarPDF("areaQuarteiroesDesignados", `PMCD_Quarteiroes_Designados_${hojeISO()}.pdf`, { orientacao: "portrait" }).catch(e => alert("❌ " + (e?.message || e))));
