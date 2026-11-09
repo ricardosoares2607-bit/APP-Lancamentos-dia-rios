@@ -4401,8 +4401,43 @@
         });
         w.appendChild(t); return w;
       }
-      function criarColunaTotal() { const c = document.createElement("div"); c.className = "coluna-agente total"; c.innerHTML = `<div class="cabecalho-agente"><h3>🏆 TOTAL DA EQUIPE</h3></div>`; c.appendChild(criarTotalBlocoQuarteirao()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoImoveis()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b2", LINHAS_BLOCO_2)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("bTratados", LINHAS_BLOCO_TRATADOS)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoInformados()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b4", LINHAS_BLOCO_4)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoDepositos()); return c; }
-      function criarTotalBlocoQuarteirao() { const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const dA = diaAtual(); const dS = dA ? dA.data : hojeISO(); const th = document.createElement("thead"); th.innerHTML = `<tr class="linha-identificacao"><th colspan="3">📅 ${formatarDataBR(dS)}</th><th colspan="3">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th><th colspan="3">🏆 TOTAL</th></tr><tr><th>Formulário</th><th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th class="col-total">TOTAL</th></tr>`; t.appendChild(th); const tb = document.createElement("tbody"); [0,1].forEach(rIdx => { const l = LINHAS_BLOCO_1[rIdx]; const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeLinha = `b1-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDia = `b1-r${rIdx}-c${c}`; td.textContent = fmtIntCell(0); } tr.appendChild(td); } tb.appendChild(tr); }); t.appendChild(tb); w.appendChild(t); return w; }
+      function criarColunaTotal() {
+        const c = document.createElement("div"); c.className = "coluna-agente total";
+        c.innerHTML = `<div class="cabecalho-agente" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <h3>RESUMO DO DIA</h3>
+          <div class="sup-cab sup-resumo-dia-badge" style="gap:5px; background:rgba(255,255,255,0.85); padding:3px 8px; border-radius:6px; border:1px solid #86efac;" title="Supervisões realizadas no dia">
+            <span class="sup-rotulo">👁️ Supervisão:</span>
+            <div class="sup-detalhes" style="display:inline-flex; gap:4px;">
+              <span class="sup-total-wrap" style="background:#f0fdf4; border:1px solid #bbf7d0;" title="Supervisões Diretas no dia"><strong>D:</strong> <span data-total-equipe-sup-direta-cab>0</span></span>
+              <span class="sup-total-wrap" style="background:#f0fdf4; border:1px solid #bbf7d0;" title="Supervisões Indiretas no dia"><strong>I:</strong> <span data-total-equipe-sup-indireta-cab>0</span></span>
+              <span class="sup-total-wrap" style="background:#bbf7d0; font-weight:800; border:1px solid #86efac;" title="Total de Supervisões no dia"><strong>T:</strong> <span data-total-equipe-sup-total-cab>0</span></span>
+            </div>
+          </div>
+        </div>`;
+        c.appendChild(criarTotalBlocoQuarteirao()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoImoveis()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b2", LINHAS_BLOCO_2)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("bTratados", LINHAS_BLOCO_TRATADOS)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoInformados()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b4", LINHAS_BLOCO_4)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoDepositos()); return c;
+      }
+      function criarTotalBlocoQuarteirao() {
+        const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t);
+        const dA = diaAtual(); const dS = dA ? dA.data : hojeISO();
+        const th = document.createElement("thead");
+        th.innerHTML = `<tr class="linha-identificacao">
+          <th colspan="2">📅 ${formatarDataBR(dS)}</th>
+          <th colspan="2">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th>
+          <th colspan="2" style="font-weight:800; color:#14532d;">RESUMO DO DIA</th>
+          <th colspan="3" style="padding:2px 3px;">
+            <div class="sup-cab" title="Supervisões realizadas no dia">
+              <span class="sup-rotulo">👁️ Supervisão:</span>
+              <div class="sup-detalhes" style="display:inline-flex; gap:4px;">
+                <span class="sup-total-wrap" style="background:#f0fdf4; border:1px solid #bbf7d0;" title="Supervisões Diretas no dia"><strong>D:</strong> <span data-total-equipe-sup-direta>0</span></span>
+                <span class="sup-total-wrap" style="background:#f0fdf4; border:1px solid #bbf7d0;" title="Supervisões Indiretas no dia"><strong>I:</strong> <span data-total-equipe-sup-indireta>0</span></span>
+                <span class="sup-total-wrap" style="background:#bbf7d0; font-weight:800; border:1px solid #86efac;" title="Total de Supervisões no dia"><strong>T:</strong> <span data-total-equipe-sup-total>0</span></span>
+              </div>
+            </div>
+          </th>
+        </tr>
+        <tr><th>Formulário</th><th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th class="col-total">TOTAL</th></tr>`;
+        t.appendChild(th); const tb = document.createElement("tbody"); [0,1].forEach(rIdx => { const l = LINHAS_BLOCO_1[rIdx]; const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeLinha = `b1-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDia = `b1-r${rIdx}-c${c}`; td.textContent = fmtIntCell(0); } tr.appendChild(td); } tb.appendChild(tr); }); t.appendChild(tb); w.appendChild(t); return w;
+      }
       function criarTotalBlocoImoveis() { const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const th = document.createElement("thead"); th.innerHTML = `<tr><th colspan="9" class="titulo-producao">Produção</th></tr>`; t.appendChild(th); const tb = document.createElement("tbody"); [2,3,4,5,6].forEach(rIdx => { const l = LINHAS_BLOCO_1[rIdx]; const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeLinha = `b1-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDia = `b1-r${rIdx}-c${c}`; td.textContent = fmtIntCell(0); } tr.appendChild(td); } tb.appendChild(tr); }); const trT = document.createElement("tr"); trT.className = "linha-total-final"; for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = "TOTAL"; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeGeral = "1"; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDiaFinal = `c${c}`; td.textContent = fmtIntCell(0); } trT.appendChild(td); } tb.appendChild(trT); t.appendChild(tb); w.appendChild(t); return w; }
       function criarTotalBlocoSimples(bId, linhas) { const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const tb = document.createElement("tbody"); linhas.forEach((l, rIdx) => { const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeLinhaBloco = `${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDiaBloco = `${bId}-r${rIdx}-c${c}`; td.textContent = fmtIntCell(0); } tr.appendChild(td); } tb.appendChild(tr); }); t.appendChild(tb); w.appendChild(t); return w; }
       function criarTotalBlocoInformados() { const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const tb = document.createElement("tbody"); const tr = document.createElement("tr"); tr.innerHTML = `<td class="celula-rotulo">Informados</td>`; for (let c = 1; c <= 7; c++) tr.innerHTML += `<td class="col-calculada" data-informado-equipe-dia="c${c}">${fmtIntCell(0)}</td>`; tr.innerHTML += `<td class="col-total" data-informado-equipe-total="1">${fmtIntCell(0)}</td>`; tb.appendChild(tr); t.appendChild(tb); w.appendChild(t); return w; }
@@ -4487,6 +4522,16 @@
           const cel = document.querySelector(`[data-total-equipe-deposito-final="b5-c${c}"]`); if (cel) { if (c === COL_GRAMAS) cel.textContent = fmtDecCell(s); else cel.textContent = fmtIntCell(s); }
         }
         const tEe = num(document.querySelector(`[data-total-equipe-deposito-final="b5-c${COL_ENCONTRADO}"]`)?.textContent), tNe = num(document.querySelector(`[data-total-equipe-deposito-final="b5-c${COL_NAO_INSP}"]`)?.textContent); const ciTe = document.querySelector(`[data-inspecionado-equipe-total="1"]`); if (ciTe) ciTe.textContent = fmtIntCell(tEe - tNe);
+        const sdDia = calcularSomasDia(estado.diaAtivo);
+        const totSupDir = sdDia ? sdDia.SUPERVISAO_DIRETA : 0;
+        const totSupInd = sdDia ? sdDia.SUPERVISAO_INDIRETA : 0;
+        const totSupGeral = sdDia ? sdDia.SUPERVISAO_REAL : 0;
+        document.querySelectorAll("[data-total-equipe-sup-direta]").forEach(el => el.textContent = fmtIntCell(totSupDir));
+        document.querySelectorAll("[data-total-equipe-sup-indireta]").forEach(el => el.textContent = fmtIntCell(totSupInd));
+        document.querySelectorAll("[data-total-equipe-sup-total]").forEach(el => el.textContent = fmtIntCell(totSupGeral));
+        document.querySelectorAll("[data-total-equipe-sup-direta-cab]").forEach(el => el.textContent = fmtIntCell(totSupDir));
+        document.querySelectorAll("[data-total-equipe-sup-indireta-cab]").forEach(el => el.textContent = fmtIntCell(totSupInd));
+        document.querySelectorAll("[data-total-equipe-sup-total-cab]").forEach(el => el.textContent = fmtIntCell(totSupGeral));
         atualizarObservacaoSupervisaoSemana();
         try { if (document.getElementById("aba-quarteiroes-designados")?.classList.contains("ativo")) renderizarQuarteiroesDesignados(); } catch(e) {}
       }
