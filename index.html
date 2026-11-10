@@ -2355,12 +2355,12 @@
       const COL_ENCONTRADO = 0, COL_NAO_INSP = 1, COL_INSP = 2, COL_FOCADOS = 3, COL_TRATADOS = 4, COL_LITROS = 5, COL_GRAMAS = 6, COL_TOTAL_DEP = 7;
       const COLUNAS_1_5 = ["Data","Prog.","Trab.","Quart."];
       const COLUNAS_CICLO_1_5 = ["Semana","Período","Prog.","Trab.","Quart."];
-      const COLUNAS_6_11 = ["R","C","TB","PE","O","TOTAL"];
+      const COLUNAS_6_11 = ["R","C","TB","O","TOTAL"];
       const COLUNAS_12_20 = ["Trat.","Fec.","Recp.","Recs.","Aband.","Inf.","Pend.","IP","Rend."];
       const COLUNAS_21_28 = ["A1","A2","B","C","D1","D2","E","TOTAL"];
       const COLUNAS_29_34 = ["Trat.","Lit.","g.","Elim.","Foc.","Sup."];
-      const LARGURAS_TABELA_SEMANA = ["165px","44px","44px","44px","38px","38px","38px","38px","38px","52px","44px","42px","44px","42px","44px","46px","46px","48px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
-      const LARGURAS_TABELA_CICLO = ["100px","160px","44px","44px","44px","38px","38px","38px","38px","38px","52px","44px","42px","44px","42px","44px","46px","46px","48px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
+      const LARGURAS_TABELA_SEMANA = ["165px","44px","44px","44px","38px","38px","38px","38px","52px","44px","42px","44px","42px","44px","46px","46px","48px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
+      const LARGURAS_TABELA_CICLO = ["100px","160px","44px","44px","44px","38px","38px","38px","38px","52px","44px","42px","44px","42px","44px","46px","46px","48px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
       const CAMPOS_CABECALHO = ["bairro","estrato","equipe","agentesEquipe","supervisor","mes","ciclo","cicloInicio","cicloTermino","semana","semanaInicio","semanaTermino"];
       let estado = {
         atividadeAtiva: "ciclo", semanaAtiva: "1", diaAtivo: "segunda",
@@ -2370,7 +2370,15 @@
         relatoriosCampo: [], _migracaoObsCiclo: false,
         quarteiroesConcluidos: {}
       };
-      if (typeof window !== "undefined") window.estado = estado;
+      if (typeof window !== "undefined") {
+        try {
+          Object.defineProperty(window, "estado", {
+            get() { return estado; },
+            set(v) { estado = v; },
+            configurable: true
+          });
+        } catch(e) { window.estado = estado; }
+      }
       function formatarNumeroMilhar(v) {
         if (v === undefined || v === null) return "";
         const s = String(v).trim();
@@ -3515,9 +3523,14 @@
               for (let c = 1; c <= 7; c++) {
                 const rawQ = v[`b1-r0-c${c}`];
                 if (rawQ === undefined || rawQ === null) continue;
+                const r = num(v[`b1-r2-c${c}`]), cc = num(v[`b1-r3-c${c}`]), tb = num(v[`b1-r4-c${c}`]), o = num(v[`b1-r6-c${c}`]);
+                const pe = num(v[`b1-r5-c${c}`]);
+                const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(rawQ).trim());
+                if (isColPE) continue;
                 const concluidosLista = extrairQuarteiroesConcluidosColuna(rawQ, v[`b1-r1-c${c}`]);
                 const concluidosSet = new Set(concluidosLista);
                 extrairQuarteiroesDeTexto(rawQ).forEach(qRaw => {
+                  if (/\bPE\b|^PE[-_\s0-9]/i.test(String(qRaw).trim())) return;
                   const q = normalizarQuarteirao(qRaw); if (!q) return;
                   const nome = (ag.nome || "").trim(); if (!nome) return;
                   const estaConcluido = concluidosSet.has(q);
@@ -3620,11 +3633,18 @@
               const nome = (ag.nome || "Agente").trim();
               const key = ag.id || nome.toLowerCase();
               if (!agg.porAgente[key]) agg.porAgente[key] = { nome, ativo: ag.ativo !== false, total: 0, dias: 0, depositos: 0 };
-              let prod = 0;
-              for (let c = 1; c <= 7; c++) prod += num(ag.valores?.[`b1-r2-c${c}`]) + num(ag.valores?.[`b1-r3-c${c}`]) + num(ag.valores?.[`b1-r4-c${c}`]) + num(ag.valores?.[`b1-r6-c${c}`]);
+              let prod = 0, peAg = 0;
+              for (let c = 1; c <= 7; c++) {
+                prod += num(ag.valores?.[`b1-r2-c${c}`]) + num(ag.valores?.[`b1-r3-c${c}`]) + num(ag.valores?.[`b1-r4-c${c}`]) + num(ag.valores?.[`b1-r6-c${c}`]);
+                peAg += num(ag.valores?.[`b1-r5-c${c}`]);
+              }
               agg.porAgente[key].total += prod;
-              if (prod > 0) agg.porAgente[key].dias += 1;
-              TIPOS_DEPOSITOS.forEach((_, i) => { agg.porAgente[key].depositos += num(ag.valores?.[`b5-r${i}-c${COL_TRATADOS}`]); });
+              if (prod > 0) {
+                agg.porAgente[key].dias += 1;
+                TIPOS_DEPOSITOS.forEach((_, i) => { agg.porAgente[key].depositos += num(ag.valores?.[`b5-r${i}-c${COL_TRATADOS}`]); });
+              } else if (peAg === 0) {
+                TIPOS_DEPOSITOS.forEach((_, i) => { agg.porAgente[key].depositos += num(ag.valores?.[`b5-r${i}-c${COL_TRATADOS}`]); });
+              }
             });
           });
         });
@@ -4456,10 +4476,27 @@
           if (!ag) return;
           const v = valoresDoDia(ag);
           LINHAS_BLOCO_1.forEach((l, rIdx) => {
-            if (l.tipo === "quarteirao") { const lst = []; for (let c = 1; c <= 7; c++) { const x = v[`b1-r${rIdx}-c${c}`]; if (x !== undefined && x !== null && String(x).trim() !== "") lst.push(x); } const cel = document.querySelector(`[data-total-linha="${ag.id}-b1-r${rIdx}"]`); if (cel) cel.textContent = fmtIntCell(contarQuarteiroesLinha(lst)); return; }
+            if (l.tipo === "quarteirao") {
+              const lst = [];
+              for (let c = 1; c <= 7; c++) {
+                const r = num(v[`b1-r2-c${c}`]), cc = num(v[`b1-r3-c${c}`]), tb = num(v[`b1-r4-c${c}`]), o = num(v[`b1-r6-c${c}`]);
+                const pe = num(v[`b1-r5-c${c}`]);
+                const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(v[`b1-r0-c${c}`] || "").trim());
+                if (isColPE) continue;
+                const x = v[`b1-r${rIdx}-c${c}`];
+                if (x !== undefined && x !== null && String(x).trim() !== "") lst.push(x);
+              }
+              const cel = document.querySelector(`[data-total-linha="${ag.id}-b1-r${rIdx}"]`);
+              if (cel) cel.textContent = fmtIntCell(contarQuarteiroesLinha(lst));
+              return;
+            }
             if (l.tipo === "concluido") {
               let totAg = 0;
               for (let c = 1; c <= 7; c++) {
+                const r = num(v[`b1-r2-c${c}`]), cc = num(v[`b1-r3-c${c}`]), tb = num(v[`b1-r4-c${c}`]), o = num(v[`b1-r6-c${c}`]);
+                const pe = num(v[`b1-r5-c${c}`]);
+                const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(v[`b1-r0-c${c}`] || "").trim());
+                if (isColPE) continue;
                 totAg += extrairQuarteiroesConcluidosColuna(v[`b1-r0-c${c}`], v[`b1-r1-c${c}`]).length;
               }
               const cel = document.querySelector(`[data-total-linha="${ag.id}-b1-r${rIdx}"]`);
@@ -4483,13 +4520,47 @@
           aplicarBloqueiosAgente(ag, dia);
         });
         LINHAS_BLOCO_1.forEach((l, rIdx) => {
-          if (l.tipo === "quarteirao") { for (let c = 1; c <= 7; c++) { const vc = []; ativos.forEach(a => { const x = valoresDoDia(a)[`b1-r${rIdx}-c${c}`]; if (x !== undefined && x !== null && String(x).trim() !== "") vc.push(x); }); const cel = document.querySelector(`[data-total-equipe-dia="b1-r${rIdx}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(contarQuarteiroesLinha(vc)); } const vd = []; ativos.forEach(a => { for (let c = 1; c <= 7; c++) { const x = valoresDoDia(a)[`b1-r${rIdx}-c${c}`]; if (x !== undefined && x !== null && String(x).trim() !== "") vd.push(x); } }); const celL = document.querySelector(`[data-total-equipe-linha="b1-r${rIdx}"]`); if (celL) celL.textContent = fmtIntCell(contarQuarteiroesLinha(vd)); return; }
+          if (l.tipo === "quarteirao") {
+            for (let c = 1; c <= 7; c++) {
+              const vc = [];
+              ativos.forEach(a => {
+                const vA = valoresDoDia(a);
+                const r = num(vA[`b1-r2-c${c}`]), cc = num(vA[`b1-r3-c${c}`]), tb = num(vA[`b1-r4-c${c}`]), o = num(vA[`b1-r6-c${c}`]);
+                const pe = num(vA[`b1-r5-c${c}`]);
+                const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(vA[`b1-r0-c${c}`] || "").trim());
+                if (isColPE) return;
+                const x = vA[`b1-r${rIdx}-c${c}`];
+                if (x !== undefined && x !== null && String(x).trim() !== "") vc.push(x);
+              });
+              const cel = document.querySelector(`[data-total-equipe-dia="b1-r${rIdx}-c${c}"]`);
+              if (cel) cel.textContent = fmtIntCell(contarQuarteiroesLinha(vc));
+            }
+            const vd = [];
+            ativos.forEach(a => {
+              const vA = valoresDoDia(a);
+              for (let c = 1; c <= 7; c++) {
+                const r = num(vA[`b1-r2-c${c}`]), cc = num(vA[`b1-r3-c${c}`]), tb = num(vA[`b1-r4-c${c}`]), o = num(vA[`b1-r6-c${c}`]);
+                const pe = num(vA[`b1-r5-c${c}`]);
+                const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(vA[`b1-r0-c${c}`] || "").trim());
+                if (isColPE) continue;
+                const x = vA[`b1-r${rIdx}-c${c}`];
+                if (x !== undefined && x !== null && String(x).trim() !== "") vd.push(x);
+              }
+            });
+            const celL = document.querySelector(`[data-total-equipe-linha="b1-r${rIdx}"]`);
+            if (celL) celL.textContent = fmtIntCell(contarQuarteiroesLinha(vd));
+            return;
+          }
           if (l.tipo === "concluido") {
             let totalEquipeLinha = 0;
             for (let c = 1; c <= 7; c++) {
               let totColEquipe = 0;
               ativos.forEach(a => {
                 const vA = valoresDoDia(a);
+                const r = num(vA[`b1-r2-c${c}`]), cc = num(vA[`b1-r3-c${c}`]), tb = num(vA[`b1-r4-c${c}`]), o = num(vA[`b1-r6-c${c}`]);
+                const pe = num(vA[`b1-r5-c${c}`]);
+                const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(vA[`b1-r0-c${c}`] || "").trim());
+                if (isColPE) return;
                 totColEquipe += extrairQuarteiroesConcluidosColuna(vA[`b1-r0-c${c}`], vA[`b1-r1-c${c}`]).length;
               });
               const cel = document.querySelector(`[data-total-equipe-dia="b1-r${rIdx}-c${c}"]`);
@@ -4543,10 +4614,27 @@
         TIPOS_DEPOSITOS.forEach(t => somas.DEP[t] = 0);
         let qT = 0, qQ = 0;
         ativos.forEach(ag => {
-          if (!ag) return; const v = ag.valores || {}; let sA = 0;
-          for (let c = 1; c <= 7; c++) { const r = num(v[`b1-r2-c${c}`]), cc = num(v[`b1-r3-c${c}`]), tb = num(v[`b1-r4-c${c}`]), o = num(v[`b1-r6-c${c}`]); somas.R += r; somas.C += cc; somas.TB += tb; somas.PE += num(v[`b1-r5-c${c}`]); somas.O += o; sA += r + cc + tb + o; somas.FECHADOS += num(v[`b2-r0-c${c}`]); somas.RECUPERADOS += num(v[`b2-r1-c${c}`]); somas.RECUSADOS += num(v[`b2-r2-c${c}`]); somas.ABANDONADOS += num(v[`b2-r3-c${c}`]); somas.ELIMINADOS += num(v[`b4-r0-c${c}`]); somas.TRATADOS_REAIS += num(v[`bTratados-r0-c${c}`]); const cQ = extrairQuarteiroesConcluidosColuna(v[`b1-r0-c${c}`], v[`b1-r1-c${c}`]); qQ += cQ.length; }
+          if (!ag) return; const v = ag.valores || {}; let sA = 0, peAgente = 0;
+          for (let c = 1; c <= 7; c++) {
+            const r = num(v[`b1-r2-c${c}`]), cc = num(v[`b1-r3-c${c}`]), tb = num(v[`b1-r4-c${c}`]), o = num(v[`b1-r6-c${c}`]);
+            const pe = num(v[`b1-r5-c${c}`]);
+            somas.R += r; somas.C += cc; somas.TB += tb; somas.PE += pe; somas.O += o;
+            sA += r + cc + tb + o;
+            peAgente += pe;
+            const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(v[`b1-r0-c${c}`] || "").trim());
+            if (!isColPE) {
+              somas.FECHADOS += num(v[`b2-r0-c${c}`]);
+              somas.RECUPERADOS += num(v[`b2-r1-c${c}`]);
+              somas.RECUSADOS += num(v[`b2-r2-c${c}`]);
+              somas.ABANDONADOS += num(v[`b2-r3-c${c}`]);
+              somas.ELIMINADOS += num(v[`b4-r0-c${c}`]);
+              somas.TRATADOS_REAIS += num(v[`bTratados-r0-c${c}`]);
+              const cQ = extrairQuarteiroesConcluidosColuna(v[`b1-r0-c${c}`], v[`b1-r1-c${c}`]);
+              qQ += cQ.length;
+            }
+          }
           if (sA > 0) qT++;
-          if (v["supSimNao"] === "Sim") {
+          if (v["supSimNao"] && String(v["supSimNao"]).trim().toLowerCase() === "sim") {
             const dir = num(v["supDireta"]);
             const ind = num(v["supIndireta"]);
             somas.SUPERVISAO_DIRETA += dir;
@@ -4559,7 +4647,17 @@
             somas.SUPERVISAO_INDIRETA += ind;
             somas.SUPERVISAO_REAL += (dir + ind > 0 ? dir + ind : num(v["supTotal"]));
           }
-          TIPOS_DEPOSITOS.forEach((_, i) => { const e = num(v[`b5-r${i}-c${COL_ENCONTRADO}`]), ni = num(v[`b5-r${i}-c${COL_NAO_INSP}`]); somas.DEP[TIPOS_DEPOSITOS[i]] += (e - ni > 0 ? e - ni : e); somas.DEP_TRATADOS += num(v[`b5-r${i}-c${COL_TRATADOS}`]); somas.DEP_LITROS += num(v[`b5-r${i}-c${COL_LITROS}`]); somas.DEP_GRAMAS += num(v[`b5-r${i}-c${COL_GRAMAS}`]); somas.DEP_FOCADOS += num(v[`b5-r${i}-c${COL_FOCADOS}`]); });
+          const agExclusivoPE = (sA === 0 && peAgente > 0);
+          if (!agExclusivoPE) {
+            TIPOS_DEPOSITOS.forEach((_, i) => {
+              const e = num(v[`b5-r${i}-c${COL_ENCONTRADO}`]), ni = num(v[`b5-r${i}-c${COL_NAO_INSP}`]);
+              somas.DEP[TIPOS_DEPOSITOS[i]] += (e - ni > 0 ? e - ni : e);
+              somas.DEP_TRATADOS += num(v[`b5-r${i}-c${COL_TRATADOS}`]);
+              somas.DEP_LITROS += num(v[`b5-r${i}-c${COL_LITROS}`]);
+              somas.DEP_GRAMAS += num(v[`b5-r${i}-c${COL_GRAMAS}`]);
+              somas.DEP_FOCADOS += num(v[`b5-r${i}-c${COL_FOCADOS}`]);
+            });
+          }
         });
         somas.TRABALHADO = qT; somas.QUARTEIRAO = qQ;
         somas.TOTAL = somas.R + somas.C + somas.TB + somas.O;
@@ -4582,6 +4680,14 @@
         return t;
       }
       const REGEX_LINHA_SUPERVISAO = /^Dia\s+\d{2}\/\d{2}\/\d{4},\s+[^,]+,\s+fo(?:i|ram)\s+realizada/i;
+      const REGEX_LINHA_PE = /^N[ao]\s+[^,]+,\s+dia\s+\d{2}\/\d{2}\/\d{4},\s+fo(?:i|ram)\s+realizada/i;
+      function formatarFrasePEDia(dataBR, nomeDiaMinusculo, qtd) {
+        if (qtd <= 0) return "";
+        const dMinusculo = (nomeDiaMinusculo || "").toLowerCase();
+        const artigo = (dMinusculo === "sábado" || dMinusculo === "domingo") ? "No" : "Na";
+        const textoInspecao = qtd === 1 ? "foi realizada a inspeção em 1 PE." : `foram realizadas as inspeções em ${qtd} PE's.`;
+        return `${artigo} ${dMinusculo}, dia ${dataBR}, ${textoInspecao}`;
+      }
       function formatarFraseSupervisaoDia(dataBR, nomeDiaMinusculo, total, direta, indireta) {
         if (total <= 0) return "";
         const prefixoQtd = total === 1 ? "foi realizada 1 supervisão" : `foram realizadas ${total} supervisões`;
@@ -4605,7 +4711,7 @@
 
         const textoAtual = String(s.rodape.observacao || "");
         const linhas = textoAtual.split("\n");
-        const linhasManuais = linhas.filter(l => !REGEX_LINHA_SUPERVISAO.test(l.trim()));
+        const linhasManuais = linhas.filter(l => !REGEX_LINHA_SUPERVISAO.test(l.trim()) && !REGEX_LINHA_PE.test(l.trim()));
         const textoManual = linhasManuais.join("\n").replace(/\s+$/, "");
 
         const novasFrases = [];
@@ -4613,13 +4719,21 @@
           const dia = s.dias?.[dk];
           if (!dia) return;
           const sd = calcularSomasDia(dk, sk, repo);
-          if (!sd || sd.SUPERVISAO_REAL <= 0) return;
+          if (!sd) return;
           const dataISO = dia.data || "";
           const dataBR = formatarDataBR(dataISO);
           if (!dataBR) return;
           const nomeDia = (diaSemanaDeISO(dataISO) || NOMES_DIAS[dk] || "").toLowerCase();
-          const frase = formatarFraseSupervisaoDia(dataBR, nomeDia, sd.SUPERVISAO_REAL, sd.SUPERVISAO_DIRETA, sd.SUPERVISAO_INDIRETA);
-          if (frase) novasFrases.push(frase);
+
+          if (sd.PE > 0) {
+            const frasePE = formatarFrasePEDia(dataBR, nomeDia, sd.PE);
+            if (frasePE) novasFrases.push(frasePE);
+          }
+
+          if (sd.SUPERVISAO_REAL > 0) {
+            const fraseSup = formatarFraseSupervisaoDia(dataBR, nomeDia, sd.SUPERVISAO_REAL, sd.SUPERVISAO_DIRETA, sd.SUPERVISAO_INDIRETA);
+            if (fraseSup) novasFrases.push(fraseSup);
+          }
         });
 
         let novoTextoObs = "";
@@ -4702,12 +4816,12 @@
           if (s) { tot.TRABALHADO += s.TRABALHADO; tot.QUARTEIRAO += s.QUARTEIRAO; tot.R += s.R; tot.C += s.C; tot.TB += s.TB; tot.PE += s.PE; tot.O += s.O; tot.TOTAL += s.TOTAL; tot.FECHADOS += s.FECHADOS; tot.RECUPERADOS += s.RECUPERADOS; tot.RECUSADOS += s.RECUSADOS; tot.ABANDONADOS += s.ABANDONADOS; tot.INFORMADOS += s.INFORMADOS; tot.PENDENCIAS += s.PENDENCIAS; TIPOS_DEPOSITOS.forEach(x => { tot.DEP[x] += s.DEP[x]; }); tot.DEP_TRATADOS += s.DEP_TRATADOS; tot.DEP_LITROS += s.DEP_LITROS; tot.DEP_GRAMAS += s.DEP_GRAMAS; tot.ELIMINADOS += s.ELIMINADOS; tot.DEP_FOCADOS += s.DEP_FOCADOS; tot.TRATADOS_GERAL += s.TRATADOS_REAIS; tot.SUPERVISAO += s.SUPERVISAO_REAL; }
           const dS = sA?.dias?.[d]?.data || ""; const nd = (nomeDiaExibido(dS, d) || "").toLowerCase(); const tx = dS ? `${formatarDataBR(dS)} (${nd})` : (nd ? `— (${nd})` : "—");
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td class="celula-data">${tx}</td><td>${pr ? fmtIntCell(pr) : "—"}</td><td>${fmtIntCell(s?.TRABALHADO || 0)}</td><td>${fmtIntCell(s?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(s?.R || 0)}</td><td>${fmtIntCell(s?.C || 0)}</td><td>${fmtIntCell(s?.TB || 0)}</td><td>${fmtIntCell(s?.PE || 0)}</td><td>${fmtIntCell(s?.O || 0)}</td><td class="col-total">${fmtIntCell(s?.TOTAL || 0)}</td><td>${fmtIntCell(s?.TRATADOS_REAIS || 0)}</td><td>${fmtIntCell(s?.FECHADOS || 0)}</td><td>${fmtIntCell(s?.RECUPERADOS || 0)}</td><td>${fmtIntCell(s?.RECUSADOS || 0)}</td><td>${fmtIntCell(s?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.PENDENCIAS || 0)}</td><td class="col-calculada">${s ? fmtPct(s.IP) : "0,0%"}</td><td class="col-calculada">${s ? fmtRendimento(s.RENDIMENTO) : "—"}</td>${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(s?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(s?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(s?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(s?.DEP_LITROS || 0)}</td><td>${fmtDecCell(s?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(s?.ELIMINADOS || 0)}</td><td>${fmtIntCell(s?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(s?.SUPERVISAO_REAL || 0)}</td>`;
+          tr.innerHTML = `<td class="celula-data">${tx}</td><td>${pr ? fmtIntCell(pr) : "—"}</td><td>${fmtIntCell(s?.TRABALHADO || 0)}</td><td>${fmtIntCell(s?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(s?.R || 0)}</td><td>${fmtIntCell(s?.C || 0)}</td><td>${fmtIntCell(s?.TB || 0)}</td><td>${fmtIntCell(s?.O || 0)}</td><td class="col-total">${fmtIntCell(s?.TOTAL || 0)}</td><td>${fmtIntCell(s?.TRATADOS_REAIS || 0)}</td><td>${fmtIntCell(s?.FECHADOS || 0)}</td><td>${fmtIntCell(s?.RECUPERADOS || 0)}</td><td>${fmtIntCell(s?.RECUSADOS || 0)}</td><td>${fmtIntCell(s?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.PENDENCIAS || 0)}</td><td class="col-calculada">${s ? fmtPct(s.IP) : "0,0%"}</td><td class="col-calculada">${s ? fmtRendimento(s.RENDIMENTO) : "—"}</td>${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(s?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(s?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(s?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(s?.DEP_LITROS || 0)}</td><td>${fmtDecCell(s?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(s?.ELIMINADOS || 0)}</td><td>${fmtIntCell(s?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(s?.SUPERVISAO_REAL || 0)}</td>`;
           tb.appendChild(tr);
         });
         const dTG = TIPOS_DEPOSITOS.reduce((a, x) => a + tot.DEP[x], 0); const ipT = tot.INFORMADOS !== 0 ? (100 / tot.INFORMADOS) * tot.PENDENCIAS : 0; const rT = tot.TRABALHADO !== 0 ? tot.TOTAL / tot.TRABALHADO : null;
         const trT = document.createElement("tr"); trT.className = "linha-total-resumo";
-        trT.innerHTML = `<td class="celula-rotulo-dia">Total (${dP} dias)</td><td><strong>${tot.PROGRAMADOS ? fmtIntCell(tot.PROGRAMADOS) : "—"}</strong></td><td><strong>${fmtIntCell(tot.TRABALHADO)}</strong></td><td><strong>${fmtIntCell(tot.QUARTEIRAO)}</strong></td><td><strong>${fmtIntCell(tot.R)}</strong></td><td><strong>${fmtIntCell(tot.C)}</strong></td><td><strong>${fmtIntCell(tot.TB)}</strong></td><td><strong>${fmtIntCell(tot.PE)}</strong></td><td><strong>${fmtIntCell(tot.O)}</strong></td><td class="col-total">${fmtIntCell(tot.TOTAL)}</td><td><strong>${fmtIntCell(tot.TRATADOS_GERAL)}</strong></td><td><strong>${fmtIntCell(tot.FECHADOS)}</strong></td><td><strong>${fmtIntCell(tot.RECUPERADOS)}</strong></td><td><strong>${fmtIntCell(tot.RECUSADOS)}</strong></td><td><strong>${fmtIntCell(tot.ABANDONADOS)}</strong></td><td class="col-calculada">${fmtIntCell(tot.INFORMADOS)}</td><td class="col-calculada">${fmtIntCell(tot.PENDENCIAS)}</td><td class="col-calculada">${fmtPct(ipT)}</td><td class="col-calculada">${fmtRendimento(rT)}</td>${TIPOS_DEPOSITOS.map(x => `<td><strong>${fmtIntCell(tot.DEP[x])}</strong></td>`).join("")}<td class="col-total">${fmtIntCell(dTG)}</td><td><strong>${fmtIntCell(tot.DEP_TRATADOS)}</strong></td><td><strong>${fmtIntCell(tot.DEP_LITROS)}</strong></td><td><strong>${fmtDecCell(tot.DEP_GRAMAS)}</strong></td><td><strong>${fmtIntCell(tot.ELIMINADOS)}</strong></td><td><strong>${fmtIntCell(tot.DEP_FOCADOS)}</strong></td><td><strong>${fmtIntCell(tot.SUPERVISAO)}</strong></td>`;
+        trT.innerHTML = `<td class="celula-rotulo-dia">Total (${dP} dias)</td><td><strong>${tot.PROGRAMADOS ? fmtIntCell(tot.PROGRAMADOS) : "—"}</strong></td><td><strong>${fmtIntCell(tot.TRABALHADO)}</strong></td><td><strong>${fmtIntCell(tot.QUARTEIRAO)}</strong></td><td><strong>${fmtIntCell(tot.R)}</strong></td><td><strong>${fmtIntCell(tot.C)}</strong></td><td><strong>${fmtIntCell(tot.TB)}</strong></td><td><strong>${fmtIntCell(tot.O)}</strong></td><td class="col-total">${fmtIntCell(tot.TOTAL)}</td><td><strong>${fmtIntCell(tot.TRATADOS_GERAL)}</strong></td><td><strong>${fmtIntCell(tot.FECHADOS)}</strong></td><td><strong>${fmtIntCell(tot.RECUPERADOS)}</strong></td><td><strong>${fmtIntCell(tot.RECUSADOS)}</strong></td><td><strong>${fmtIntCell(tot.ABANDONADOS)}</strong></td><td class="col-calculada">${fmtIntCell(tot.INFORMADOS)}</td><td class="col-calculada">${fmtIntCell(tot.PENDENCIAS)}</td><td class="col-calculada">${fmtPct(ipT)}</td><td class="col-calculada">${fmtRendimento(rT)}</td>${TIPOS_DEPOSITOS.map(x => `<td><strong>${fmtIntCell(tot.DEP[x])}</strong></td>`).join("")}<td class="col-total">${fmtIntCell(dTG)}</td><td><strong>${fmtIntCell(tot.DEP_TRATADOS)}</strong></td><td><strong>${fmtIntCell(tot.DEP_LITROS)}</strong></td><td><strong>${fmtDecCell(tot.DEP_GRAMAS)}</strong></td><td><strong>${fmtIntCell(tot.ELIMINADOS)}</strong></td><td><strong>${fmtIntCell(tot.DEP_FOCADOS)}</strong></td><td><strong>${fmtIntCell(tot.SUPERVISAO)}</strong></td>`;
         tb.appendChild(trT); t.appendChild(tb);
         w.appendChild(t);
       }
@@ -4768,17 +4882,17 @@
         const tb = document.createElement("tbody");
         const tC = { diasComProducao: 0, PROGRAMADOS: 0, TRABALHADO: 0, QUARTEIRAO: 0, R: 0, C: 0, TB: 0, PE: 0, O: 0, TOTAL: 0, TRATADOS_GERAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, DEP: {}, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, ELIMINADOS: 0, DEP_FOCADOS: 0, SUPERVISAO: 0 };
         TIPOS_DEPOSITOS.forEach(x => tC.DEP[x] = 0);
-        if (ks.length === 0) { tb.innerHTML = `<tr><td colspan="34" style="padding: 18px; color: #64748b; font-weight: 600;">Nenhuma semana para o ${formatarCicloTexto(cI)}.</td></tr>`; t.appendChild(tb); w.appendChild(t); return; }
+        if (ks.length === 0) { tb.innerHTML = `<tr><td colspan="33" style="padding: 18px; color: #64748b; font-weight: 600;">Nenhuma semana para o ${formatarCicloTexto(cI)}.</td></tr>`; t.appendChild(tb); w.appendChild(t); return; }
         ks.forEach(sN => {
           const tS = calcularTotaisSemana(String(sN), col); const pI = obterPeriodoDaSemana(sN, an, cI, estado.atividadeAtiva);
           if (tS) { tC.diasComProducao += tS.diasComProducao; tC.PROGRAMADOS += tS.PROGRAMADOS; tC.TRABALHADO += tS.TRABALHADO; tC.QUARTEIRAO += tS.QUARTEIRAO; tC.R += tS.R; tC.C += tS.C; tC.TB += tS.TB; tC.PE += tS.PE; tC.O += tS.O; tC.TOTAL += tS.TOTAL; tC.TRATADOS_GERAL += tS.TRATADOS_GERAL; tC.FECHADOS += tS.FECHADOS; tC.RECUPERADOS += tS.RECUPERADOS; tC.RECUSADOS += tS.RECUSADOS; tC.ABANDONADOS += tS.ABANDONADOS; tC.INFORMADOS += tS.INFORMADOS; tC.PENDENCIAS += tS.PENDENCIAS; TIPOS_DEPOSITOS.forEach(x => { tC.DEP[x] += tS.DEP[x]; }); tC.DEP_TRATADOS += tS.DEP_TRATADOS; tC.DEP_LITROS += tS.DEP_LITROS; tC.DEP_GRAMAS += tS.DEP_GRAMAS; tC.ELIMINADOS += tS.ELIMINADOS; tC.DEP_FOCADOS += tS.DEP_FOCADOS; tC.SUPERVISAO += tS.SUPERVISAO; }
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td class="celula-data">SE ${pad2(sN)}</td><td class="celula-dia-semana">${pI.texto}</td><td>${tS ? (tS.PROGRAMADOS ? fmtIntCell(tS.PROGRAMADOS) : "—") : "—"}</td><td>${fmtIntCell(tS?.TRABALHADO || 0)}</td><td>${fmtIntCell(tS?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(tS?.R || 0)}</td><td>${fmtIntCell(tS?.C || 0)}</td><td>${fmtIntCell(tS?.TB || 0)}</td><td>${fmtIntCell(tS?.PE || 0)}</td><td>${fmtIntCell(tS?.O || 0)}</td><td class="col-total">${fmtIntCell(tS?.TOTAL || 0)}</td><td>${fmtIntCell(tS?.TRATADOS_GERAL || 0)}</td><td>${fmtIntCell(tS?.FECHADOS || 0)}</td><td>${fmtIntCell(tS?.RECUPERADOS || 0)}</td><td>${fmtIntCell(tS?.RECUSADOS || 0)}</td><td>${fmtIntCell(tS?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.PENDENCIAS || 0)}</td><td class="col-calculada">${fmtPct(tS?.IP || 0)}</td><td class="col-calculada">${fmtRendimento(tS?.RENDIMENTO || null)}</td>${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(tS?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(tS?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(tS?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_LITROS || 0)}</td><td>${fmtDecCell(tS?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(tS?.ELIMINADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(tS?.SUPERVISAO || 0)}</td>`;
+          tr.innerHTML = `<td class="celula-data">SE ${pad2(sN)}</td><td class="celula-dia-semana">${pI.texto}</td><td>${tS ? (tS.PROGRAMADOS ? fmtIntCell(tS.PROGRAMADOS) : "—") : "—"}</td><td>${fmtIntCell(tS?.TRABALHADO || 0)}</td><td>${fmtIntCell(tS?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(tS?.R || 0)}</td><td>${fmtIntCell(tS?.C || 0)}</td><td>${fmtIntCell(tS?.TB || 0)}</td><td>${fmtIntCell(tS?.O || 0)}</td><td class="col-total">${fmtIntCell(tS?.TOTAL || 0)}</td><td>${fmtIntCell(tS?.TRATADOS_GERAL || 0)}</td><td>${fmtIntCell(tS?.FECHADOS || 0)}</td><td>${fmtIntCell(tS?.RECUPERADOS || 0)}</td><td>${fmtIntCell(tS?.RECUSADOS || 0)}</td><td>${fmtIntCell(tS?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.PENDENCIAS || 0)}</td><td class="col-calculada">${fmtPct(tS?.IP || 0)}</td><td class="col-calculada">${fmtRendimento(tS?.RENDIMENTO || null)}</td>${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(tS?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(tS?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(tS?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_LITROS || 0)}</td><td>${fmtDecCell(tS?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(tS?.ELIMINADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(tS?.SUPERVISAO || 0)}</td>`;
           tb.appendChild(tr);
         });
         const dTC = TIPOS_DEPOSITOS.reduce((a, x) => a + tC.DEP[x], 0); const ipC = tC.INFORMADOS !== 0 ? (100 / tC.INFORMADOS) * tC.PENDENCIAS : 0; const rC = tC.TRABALHADO !== 0 ? tC.TOTAL / tC.TRABALHADO : null;
         const trT = document.createElement("tr"); trT.className = "linha-total-resumo";
-        trT.innerHTML = `<td class="celula-rotulo-dia">Total ${formatarCicloTexto(cI)}</td><td><strong>${tC.diasComProducao} dias prod.</strong></td><td><strong>${tC.PROGRAMADOS ? fmtIntCell(tC.PROGRAMADOS) : "—"}</strong></td><td><strong>${fmtIntCell(tC.TRABALHADO)}</strong></td><td><strong>${fmtIntCell(tC.QUARTEIRAO)}</strong></td><td><strong>${fmtIntCell(tC.R)}</strong></td><td><strong>${fmtIntCell(tC.C)}</strong></td><td><strong>${fmtIntCell(tC.TB)}</strong></td><td><strong>${fmtIntCell(tC.PE)}</strong></td><td><strong>${fmtIntCell(tC.O)}</strong></td><td class="col-total">${fmtIntCell(tC.TOTAL)}</td><td><strong>${fmtIntCell(tC.TRATADOS_GERAL)}</strong></td><td><strong>${fmtIntCell(tC.FECHADOS)}</strong></td><td><strong>${fmtIntCell(tC.RECUPERADOS)}</strong></td><td><strong>${fmtIntCell(tC.RECUSADOS)}</strong></td><td><strong>${fmtIntCell(tC.ABANDONADOS)}</strong></td><td class="col-calculada">${fmtIntCell(tC.INFORMADOS)}</td><td class="col-calculada">${fmtIntCell(tC.PENDENCIAS)}</td><td class="col-calculada">${fmtPct(ipC)}</td><td class="col-calculada">${fmtRendimento(rC)}</td>${TIPOS_DEPOSITOS.map(x => `<td><strong>${fmtIntCell(tC.DEP[x])}</strong></td>`).join("")}<td class="col-total">${fmtIntCell(dTC)}</td><td><strong>${fmtIntCell(tC.DEP_TRATADOS)}</strong></td><td><strong>${fmtIntCell(tC.DEP_LITROS)}</strong></td><td><strong>${fmtDecCell(tC.DEP_GRAMAS)}</strong></td><td><strong>${fmtIntCell(tC.ELIMINADOS)}</strong></td><td><strong>${fmtIntCell(tC.DEP_FOCADOS)}</strong></td><td><strong>${fmtIntCell(tC.SUPERVISAO)}</strong></td>`;
+        trT.innerHTML = `<td class="celula-rotulo-dia">Total ${formatarCicloTexto(cI)}</td><td><strong>${tC.diasComProducao} dias prod.</strong></td><td><strong>${tC.PROGRAMADOS ? fmtIntCell(tC.PROGRAMADOS) : "—"}</strong></td><td><strong>${fmtIntCell(tC.TRABALHADO)}</strong></td><td><strong>${fmtIntCell(tC.QUARTEIRAO)}</strong></td><td><strong>${fmtIntCell(tC.R)}</strong></td><td><strong>${fmtIntCell(tC.C)}</strong></td><td><strong>${fmtIntCell(tC.TB)}</strong></td><td><strong>${fmtIntCell(tC.O)}</strong></td><td class="col-total">${fmtIntCell(tC.TOTAL)}</td><td><strong>${fmtIntCell(tC.TRATADOS_GERAL)}</strong></td><td><strong>${fmtIntCell(tC.FECHADOS)}</strong></td><td><strong>${fmtIntCell(tC.RECUPERADOS)}</strong></td><td><strong>${fmtIntCell(tC.RECUSADOS)}</strong></td><td><strong>${fmtIntCell(tC.ABANDONADOS)}</strong></td><td class="col-calculada">${fmtIntCell(tC.INFORMADOS)}</td><td class="col-calculada">${fmtIntCell(tC.PENDENCIAS)}</td><td class="col-calculada">${fmtPct(ipC)}</td><td class="col-calculada">${fmtRendimento(rC)}</td>${TIPOS_DEPOSITOS.map(x => `<td><strong>${fmtIntCell(tC.DEP[x])}</strong></td>`).join("")}<td class="col-total">${fmtIntCell(dTC)}</td><td><strong>${fmtIntCell(tC.DEP_TRATADOS)}</strong></td><td><strong>${fmtIntCell(tC.DEP_LITROS)}</strong></td><td><strong>${fmtDecCell(tC.DEP_GRAMAS)}</strong></td><td><strong>${fmtIntCell(tC.ELIMINADOS)}</strong></td><td><strong>${fmtIntCell(tC.DEP_FOCADOS)}</strong></td><td><strong>${fmtIntCell(tC.SUPERVISAO)}</strong></td>`;
         tb.appendChild(trT); t.appendChild(tb); w.appendChild(t);
       }
       function calcularProducaoAgenteDia(ag) { if (!ag || !ag.valores) return 0; const v = ag.valores; let s = 0; for (let c = 1; c <= 7; c++) s += num(v[`b1-r2-c${c}`]) + num(v[`b1-r3-c${c}`]) + num(v[`b1-r4-c${c}`]) + num(v[`b1-r6-c${c}`]); return s; }
@@ -6329,6 +6443,11 @@
           sincronizarPeriodosSemanasCiclo();
           alternarAba("lancamentos");
           renderizarDashboard();
+          if (typeof window !== "undefined") {
+            window.salvar = salvar;
+            window.renderizar = renderizar;
+            window.calcularSomasDia = calcularSomasDia;
+          }
         } catch (eg) { console.error("[PMCD Erro]:", eg); }
       });
     </script>
