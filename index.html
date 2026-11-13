@@ -114,24 +114,22 @@
       .conteudo-aba h2 { margin-bottom: 10px; color: #166534; font-size: 1.15rem; }
       .faixa-programacao { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
       .seletor-atividade { display: flex; align-items: center; gap: 6px; }
-      .btn-tipo-atividade { border: 2px solid #cbd5e1; background: #f8fafc; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+      .btn-tipo-atividade { border: 2px solid #cbd5e1; background: #f8fafc; padding: 5px 10px; border-radius: 6px; cursor: default; font-weight: 700; font-size: 0.8rem; }
       .btn-tipo-atividade.ativo-ciclo { background: #166534; color: #fff; border-color: #14532d; }
-      .btn-tipo-atividade.ativo-liraa { background: #c2410c; color: #fff; border-color: #9a3412; }
       .badge-aviso-atividade { font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
       .badge-aviso-atividade.ciclo { background: #dcfce7; color: #14532d; border: 1px solid #86efac; }
-      .badge-aviso-atividade.liraa { background: #ffedd5; color: #9a3412; border: 1px solid #fdba74; }
       .badge-aviso-atividade.alerta { background: #fef3c7; color: #92400e; border: 1px solid #fde047; }
       .badge-aviso-atividade.conflito { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
       .barra-semanas { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; }
       .nav-semana { display: flex; align-items: center; gap: 6px; }
-      .btn-semana { background: #16a34a; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; min-width: 36px; }
-      .btn-semana:hover { background: #15803d; }
+      .btn-semana { background: #16a34a; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; min-width: 36px; transition: opacity 0.15s ease, background 0.15s ease; }
+      .btn-semana:hover:not(:disabled) { background: #15803d; }
+      .btn-semana:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; opacity: 0.7; }
       .label-semana { font-weight: 700; color: #166534; font-size: 0.95rem; min-width: 150px; text-align: center; }
       .abas-dias { display: flex; gap: 5px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 5px; margin-bottom: 10px; overflow-x: auto; }
       .aba-dia { flex: 1; min-width: 88px; background: #f3f4f6; border: 2px solid transparent; border-radius: 6px; padding: 6px 8px; font-size: 0.82rem; font-weight: 600; color: #374151; cursor: pointer; text-align: center; }
       .aba-dia:hover { background: #e5e7eb; }
       .aba-dia.ativa { background: #16a34a; color: #fff; border-color: #15803d; }
-      .aba-dia.ativa.modo-liraa { background: #ea580c; border-color: #c2410c; }
       .barra-acoes { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
       .grupo-data { display: flex; align-items: center; gap: 5px; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px; flex-wrap: wrap; }
       .grupo-data label { font-weight: 700; color: #166534; font-size: 0.8rem; }
@@ -468,43 +466,6 @@
       #aba-resumo .campo-rodape { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 440px; }
       #aba-resumo .campo-rodape label { font-size: 0.86rem; font-weight: 800; color: #14532d; }
       #aba-resumo .campo-rodape input { flex: 1; border-bottom: 1.5px solid #475569; padding: 4px 6px; font-size: 0.86rem; }
-      .fad7-form { display: flex; flex-direction: column; gap: 8px; }
-      .fad7-secao { border: 1.5px solid #475569; border-radius: 6px; overflow: hidden; }
-      .fad7-secao-titulo { background: #dcfce7; color: #14532d; font-weight: 800; font-size: 0.8rem; padding: 5px 10px; border-bottom: 1.5px solid #475569; text-transform: uppercase; letter-spacing: 0.3px; }
-      .fad7-tabela { width: 100%; border-collapse: collapse; font-size: 0.74rem; table-layout: fixed; }
-      .fad7-tabela th, .fad7-tabela td { border: 1px solid #94a3b8; padding: 3px 4px; text-align: center; vertical-align: middle; word-wrap: break-word; overflow-wrap: anywhere; }
-      .fad7-tabela th { background: #f1f5f9; color: #1e293b; font-weight: 700; font-size: 0.68rem; line-height: 1.2; }
-      .fad7-tabela input[type="text"], .fad7-tabela input[type="number"], .fad7-tabela input[type="date"], .fad7-tabela select { width: 100%; border: none; background: transparent; padding: 3px 2px; font-size: 0.74rem; text-align: center; outline: none; font-weight: 700; color: #14532d; }
-      .fad7-tabela input:focus, .fad7-tabela select:focus { background: #fef9c3; }
-      .fad7-tabela td.fad7-total { background: #fef3c7; font-weight: 800; color: #92400e; }
-      .fad7-atividades { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 14px; padding: 8px 12px; font-size: 0.78rem; }
-      .fad7-atividades label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; color: #1e293b; }
-      .fad7-atividades input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #166534; }
-      .fad7-cabecalho-doc { text-align: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1.5px solid #475569; }
-      .fad7-cabecalho-doc .fad7-titulo-1 { font-size: 1rem; font-weight: 900; color: #14532d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-      .fad7-cabecalho-doc .fad7-titulo-2 { font-size: 0.86rem; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.4px; }
-      .fad7-resumo-campo-secao { display: flex; flex-direction: column; gap: 6px; }
-      .fad7-resumo-campo-secao-titulo { background: #dcfce7; color: #14532d; font-weight: 800; font-size: 0.8rem; padding: 5px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
-      .fad7-resumo-campo-bloco { display: flex; flex-wrap: nowrap; gap: 8px; padding: 0; overflow-x: auto; align-items: stretch; }
-      .fad7-resumo-campo-card { border: 1.5px solid #475569; border-radius: 6px; overflow: hidden; background: #fff; display: flex; flex-direction: column; min-width: 0; }
-      .fad7-resumo-campo-card.quart { flex: 1 1 0; min-width: 100px; }
-      .fad7-resumo-campo-card.trabalhados { flex: 6 1 0; min-width: 440px; }
-      .fad7-resumo-campo-card.imoveis { flex: 3 1 0; min-width: 250px; }
-      .fad7-resumo-campo-card.indices { flex: 2 1 0; min-width: 180px; }
-      .fad7-tabela th.fad7-subth, .fad7-tabela tr.fad7-linha-subcabecalho th { background: #f1f5f9; color: #1e293b; font-weight: 700; font-size: 0.65rem; padding: 2px 2px; text-transform: uppercase; letter-spacing: 0.2px; border-top: 1px solid #94a3b8; border-bottom: 1px solid #94a3b8; }
-      .fad7-tabela th.fad7-subth.fad7-total, .fad7-tabela tr.fad7-linha-subcabecalho th.fad7-total { background: #fef3c7; color: #92400e; }
-      .fad7-card-titulo { background: #e2e8f0; color: #14532d; font-weight: 800; font-size: 0.68rem; padding: 4px 4px; border-bottom: 1.5px solid #475569; text-align: center; text-transform: uppercase; letter-spacing: 0.2px; line-height: 1.2; }
-      .fad7-resumo-campo-card .fad7-tabela { flex: 1 1 auto; }
-      .fad7-linha-dupla { display: flex; gap: 8px; align-items: stretch; }
-      .fad7-secao-depositos { flex: 1 1 0; min-width: 0; }
-      .fad7-secao-eliminados { flex: 0 0 180px; min-width: 150px; display: flex; flex-direction: column; }
-      .fad7-secao-eliminados .fad7-tabela { flex: 1 1 auto; height: 100%; }
-      .fad7-secao-eliminados .fad7-tabela tbody td { height: 100%; vertical-align: middle; }
-      .fad7-secao-eliminados .fad7-tabela input { font-size: 0.95rem; font-weight: 800; }
-      @media (max-width: 768px) {
-        .fad7-linha-dupla { flex-direction: column; }
-        .fad7-secao-eliminados { flex: 1 1 auto; width: 100%; }
-      }
       .rc-form { display: flex; flex-direction: column; gap: 10px; }
       .rc-cabecalho { text-align: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1.5px solid #475569; }
       .rc-titulo { font-size: 1.2rem; font-weight: 900; color: #14532d; text-transform: uppercase; letter-spacing: 1px; }
@@ -564,7 +525,7 @@
         header, nav.barra-navegacao-abas, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao { display: none !important; }
         main { padding: 0 !important; }
         .conteudo-aba { display: none !important; }
-        #aba-resumo.ativo, #aba-ciclo.ativo, #aba-producao-individual.ativo, #aba-fad7.ativo, #aba-relatorio-campo.ativo, #aba-quarteiroes-designados.ativo, #aba-config-estrato.ativo, #aba-resumo-reconhecimento.ativo { display: block !important; }
+        #aba-resumo.ativo, #aba-ciclo.ativo, #aba-producao-individual.ativo, #aba-relatorio-campo.ativo, #aba-quarteiroes-designados.ativo, #aba-config-estrato.ativo, #aba-resumo-reconhecimento.ativo { display: block !important; }
         .area-impressao { border: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
@@ -869,7 +830,6 @@
         <button type="button" class="btn-aba-nav" data-aba="producao-individual"><span class="aba-icone">👤</span><span class="aba-rotulo">Produção Individual</span></button>
         <button type="button" class="btn-aba-nav" data-aba="quarteiroes-designados"><span class="aba-icone">🧱</span><span class="aba-rotulo">Quarteirões Designados</span></button>
         <button type="button" class="btn-aba-nav" data-aba="resumo-reconhecimento"><span class="aba-icone">🗺️</span><span class="aba-rotulo">Resumo de reconhecimento</span></button>
-        <button type="button" class="btn-aba-nav" data-aba="fad7"><span class="aba-icone">📋</span><span class="aba-rotulo">FAD 7</span></button>
         <button type="button" class="btn-aba-nav" data-aba="relatorio-campo"><span class="aba-icone">📄</span><span class="aba-rotulo">Relatório de Campo</span></button>
       </div>
     </nav>
@@ -971,7 +931,7 @@
               <div class="secao-titulo">🔄 Configuração do Ciclo (1º a 6º)</div>
               <div class="grid-prog-ciclo">
                 <div><label>Ano:</label><input type="number" id="progAno" min="2020" max="2035" required /></div>
-                <div><label>Atividade:</label><select id="progAtividade"><option value="ciclo">Ciclo de Visita</option><option value="liraa">LIRAa</option></select></div>
+                <div><label>Atividade:</label><select id="progAtividade"><option value="ciclo">Ciclo de Visita</option></select></div>
                 <div><label>Ciclo:</label><select id="progCiclo"><option value="1">01º Ciclo</option><option value="2">02º Ciclo</option><option value="3">03º Ciclo</option><option value="4">04º Ciclo</option><option value="5">05º Ciclo</option><option value="6">06º Ciclo</option></select></div>
                 <div><label>Semana de início:</label><input type="number" id="progCicloSemanaInicio" min="1" max="53" /></div>
                 <div><label>Data de início:</label><input type="date" id="progCicloDataInicio" required /></div>
@@ -1001,8 +961,7 @@
         <div class="faixa-programacao">
           <div class="seletor-atividade">
             <span style="font-weight: 700; font-size: 0.82rem; color: #166534;">Atividade:</span>
-            <button type="button" class="btn-tipo-atividade ativo-ciclo" id="btnAtividadeCiclo">🏡 Ciclo de Visita</button>
-            <button type="button" class="btn-tipo-atividade" id="btnAtividadeLiraa">🔍 LIRAa</button>
+            <span class="btn-tipo-atividade ativo-ciclo" id="btnAtividadeCiclo">🏡 Ciclo de Visita</span>
           </div>
           <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
             <span id="badgeStatusProgramacao" class="badge-aviso-atividade ciclo">🏡 Ciclo Regular</span>
@@ -1041,15 +1000,6 @@
             <div class="grupo-data" style="background: #eff6ff; border: 1.5px solid #93c5fd;"><label for="semanaLancamento" style="color: #1d4ed8;">4. SE:</label><input type="number" id="semanaLancamento" min="1" max="53" style="width: 52px;" /></div>
             <div class="grupo-data"><label for="semanaDataInicio">5. Início:</label><input type="date" id="semanaDataInicio" /></div>
             <div class="grupo-data"><label for="semanaDataTermino">6. Término:</label><input type="date" id="semanaDataTermino" /></div>
-          </div>
-          <div id="blocoProgLiraa" style="display: none; align-items: center; gap: 6px; flex-wrap: wrap;">
-            <div class="grupo-data" style="background: #fff7ed; border: 1.5px solid #fdba74;"><label for="anoLancamentoLiraa">Ano:</label><input type="number" id="anoLancamentoLiraa" min="2020" max="2035" style="width: 68px;" /></div>
-            <div class="grupo-data" style="background: #fff7ed; border: 1.5px solid #fdba74;"><label for="mesLancamentoLiraa">Mês:</label><input type="text" id="mesLancamentoLiraa" style="width: 85px;" /></div>
-            <div class="grupo-data" style="background: #ffedd5; border: 1.5px solid #fb923c;"><label for="liraaCiclo" style="color: #9a3412;">1. Ciclo:</label><select id="liraaCiclo"><option value="1">01º Ciclo</option><option value="2">02º Ciclo</option><option value="3">03º Ciclo</option><option value="4">04º Ciclo</option><option value="5">05º Ciclo</option><option value="6">06º Ciclo</option></select></div>
-            <div class="grupo-data" style="background: #ffedd5; border: 1.5px solid #fb923c;"><label for="liraaSemanaInicio" style="color: #9a3412;">2. SE Inicial:</label><input type="number" id="liraaSemanaInicio" min="1" max="53" style="width: 52px;" /></div>
-            <div class="grupo-data" style="background: #ffedd5; border: 1.5px solid #fb923c;"><label for="liraaDataInicio" style="color: #9a3412;">3. Data Início:</label><input type="date" id="liraaDataInicio" /></div>
-            <div class="grupo-data" style="background: #ffedd5; border: 1.5px solid #fb923c;"><label for="liraaSemanaTermino" style="color: #9a3412;">4. SE Término:</label><input type="number" id="liraaSemanaTermino" min="1" max="53" style="width: 52px;" /></div>
-            <div class="grupo-data" style="background: #ffedd5; border: 1.5px solid #fb923c;"><label for="liraaDataTermino" style="color: #9a3412;">5. Data Término:</label><input type="date" id="liraaDataTermino" /></div>
           </div>
         </div>
         <div class="barra-lancamento-dia">
@@ -1306,276 +1256,6 @@
                 </thead>
                 <tbody id="tbodyReconhecimento2"></tbody>
                 <tfoot id="tfootReconhecimento2"></tfoot>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section id="aba-fad7" class="conteudo-aba">
-        <h2>📋 FAD 7 - Resumo Semanal do Serviço Antivetorial (LIRAa)</h2>
-        <div class="barra-semanas">
-          <div class="nav-semana">
-            <button class="btn-semana" id="btnSemanaAnteriorFad7">◀</button>
-            <span class="label-semana" id="labelSemanaFad7">Semana 01 [LIRAa]</span>
-            <button class="btn-semana" id="btnSemanaProximaFad7">▶</button>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span id="badgeFad7Atividade" class="badge-aviso-atividade liraa">🔍 LIRAa</span>
-            <button class="btn btn-pdf" id="btnImprimirFad7">🖨️ Baixar PDF</button>
-          </div>
-        </div>
-        <div class="area-impressao" id="areaImpressaoFad7">
-          <div class="fad7-form">
-            <div class="fad7-cabecalho-doc">
-              <div class="fad7-titulo-1">PROGRAMA NACIONAL DE CONTROLE DA DENGUE - PNCD</div>
-              <div class="fad7-titulo-2">RESUMO SEMANAL DO SERVIÇO ANTIVETORIAL - FAD 7</div>
-            </div>
-            <div class="fad7-secao">
-              <table class="fad7-tabela">
-                <tr><th style="width: 130px;">Município</th><td style="width: 38%;"><input type="text" data-fad7="municipio" /></td><th style="width: 200px;">Código e Nome da Localidade</th><td><input type="text" data-fad7="localidade" /></td></tr>
-              </table>
-            </div>
-            <div class="fad7-secao">
-              <table class="fad7-tabela">
-                <thead><tr><th>Categoria</th><th>Tipo</th><th>Ciclo / Ano</th><th>Concluído?</th><th>SE</th><th>Data Início</th><th>Data Final</th></tr></thead>
-                <tbody><tr>
-                  <td><input type="text" data-fad7="categoria" /></td>
-                  <td><select data-fad7="tipo"><option value=""></option><option value="1">1 - Sede</option><option value="2">2 - Outros</option></select></td>
-                  <td><input type="text" data-fad7="cicloAno" placeholder="1/2026" /></td>
-                  <td><select data-fad7="concluido"><option value=""></option><option value="S">S</option><option value="N">N</option></select></td>
-                  <td><input type="text" data-fad7="semana" /></td>
-                  <td><input type="date" data-fad7="dataInicio" /></td>
-                  <td><input type="date" data-fad7="dataFinal" /></td>
-                </tr></tbody>
-              </table>
-            </div>
-            <div class="fad7-secao">
-              <div class="fad7-secao-titulo">Atividade</div>
-              <div class="fad7-atividades">
-                <label><input type="checkbox" data-fad7="atv1" /> 1 - LI</label>
-                <label><input type="checkbox" data-fad7="atv2" /> 2 - LI + T</label>
-                <label><input type="checkbox" data-fad7="atv3" /> 3 - PE</label>
-                <label><input type="checkbox" data-fad7="atv4" /> 4 - Tratamento</label>
-                <label><input type="checkbox" data-fad7="atv5" /> 5 - DF</label>
-                <label><input type="checkbox" data-fad7="atv6" /> 6 - PVE</label>
-              </div>
-            </div>
-            <div class="fad7-resumo-campo-secao">
-              <div class="fad7-resumo-campo-secao-titulo">Resumo do Trabalho de Campo</div>
-              <div class="fad7-resumo-campo-bloco">
-                <div class="fad7-resumo-campo-card quart">
-                  <div class="fad7-card-titulo">Total Quart. Conc.</div>
-                  <table class="fad7-tabela"><tbody><tr><td><input type="text" data-fad7="quartConc" /></td></tr></tbody></table>
-                </div>
-                <div class="fad7-resumo-campo-card trabalhados">
-                  <div class="fad7-card-titulo">Nº de Imóveis Trabalhados Por Tipo</div>
-                  <table class="fad7-tabela">
-                    <thead>
-                      <tr>
-                        <th>Residência</th>
-                        <th>Comércio</th>
-                        <th>TB</th>
-                        <th>PE</th>
-                        <th>Outros</th>
-                        <th class="fad7-total">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><input type="text" inputmode="numeric" data-fad7="residencia" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="comercio" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="tb" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="pe" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="outros" /></td>
-                        <td class="fad7-total"><input type="text" inputmode="numeric" data-fad7="totalImoveisTrab" /></td>
-                      </tr>
-                      <tr class="fad7-linha-subcabecalho">
-                        <th class="fad7-subth">Tratados</th>
-                        <th class="fad7-subth">Tratados</th>
-                        <th class="fad7-subth">Tratados</th>
-                        <th class="fad7-subth">Tratados</th>
-                        <th class="fad7-subth">Tratados</th>
-                        <th class="fad7-subth fad7-total">Tratados</th>
-                      </tr>
-                      <tr>
-                        <td><input type="text" inputmode="numeric" data-fad7="residenciaTratados" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="comercioTratados" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="tbTratados" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="peTratados" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="outrosTratados" /></td>
-                        <td class="fad7-total"><input type="text" inputmode="numeric" data-fad7="totalImoveisTratados" /></td>
-                      </tr>
-                      <tr class="fad7-linha-subcabecalho">
-                        <th class="fad7-subth">Focados</th>
-                        <th class="fad7-subth">Focados</th>
-                        <th class="fad7-subth">Focados</th>
-                        <th class="fad7-subth">Focados</th>
-                        <th class="fad7-subth">Focados</th>
-                        <th class="fad7-subth fad7-total">Focados</th>
-                      </tr>
-                      <tr>
-                        <td><input type="text" inputmode="numeric" data-fad7="residenciaFocados" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="comercioFocados" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="tbFocados" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="peFocados" /></td>
-                        <td><input type="text" inputmode="numeric" data-fad7="outrosFocados" /></td>
-                        <td class="fad7-total"><input type="text" inputmode="numeric" data-fad7="totalImoveisFocados" /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="fad7-resumo-campo-card imoveis">
-                  <div class="fad7-card-titulo">Nº de Imóveis</div>
-                  <table class="fad7-tabela">
-                    <thead><tr><th>Trat. Focal</th><th>Inspecionados</th><th>Amostras Coletadas</th></tr></thead>
-                    <tbody><tr>
-                      <td><input type="text" data-fad7="tratFocal" /></td>
-                      <td><input type="text" data-fad7="inspecionados" /></td>
-                      <td><input type="text" data-fad7="amostras" /></td>
-                    </tr></tbody>
-                  </table>
-                </div>
-                <div class="fad7-resumo-campo-card indices">
-                  <div class="fad7-card-titulo">Índices</div>
-                  <table class="fad7-tabela">
-                    <thead><tr><th>Índ. Infest. Predial</th><th>Índ. Breteau</th></tr></thead>
-                    <tbody><tr>
-                      <td><input type="text" data-fad7="indiceInfestacao" /></td>
-                      <td><input type="text" data-fad7="indiceBreteau" /></td>
-                    </tr></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <div class="fad7-linha-dupla">
-              <div class="fad7-secao fad7-secao-depositos">
-                <div class="fad7-secao-titulo">Nº de Depósitos Inspecionados por Tipo</div>
-                <table class="fad7-tabela">
-                  <thead>
-                    <tr>
-                      <th>A1</th>
-                      <th>A2</th>
-                      <th>B</th>
-                      <th>C</th>
-                      <th>D1</th>
-                      <th>D2</th>
-                      <th>E</th>
-                      <th class="fad7-total">TOTAL</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><input type="text" inputmode="numeric" data-fad7="depA1" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depA2" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depB" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depC" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depD1" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depD2" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depE" /></td>
-                      <td class="fad7-total"><input type="text" inputmode="numeric" data-fad7="depTotal" /></td>
-                    </tr>
-                    <tr class="fad7-linha-subcabecalho">
-                      <th class="fad7-subth">Tratados</th>
-                      <th class="fad7-subth">Tratados</th>
-                      <th class="fad7-subth">Tratados</th>
-                      <th class="fad7-subth">Tratados</th>
-                      <th class="fad7-subth">Tratados</th>
-                      <th class="fad7-subth">Tratados</th>
-                      <th class="fad7-subth">Tratados</th>
-                      <th class="fad7-subth fad7-total">Tratados</th>
-                    </tr>
-                    <tr>
-                      <td><input type="text" inputmode="numeric" data-fad7="depTratA1" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depTratA2" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depTratB" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depTratC" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depTratD1" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depTratD2" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depTratE" /></td>
-                      <td class="fad7-total"><input type="text" inputmode="numeric" data-fad7="depTratTotal" /></td>
-                    </tr>
-                    <tr class="fad7-linha-subcabecalho">
-                      <th class="fad7-subth">Focados</th>
-                      <th class="fad7-subth">Focados</th>
-                      <th class="fad7-subth">Focados</th>
-                      <th class="fad7-subth">Focados</th>
-                      <th class="fad7-subth">Focados</th>
-                      <th class="fad7-subth">Focados</th>
-                      <th class="fad7-subth">Focados</th>
-                      <th class="fad7-subth fad7-total">Focados</th>
-                    </tr>
-                    <tr>
-                      <td><input type="text" inputmode="numeric" data-fad7="depFocA1" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depFocA2" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depFocB" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depFocC" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depFocD1" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depFocD2" /></td>
-                      <td><input type="text" inputmode="numeric" data-fad7="depFocE" /></td>
-                      <td class="fad7-total"><input type="text" inputmode="numeric" data-fad7="depFocTotal" /></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="fad7-secao fad7-secao-eliminados">
-                <div class="fad7-secao-titulo">Eliminados</div>
-                <table class="fad7-tabela">
-                  <thead>
-                    <tr>
-                      <th>Nº de Depósitos Eliminados</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><input type="text" inputmode="numeric" data-fad7="depEliminados" placeholder="0" /></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div class="fad7-secao">
-              <div class="fad7-secao-titulo">Índice por Tipo de Recipiente</div>
-              <table class="fad7-tabela">
-                <thead><tr><th>A1</th><th>A2</th><th>B</th><th>C</th><th>D1</th><th>D2</th><th>E</th><th class="fad7-total">Total</th></tr></thead>
-                <tbody><tr>
-                  <td><input type="text" data-fad7="idxA1" /></td>
-                  <td><input type="text" data-fad7="idxA2" /></td>
-                  <td><input type="text" data-fad7="idxB" /></td>
-                  <td><input type="text" data-fad7="idxC" /></td>
-                  <td><input type="text" data-fad7="idxD1" /></td>
-                  <td><input type="text" data-fad7="idxD2" /></td>
-                  <td><input type="text" data-fad7="idxE" /></td>
-                  <td class="fad7-total"><input type="text" data-fad7="idxTotal" /></td>
-                </tr></tbody>
-              </table>
-            </div>
-            <div class="fad7-secao">
-              <div class="fad7-secao-titulo">Número de Depósitos Tratados</div>
-              <table class="fad7-tabela">
-                <thead><tr><th colspan="3">Larvicida (1)</th></tr><tr><th>Tipo</th><th>Quant. (Gramas)</th><th>Quant. Dep. Tratado</th></tr></thead>
-                <tbody><tr>
-                  <td><input type="text" data-fad7="larv1Tipo" /></td>
-                  <td><input type="text" data-fad7="larv1Gramas" /></td>
-                  <td><input type="text" data-fad7="larv1DepTrat" /></td>
-                </tr></tbody>
-              </table>
-            </div>
-            <div class="fad7-secao">
-              <div class="fad7-secao-titulo">Agentes</div>
-              <table class="fad7-tabela">
-                <thead><tr><th>Agentes por dia trabalhado</th></tr></thead>
-                <tbody><tr><td><input type="text" data-fad7="agentesDia" /></td></tr></tbody>
-              </table>
-            </div>
-            <div class="fad7-secao">
-              <div class="fad7-secao-titulo">Assinatura</div>
-              <table class="fad7-tabela">
-                <thead><tr><th>NOME</th><th>ASSINATURA</th><th>DATA</th></tr></thead>
-                <tbody><tr>
-                  <td><input type="text" data-fad7="nomeResp" /></td>
-                  <td><input type="text" data-fad7="assinatura" /></td>
-                  <td><input type="text" data-fad7="dataAssinatura" /></td>
-                </tr></tbody>
               </table>
             </div>
           </div>
@@ -1946,7 +1626,7 @@
       <div class="modal-conteudo" style="max-width: 480px;">
         <div class="modal-header"><h3>✏️ Corrigir Lançamento</h3><button type="button" class="btn-fechar-modal" id="btnFecharModalCorrecao">&times;</button></div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div><label>Atividade:</label><select id="corrAtividade" style="width: 100%; padding: 5px;"><option value="ciclo">Ciclo</option><option value="liraa">LIRAa</option></select></div>
+          <div><label>Atividade:</label><select id="corrAtividade" style="width: 100%; padding: 5px;"><option value="ciclo">Ciclo de Visita</option></select></div>
           <div><label>Ciclo:</label><select id="corrCiclo" style="width: 100%; padding: 5px;"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option></select></div>
           <div><label>SE:</label><input type="number" id="corrSemana" min="1" max="53" style="width: 100%; padding: 5px;" /></div>
           <div><label>Segunda-feira:</label><input type="date" id="corrDataSegunda" style="width: 100%; padding: 5px;" /></div>
@@ -2364,7 +2044,7 @@
       const CAMPOS_CABECALHO = ["bairro","estrato","equipe","agentesEquipe","supervisor","mes","ciclo","cicloInicio","cicloTermino","semana","semanaInicio","semanaTermino"];
       let estado = {
         atividadeAtiva: "ciclo", semanaAtiva: "1", diaAtivo: "segunda",
-        cicloFiltroConsolidado: "1", semanas: {}, semanasLiraa: {},
+        cicloFiltroConsolidado: "1", semanas: {},
         programacao: [], ciclosConfig: {}, ciclo: { cabecalho: {}, rodape: {} }, configEquipe: null,
         configEstrato: null,
         relatoriosCampo: [], _migracaoObsCiclo: false,
@@ -2508,7 +2188,6 @@
         if (elementoId === "areaImpressao") { const baseW = Math.round(el.getBoundingClientRect().width); const wrapEl = el.querySelector(".resumo-wrapper"); const tableW = wrapEl ? wrapEl.scrollWidth : 0; const padH = 44; fw = Math.max(baseW, tableW + padH); }
         else if (elementoId === "areaImpressaoCiclo") { fw = 1680; }
         else if (elementoId === "areaProducaoIndividual") { fw = 1400; }
-        else if (elementoId === "areaImpressaoFad7") { fw = 1400; }
         else if (elementoId === "areaRelatorioCampo") { fw = 1400; }
         else if (elementoId === "areaQuarteiroesDesignados") { fw = 1050; }
         else if (elementoId === "areaConfigEstrato") { fw = 1100; }
@@ -2628,8 +2307,8 @@
         return direto().then(restaurar).catch(() => fb().then(restaurar).catch(fallbackImpressao));
       }
       function obterTotalSemanasEpidemiologicas(ano) { const a = Number(ano) || new Date().getFullYear(); function p(y) { return (y + Math.floor(y/4) - Math.floor(y/100) + Math.floor(y/400)) % 7; } return (p(a) === 4 || p(a-1) === 3) ? 53 : 52; }
-      function atualizarLimitesSemanas(ano) { const t = obterTotalSemanasEpidemiologicas(ano); ["progCicloSemanaInicio","progCicloSemanaTermino","semanaLancamento","liraaSemanaInicio","liraaSemanaTermino","corrSemana","dashSemanaRef"].forEach(id => { const el = document.getElementById(id); if (el) el.max = t; }); }
-      function repoAtivo() { if (!estado.semanas) estado.semanas = {}; if (!estado.semanasLiraa) estado.semanasLiraa = {}; return estado.atividadeAtiva === "liraa" ? estado.semanasLiraa : estado.semanas; }
+      function atualizarLimitesSemanas(ano) { const t = obterTotalSemanasEpidemiologicas(ano); ["progCicloSemanaInicio","progCicloSemanaTermino","semanaLancamento","corrSemana","dashSemanaRef"].forEach(id => { const el = document.getElementById(id); if (el) el.max = t; }); }
+      function repoAtivo() { if (!estado.semanas) estado.semanas = {}; return estado.semanas; }
       function semana() { const r = repoAtivo(); if (!r[estado.semanaAtiva]) { const k = Object.keys(r); if (k.length > 0) estado.semanaAtiva = k[0]; else { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, estado.atividadeAtiva, "1"); estado.semanaAtiva = s; } } return r[estado.semanaAtiva]; }
       function diaAtual() { const s = semana(); if (!s || !s.dias) return null; if (!s.dias[estado.diaAtivo]) estado.diaAtivo = "segunda"; return s.dias[estado.diaAtivo]; }
       function valoresDoDia(ag) { if (!ag) return {}; if (!ag.valores) ag.valores = {}; return ag.valores; }
@@ -2640,10 +2319,10 @@
       function obterCicloConfig(ano, c, a) { if (!estado.ciclosConfig) estado.ciclosConfig = {}; const at = a || estado.atividadeAtiva || "ciclo"; const n = estado.ciclosConfig[chaveCicloConfig(ano,c,at)]; if (n && (n.inicio || n.termino || n.semanaInicio || n.semanaTermino)) return n; if (at === "ciclo") { const l = estado.ciclosConfig[chaveCicloConfig(ano,c)]; if (l && (l.inicio || l.termino || l.semanaInicio || l.semanaTermino)) return l; } return { inicio: "", termino: "", semanaInicio: "", semanaTermino: "" }; }
       function salvarCicloConfig(ano, c, ini, fim, si = "", sf = "", a = null) { if (!estado.ciclosConfig) estado.ciclosConfig = {}; const at = a || estado.atividadeAtiva || "ciclo"; estado.ciclosConfig[chaveCicloConfig(ano,c,at)] = { inicio: ini || "", termino: fim || "", semanaInicio: si ? String(si) : "", semanaTermino: sf ? String(sf) : "" }; }
       function obterDatasCicloEfetivas(ano, c, a) {
-        const A = Number(ano) || new Date().getFullYear(); const cN = normalizarNumeroCiclo(c); const at = a || estado.atividadeAtiva || "ciclo";
-        const p = (estado.programacao || []).find(x => x && Number(x.ano) === A && normalizarNumeroCiclo(x.ciclo) === cN && (x.atividade || "ciclo") === at);
+        const A = Number(ano) || new Date().getFullYear(); const cN = normalizarNumeroCiclo(c);
+        const p = (estado.programacao || []).find(x => x && Number(x.ano) === A && normalizarNumeroCiclo(x.ciclo) === cN && (!x.atividade || x.atividade === "ciclo"));
         if (p) return { inicio: p.cicloDataInicio || p.dataInicio || "", termino: p.cicloDataTermino || p.dataTermino || "", semanaInicio: p.cicloSemanaInicio || p.semana || "", semanaTermino: p.cicloSemanaTermino || p.semana || "", origem: "programacao" };
-        const cfg = obterCicloConfig(A, cN, at);
+        const cfg = obterCicloConfig(A, cN, "ciclo");
         return { inicio: cfg.inicio || "", termino: cfg.termino || "", semanaInicio: cfg.semanaInicio || "", semanaTermino: cfg.semanaTermino || "", origem: "config" };
       }
       function formatarDataBR(iso) { if (!iso) return ""; const p = String(iso).split("-"); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : ""; }
@@ -2659,27 +2338,24 @@
       function obterSegundaFeiraSEPadrao(ano, se) { const a = Number(ano) || new Date().getFullYear(); const s = Number(se) || 1; const j4 = new Date(a, 0, 4); const dj4 = j4.getDay(); const dif = (dj4 === 0 ? -6 : 1 - dj4); const seg1 = new Date(a, 0, 4 + dif); seg1.setDate(seg1.getDate() + (s-1)*7); return `${seg1.getFullYear()}-${String(seg1.getMonth()+1).padStart(2,"0")}-${String(seg1.getDate()).padStart(2,"0")}`; }
       function obterPeriodoDaSemana(semNum, ano, cN, at) {
         const sN = Number(semNum) || 1; const y = Number(ano) || new Date().getFullYear(); const c = normalizarNumeroCiclo(cN || "1");
-        let p = (estado.programacao || []).find(x => x && Number(x.ano) === y && normalizarNumeroCiclo(x.ciclo) === c && (!x.atividade || x.atividade === at));
-        if (!p) p = (estado.programacao || []).find(x => x && Number(x.ano) === y && normalizarNumeroCiclo(x.ciclo) === c);
+        let p = (estado.programacao || []).find(x => x && Number(x.ano) === y && normalizarNumeroCiclo(x.ciclo) === c && (!x.atividade || x.atividade === "ciclo"));
+        if (!p) p = (estado.programacao || []).find(x => x && Number(x.ano) === y && (!x.atividade || x.atividade === "ciclo") && (x.cicloSemanaInicio || x.semana) && (x.cicloDataInicio || x.dataInicio));
         if (p) { const sI = Number(p.cicloSemanaInicio || p.semana); const dI = p.cicloDataInicio || p.dataInicio; if (sI && dI) { const dS = sN - sI; const seg = adicionarDiasISO(dI, dS * 7); const sex = adicionarDiasISO(seg, 4); return { inicioISO: seg, terminoISO: sex, inicioBR: formatarDataBR(seg), terminoBR: formatarDataBR(sex), texto: `${formatarDataBR(seg)} a ${formatarDataBR(sex)}` }; } }
-        const op = (estado.programacao || []).find(x => x && Number(x.ano) === y && (x.cicloSemanaInicio || x.semana) && (x.cicloDataInicio || x.dataInicio));
-        if (op) { const sI = Number(op.cicloSemanaInicio || op.semana); const dI = op.cicloDataInicio || op.dataInicio; const dS = sN - sI; const seg = adicionarDiasISO(dI, dS*7); const sex = adicionarDiasISO(seg, 4); return { inicioISO: seg, terminoISO: sex, inicioBR: formatarDataBR(seg), terminoBR: formatarDataBR(sex), texto: `${formatarDataBR(seg)} a ${formatarDataBR(sex)}` }; }
         const seg = obterSegundaFeiraSEPadrao(y, sN); const sex = adicionarDiasISO(seg, 4);
         return { inicioISO: seg, terminoISO: sex, inicioBR: formatarDataBR(seg), terminoBR: formatarDataBR(sex), texto: `${formatarDataBR(seg)} a ${formatarDataBR(sex)}` };
       }
       function sincronizarPeriodosSemanasCiclo() {
-        [estado.semanas, estado.semanasLiraa].forEach(col => {
-          if (!col) return;
-          Object.keys(col).forEach(k => {
-            const s = col[k]; if (!s) return;
-            const sN = Number(k); if (isNaN(sN) || sN <= 0) return;
-            const ano = obterAnoSemana(s); const c = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"); const at = s.atividade || (col === estado.semanasLiraa ? "liraa" : "ciclo");
-            const p = obterPeriodoDaSemana(sN, ano, c, at);
-            if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio();
-            s.cabecalho.semanaInicio = p.inicioBR; s.cabecalho.semanaTermino = p.terminoBR;
-            const o = { segunda: 0, terca: 1, quarta: 2, quinta: 3, sexta: 4 };
-            DIAS_SEMANA.forEach(d => { if (s.dias && s.dias[d]) { const e = adicionarDiasISO(p.inicioISO, o[d]); if (!s.dias[d].data || s.dias[d].data !== e) s.dias[d].data = e; } });
-          });
+        const col = estado.semanas;
+        if (!col) return;
+        Object.keys(col).forEach(k => {
+          const s = col[k]; if (!s) return;
+          const sN = Number(k); if (isNaN(sN) || sN <= 0) return;
+          const ano = obterAnoSemana(s); const c = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1");
+          const p = obterPeriodoDaSemana(sN, ano, c, "ciclo");
+          if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio();
+          s.cabecalho.semanaInicio = p.inicioBR; s.cabecalho.semanaTermino = p.terminoBR;
+          const o = { segunda: 0, terca: 1, quarta: 2, quinta: 3, sexta: 4 };
+          DIAS_SEMANA.forEach(d => { if (s.dias && s.dias[d]) { const e = adicionarDiasISO(p.inicioISO, o[d]); if (!s.dias[d].data || s.dias[d].data !== e) s.dias[d].data = e; } });
         });
       }
       function criarCabecalhoVazio() { const c = {}; CAMPOS_CABECALHO.forEach(k => c[k] = ""); c.ciclo = "1"; return c; }
@@ -2700,43 +2376,178 @@
         const rod = criarRodapeVazio(); if (estado.configEquipe?.responsavel) rod.responsavel = estado.configEquipe.responsavel;
         return { atividade: at, ano, dias, resumo: { valores: {} }, cabecalho: cab, rodape: rod };
       }
-      function consultarProgramacaoPorData(iso) { if (!iso || !estado.programacao) return []; return estado.programacao.filter(p => p && (p.cicloDataInicio || p.dataInicio) && (p.cicloDataTermino || p.dataTermino) && iso >= (p.cicloDataInicio || p.dataInicio) && iso <= (p.cicloDataTermino || p.dataTermino)); }
+      function consultarProgramacaoPorData(iso) { if (!iso || !estado.programacao) return []; return estado.programacao.filter(p => p && (!p.atividade || p.atividade === "ciclo") && (p.cicloDataInicio || p.dataInicio) && (p.cicloDataTermino || p.dataTermino) && iso >= (p.cicloDataInicio || p.dataInicio) && iso <= (p.cicloDataTermino || p.dataTermino)); }
       function identificarCicloAtivo() { const s = semana(); const ph = consultarProgramacaoPorData(hojeISO()); if (ph.length > 0 && ph[0].ciclo) return normalizarNumeroCiclo(ph[0].ciclo); if (s?.cabecalho?.ciclo) return normalizarNumeroCiclo(s.cabecalho.ciclo); return estado.cicloFiltroConsolidado || "1"; }
+      function obterSemanasProgramadas(atividade = null, anoAlvo = null) {
+        const s = semana();
+        const ano = Number(anoAlvo || (s ? obterAnoSemana(s) : new Date().getFullYear())) || new Date().getFullYear();
+        const todas = (estado.programacao || []).filter(p => p && (!p.atividade || p.atividade === "ciclo"));
+        if (todas.length === 0) return [];
+        const progsAno = todas.filter(p => !p.ano || Number(p.ano) === ano);
+        const mapa = new Map();
+        progsAno.forEach(p => {
+          const sI = Number(p.cicloSemanaInicio || p.semana || obterSemanaEpidemiologicaDeISO(p.cicloDataInicio || p.dataInicio));
+          const sF = Number(p.cicloSemanaTermino || p.semana || obterSemanaEpidemiologicaDeISO(p.cicloDataTermino || p.dataTermino) || sI);
+          if (isNaN(sI) || isNaN(sF) || sI <= 0 || sF < sI) return;
+          const dIni = p.cicloDataInicio || p.dataInicio || "";
+          for (let w = sI; w <= sF; w++) {
+            if (!mapa.has(w)) {
+              const dataSort = dIni ? adicionarDiasISO(dIni, (w - sI) * 7) : "";
+              mapa.set(w, {
+                se: w,
+                ano: Number(p.ano) || ano,
+                ciclo: normalizarNumeroCiclo(p.ciclo || "1"),
+                mes: p.mes || (dataSort ? obterNomeMesDeData(dataSort) : ""),
+                prog: p,
+                dataSort
+              });
+            }
+          }
+        });
+        return Array.from(mapa.values()).sort((a, b) => {
+          if (a.dataSort && b.dataSort && a.dataSort !== b.dataSort) return a.dataSort.localeCompare(b.dataSort);
+          if (a.ano !== b.ano) return a.ano - b.ano;
+          return a.se - b.se;
+        });
+      }
+      function garantirSemanaCriadaNaProgramacao(itemProg) {
+        if (!itemProg) return null;
+        const r = estado.semanas || (estado.semanas = {});
+        const k = String(itemProg.se);
+        const p = obterPeriodoDaSemana(k, itemProg.ano, itemProg.ciclo, "ciclo");
+        if (!r[k]) {
+          r[k] = criarSemana(p.inicioISO, k, "ciclo", itemProg.ciclo, itemProg.mes);
+          r[k].ano = itemProg.ano;
+        } else {
+          r[k].ano = itemProg.ano;
+          if (!r[k].cabecalho) r[k].cabecalho = criarCabecalhoVazio();
+          r[k].cabecalho.semana = k;
+          const vazia = contarTotalLancamentos({ semanas: { [k]: r[k] } }) === 0;
+          if (vazia) {
+            r[k].cabecalho.ciclo = itemProg.ciclo;
+            if (itemProg.mes) r[k].cabecalho.mes = itemProg.mes;
+            const dc = obterDatasCicloEfetivas(itemProg.ano, itemProg.ciclo, "ciclo");
+            r[k].cabecalho.cicloInicio = formatarDataBR(dc.inicio);
+            r[k].cabecalho.cicloTermino = formatarDataBR(dc.termino);
+            r[k].cabecalho.semanaInicio = p.inicioBR;
+            r[k].cabecalho.semanaTermino = p.terminoBR;
+          }
+        }
+        return r[k];
+      }
+      function selecionarMelhorSemanaProgramada(lista) {
+        if (!Array.isArray(lista) || lista.length === 0) return null;
+        const ultima = estado._ultimaSemanaPorAtividade && estado._ultimaSemanaPorAtividade.ciclo;
+        if (ultima) {
+          const enc = lista.find(x => x.se === Number(ultima));
+          if (enc) return enc;
+        }
+        const hoje = hojeISO();
+        const porData = lista.find(x => {
+          const per = obterPeriodoDaSemana(x.se, x.ano, x.ciclo, "ciclo");
+          return per && per.inicioISO && per.terminoISO && hoje >= per.inicioISO && hoje <= per.terminoISO;
+        });
+        if (porData) return porData;
+        const seHoje = Number(obterSemanaEpidemiologicaDeISO(hoje)) || semanaAtualDoAno();
+        const proxima = lista.find(x => x.se >= seHoje);
+        if (proxima) return proxima;
+        return lista[lista.length - 1];
+      }
+      function ajustarSemanaAtivaParaProgramacao(persistir = false) {
+        const lista = obterSemanasProgramadas("ciclo");
+        if (lista.length === 0) return false;
+        const seAtual = Number(estado.semanaAtiva);
+        const enc = lista.find(x => x.se === seAtual);
+        if (enc) {
+          garantirSemanaCriadaNaProgramacao(enc);
+          if (!estado._ultimaSemanaPorAtividade) estado._ultimaSemanaPorAtividade = {};
+          estado._ultimaSemanaPorAtividade.ciclo = String(enc.se);
+          return false;
+        }
+        const melhor = selecionarMelhorSemanaProgramada(lista);
+        if (!melhor) return false;
+        garantirSemanaCriadaNaProgramacao(melhor);
+        estado.semanaAtiva = String(melhor.se);
+        if (!estado._ultimaSemanaPorAtividade) estado._ultimaSemanaPorAtividade = {};
+        estado._ultimaSemanaPorAtividade.ciclo = String(melhor.se);
+        if (persistir) salvar();
+        return true;
+      }
+      function atualizarEstadoBotoesSemana() {
+        const lista = obterSemanasProgramadas("ciclo");
+        const seAtual = Number(estado.semanaAtiva);
+        let temAnt = false, temProx = false;
+        let titAnt = "", titProx = "";
+        if (lista.length > 0) {
+          const idx = lista.findIndex(x => x.se === seAtual);
+          if (idx !== -1) {
+            temAnt = idx > 0;
+            temProx = idx < lista.length - 1;
+            if (temAnt) titAnt = `Semana anterior programada: SE ${pad2(lista[idx - 1].se)}`;
+            if (temProx) titProx = `Próxima semana programada: SE ${pad2(lista[idx + 1].se)}`;
+          } else {
+            const ant = [...lista].reverse().find(x => x.se < seAtual);
+            const prox = lista.find(x => x.se > seAtual);
+            temAnt = !!(ant || lista.length > 0);
+            temProx = !!(prox || lista.length > 0);
+          }
+        }
+        if (!temAnt) titAnt = lista.length === 0 ? "Nenhuma semana programada para Ciclo de Visitas na SUGARBO" : "Esta é a primeira semana programada para Ciclo de Visitas";
+        if (!temProx) titProx = lista.length === 0 ? "Nenhuma semana programada para Ciclo de Visitas na SUGARBO" : "Esta é a última semana programada para Ciclo de Visitas";
+        ["btnSemanaAnterior", "btnSemanaAnteriorResumo", "btnSemanaAnteriorProdInd"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = !temAnt; el.title = titAnt; }
+        });
+        ["btnSemanaProxima", "btnSemanaProximaResumo", "btnSemanaProximaProdInd"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = !temProx; el.title = titProx; }
+        });
+      }
       function verificarEAtualizarBadgeAtividade() {
         const s = semana(); const d = diaAtual(); const b = document.getElementById("badgeStatusProgramacao"); if (!s || !d || !b) return;
-        const iso = d.data || hojeISO(); const ps = consultarProgramacaoPorData(iso);
-        if (ps.length === 1) { const p = ps[0]; const cl = p.atividade === "liraa" ? "liraa" : "ciclo"; b.className = `badge-aviso-atividade ${cl}`; b.textContent = `📋 Programado: ${p.atividade === "liraa" ? "LIRAa" : "Ciclo"} (${formatarCicloTexto(p.ciclo)} - SE ${pad2(p.cicloSemanaInicio||p.semana)} a ${pad2(p.cicloSemanaTermino||p.semana)})`; }
-        else if (ps.length > 1) { b.className = "badge-aviso-atividade conflito"; b.textContent = `⚠️ Conflito (${ps.length})`; }
-        else { b.className = "badge-aviso-atividade alerta"; b.textContent = `ℹ️ Sem programação para ${formatarDataBR(iso)}`; }
+        const ano = obterAnoSemana(s);
+        const lista = obterSemanasProgramadas("ciclo", ano);
+        const item = lista.find(x => x.se === Number(estado.semanaAtiva));
+        if (item && item.prog) {
+          const p = item.prog;
+          const sI = p.cicloSemanaInicio || p.semana;
+          const sF = p.cicloSemanaTermino || p.semana;
+          const faixaSE = String(sI) === String(sF) ? `SE ${pad2(sI)}` : `SE ${pad2(sI)} a ${pad2(sF)}`;
+          b.className = "badge-aviso-atividade ciclo";
+          b.textContent = `📋 Programado: Ciclo (${formatarCicloTexto(p.ciclo)} - ${faixaSE})`;
+        } else if (lista.length === 0) {
+          b.className = "badge-aviso-atividade alerta";
+          b.textContent = "ℹ️ Sem programação de Ciclo de Visitas na SUGARBO";
+        } else {
+          b.className = "badge-aviso-atividade alerta";
+          b.textContent = `ℹ️ SE ${pad2(estado.semanaAtiva)} fora da programação de Ciclo`;
+        }
         const br = document.getElementById("badgeResumoAtividade"); const st = document.getElementById("subtituloResumoSemana");
-        if (br) { if (estado.atividadeAtiva === "liraa") { br.textContent = "🔍 LIRAa"; br.className = "badge-aviso-atividade liraa"; if (st) st.textContent = "RESUMO DOS TRABALHOS DE CAMPO - LIRAA"; } else { br.textContent = "🏡 Ciclo de Visita"; br.className = "badge-aviso-atividade ciclo"; if (st) st.textContent = "RESUMO DOS TRABALHOS DE CAMPO"; } }
+        if (br) { br.textContent = "🏡 Ciclo de Visita"; br.className = "badge-aviso-atividade ciclo"; if (st) st.textContent = "RESUMO DOS TRABALHOS DE CAMPO"; }
       }
       function autoDetectarProgramacaoPorData(iso, persistir = true) {
         if (!iso) return false;
-        const atAtual = (estado.atividadeAtiva === "liraa") ? "liraa" : "ciclo";
-        const ps = consultarProgramacaoPorData(iso).filter(p => p && (p.atividade || "ciclo") === atAtual);
+        const ps = consultarProgramacaoPorData(iso);
         if (ps.length !== 1) return false;
         const p = ps[0]; const se = identificarSemanaDaData(iso, p.ano, p.ciclo) || obterSemanaEpidemiologicaDeISO(iso) || String(p.cicloSemanaInicio || p.semana || 1);
-        const sk = String(se); const repo = atAtual === "liraa" ? estado.semanasLiraa : estado.semanas;
-        if (!repo[sk]) { const pd = obterPeriodoDaSemana(sk, p.ano, p.ciclo, atAtual); repo[sk] = criarSemana(pd.inicioISO, sk, atAtual, p.ciclo, p.mes); }
+        const lista = obterSemanasProgramadas("ciclo", p.ano);
+        if (lista.length > 0 && !lista.some(x => x.se === Number(se))) return false;
+        const sk = String(se); const repo = estado.semanas || (estado.semanas = {});
+        if (!repo[sk]) { const pd = obterPeriodoDaSemana(sk, p.ano, p.ciclo, "ciclo"); repo[sk] = criarSemana(pd.inicioISO, sk, "ciclo", p.ciclo, p.mes); }
         const s = repo[sk]; if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio();
         s.cabecalho.ciclo = normalizarNumeroCiclo(p.ciclo); s.cabecalho.semana = sk; s.cabecalho.mes = p.mes || obterNomeMesDeData(iso);
         if (p.cicloDataInicio) s.cabecalho.cicloInicio = formatarDataBR(p.cicloDataInicio); if (p.cicloDataTermino) s.cabecalho.cicloTermino = formatarDataBR(p.cicloDataTermino);
         s.ano = p.ano;
-        // Não altera estado.atividadeAtiva: a atividade só é alterada por clique ou ação intencional do usuário
         estado.semanaAtiva = sk; const ch = chaveDiaDeISO(iso); if (ch) estado.diaAtivo = ch;
+        if (!estado._ultimaSemanaPorAtividade) estado._ultimaSemanaPorAtividade = {};
+        estado._ultimaSemanaPorAtividade.ciclo = sk;
         if (persistir) { salvar(); renderizar(); atualizarTotais(); }
         return true;
       }
-      function alternarAtividade(na) {
-        if (estado.atividadeAtiva === na) return;
-        estado.atividadeAtiva = na;
-        estado.atividadeSelecionadaPeloUsuario = na;
-        try { localStorage.setItem("pmcd_atividade_usuario", na); } catch(e) {}
-        const r = repoAtivo(); const k = Object.keys(r);
-        if (k.length === 0) { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, na, "1"); estado.semanaAtiva = s; }
-        else if (!r[estado.semanaAtiva]) estado.semanaAtiva = k[0];
-        salvar(); renderizar(); atualizarTotais();
+      function alternarAtividade() {
+        estado.atividadeAtiva = "ciclo";
+        estado.atividadeSelecionadaPeloUsuario = "ciclo";
+        try { localStorage.setItem("pmcd_atividade_usuario", "ciclo"); } catch(e) {}
       }
       function preencherDadosCicloNoModalProg(ano, c) { const at = (document.getElementById("progAtividade")?.value) || "ciclo"; const cfg = obterCicloConfig(ano, c, at); if (cfg && (cfg.inicio || cfg.termino)) { const a = document.getElementById("progCicloDataInicio"); if (a) a.value = cfg.inicio || ""; const b = document.getElementById("progCicloDataTermino"); if (b) b.value = cfg.termino || ""; const si = document.getElementById("progCicloSemanaInicio"); if (si) si.value = cfg.semanaInicio || ""; const sf = document.getElementById("progCicloSemanaTermino"); if (sf) sf.value = cfg.semanaTermino || ""; atualizarPreviewPeriodoCiclo(); } }
       function obterSemanaEpidemiologicaDeISO(iso) { if (!iso) return ""; const p = String(iso).split("-").map(Number); if (p.length !== 3 || p.some(isNaN)) return ""; const d = new Date(p[0], p[1]-1, p[2]); if (isNaN(d.getTime())) return ""; d.setHours(0,0,0,0); const t = new Date(d); t.setDate(t.getDate() + 3 - ((t.getDay()+6) % 7)); const w = new Date(t.getFullYear(), 0, 4); return String(1 + Math.round(((t - w) / 86400000 - 3 + ((w.getDay()+6) % 7)) / 7)); }
@@ -2783,17 +2594,18 @@
         atualizarPreviewPeriodoCiclo();
       }
       let idProgramacaoParaExcluir = null;
-      function solicitarExclusaoProgramacao(id) { idProgramacaoParaExcluir = id; const p = (estado.programacao || []).find(x => x && x.id === id); const d = document.getElementById("detalhesExclusaoProg"); if (d) { if (p) d.innerHTML = `<strong>Ano:</strong> ${p.ano || "—"}<br><strong>Atividade:</strong> ${p.atividade === "liraa" ? "LIRAa" : "Ciclo"}<br><strong>Ciclo:</strong> ${formatarCicloTexto(p.ciclo)}<br><strong>Período:</strong> ${formatarDataBR(p.cicloDataInicio || p.dataInicio)} a ${formatarDataBR(p.cicloDataTermino || p.dataTermino)}<br><strong>Semanas:</strong> SE ${pad2(p.cicloSemanaInicio || p.semana)} a SE ${pad2(p.cicloSemanaTermino || p.semana)}`; else d.textContent = "—"; } document.getElementById("modalConfirmarExclusaoProg").classList.add("ativo"); }
+      function solicitarExclusaoProgramacao(id) { idProgramacaoParaExcluir = id; const p = (estado.programacao || []).find(x => x && x.id === id); const d = document.getElementById("detalhesExclusaoProg"); if (d) { if (p) d.innerHTML = `<strong>Ano:</strong> ${p.ano || "—"}<br><strong>Atividade:</strong> Ciclo<br><strong>Ciclo:</strong> ${formatarCicloTexto(p.ciclo)}<br><strong>Período:</strong> ${formatarDataBR(p.cicloDataInicio || p.dataInicio)} a ${formatarDataBR(p.cicloDataTermino || p.dataTermino)}<br><strong>Semanas:</strong> SE ${pad2(p.cicloSemanaInicio || p.semana)} a SE ${pad2(p.cicloSemanaTermino || p.semana)}`; else d.textContent = "—"; } document.getElementById("modalConfirmarExclusaoProg").classList.add("ativo"); }
       function fecharModalExclusaoProg() { idProgramacaoParaExcluir = null; document.getElementById("modalConfirmarExclusaoProg").classList.remove("ativo"); }
-      function executarExclusaoProgramacaoConfirmada() { if (!idProgramacaoParaExcluir) { fecharModalExclusaoProg(); return; } const id = idProgramacaoParaExcluir; estado.programacao = (estado.programacao || []).filter(x => x && x.id !== id); salvar(); fecharModalExclusaoProg(); renderizarTabelaProgramacao(); sincronizarPeriodosSemanasCiclo(); try { verificarEAtualizarBadgeAtividade(); } catch(e) {} try { atualizarPreviewPeriodoCiclo(); } catch(e) {} try { renderizarQuarteiroesDesignados(); } catch(e) {} }
+      function executarExclusaoProgramacaoConfirmada() { if (!idProgramacaoParaExcluir) { fecharModalExclusaoProg(); return; } const id = idProgramacaoParaExcluir; estado.programacao = (estado.programacao || []).filter(x => x && x.id !== id); ajustarSemanaAtivaParaProgramacao(false); salvar(); fecharModalExclusaoProg(); renderizarTabelaProgramacao(); sincronizarPeriodosSemanasCiclo(); try { verificarEAtualizarBadgeAtividade(); } catch(e) {} try { atualizarPreviewPeriodoCiclo(); } catch(e) {} try { renderizar(); atualizarTotais(); } catch(e) {} try { renderizarQuarteiroesDesignados(); } catch(e) {} }
       function renderizarTabelaProgramacao() {
         const c = document.getElementById("corpoTabelaProg"); if (!c) return;
         c.innerHTML = "";
-        if (!estado.programacao || estado.programacao.length === 0) { c.innerHTML = `<tr><td colspan="5" style="padding: 12px; color: #64748b;">Nenhuma programação cadastrada.</td></tr>`; return; }
-        const ord = [...estado.programacao].filter(Boolean).sort((a,b) => a.ano !== b.ano ? a.ano - b.ano : (a.cicloSemanaInicio||0) - (b.cicloSemanaInicio||0));
+        const listaCiclo = (estado.programacao || []).filter(p => p && (!p.atividade || p.atividade === "ciclo"));
+        if (listaCiclo.length === 0) { c.innerHTML = `<tr><td colspan="5" style="padding: 12px; color: #64748b;">Nenhuma programação cadastrada.</td></tr>`; return; }
+        const ord = [...listaCiclo].sort((a,b) => a.ano !== b.ano ? a.ano - b.ano : (a.cicloSemanaInicio||0) - (b.cicloSemanaInicio||0));
         ord.forEach(p => {
           const tr = document.createElement("tr");
-          const t = p.atividade === "liraa" ? `<span style="background:#ffedd5; color:#9a3412; font-weight:700; padding:2px 6px; border-radius:4px;">LIRAa</span>` : `<span style="background:#dcfce7; color:#14532d; font-weight:700; padding:2px 6px; border-radius:4px;">Ciclo</span>`;
+          const t = `<span style="background:#dcfce7; color:#14532d; font-weight:700; padding:2px 6px; border-radius:4px;">Ciclo</span>`;
           const sFaixa = (p.cicloSemanaInicio || p.semana) ? `<br><small style="color:#166534; font-weight:700;">SE: ${pad2(p.cicloSemanaInicio || p.semana)} a ${pad2(p.cicloSemanaTermino || p.semana)}</small>` : "";
           tr.innerHTML = `<td><strong>${p.ano}</strong></td><td>${t}</td><td>${formatarCicloTexto(p.ciclo)}</td><td>${formatarDataBR(p.cicloDataInicio || p.dataInicio)} a ${formatarDataBR(p.cicloDataTermino || p.dataTermino)}${sFaixa}</td><td style="display:flex; justify-content:center; gap:4px;"><button class="btn btn-cinza btn-editar-prog" data-id="${p.id}" style="padding: 4px 8px; color: #0284c7;">✏️</button><button class="btn btn-cinza btn-remover-prog" data-id="${p.id}" style="padding: 4px 8px; color: #dc2626; background:#fee2e2;">🗑️</button></td>`;
           c.appendChild(tr);
@@ -2803,7 +2615,7 @@
       }
       function salvarNovaProgramacao(e) {
         if (e && e.preventDefault) e.preventDefault();
-        const inA = document.getElementById("progAno"), inAt = document.getElementById("progAtividade"), inC = document.getElementById("progCiclo"), inDI = document.getElementById("progCicloDataInicio"), inDF = document.getElementById("progCicloDataTermino"), inSI = document.getElementById("progCicloSemanaInicio"), inSF = document.getElementById("progCicloSemanaTermino"), eId = document.getElementById("progEditId")?.value;
+        const inA = document.getElementById("progAno"), inC = document.getElementById("progCiclo"), inDI = document.getElementById("progCicloDataInicio"), inDF = document.getElementById("progCicloDataTermino"), inSI = document.getElementById("progCicloSemanaInicio"), inSF = document.getElementById("progCicloSemanaTermino"), eId = document.getElementById("progEditId")?.value;
         const ano = Number(inA?.value) || new Date().getFullYear(); if (inA && !inA.value) inA.value = ano;
         const dI = inDI?.value, dF = inDF?.value;
         if (!dI) { alert("⚠️ Informe a Data de Início."); inDI?.focus(); return; }
@@ -2814,24 +2626,25 @@
         if (!sF || isNaN(sF)) { sF = Number(obterSemanaEpidemiologicaDeISO(dF)) || 52; if (inSF) inSF.value = sF; }
         const mx = obterTotalSemanasEpidemiologicas(ano); if (sI < 1 || sI > mx || sF < 1 || sF > mx) { alert(`⚠️ Semanas devem estar entre 1 e ${mx}.`); return; }
         if (sI > sF) { alert("⚠️ Semana início > término."); return; }
-        const c = inC?.value || "1"; const at = inAt?.value || "ciclo"; const m = obterNomeMesDeData(dI) || "Janeiro";
+        const c = inC?.value || "1"; const at = "ciclo"; const m = obterNomeMesDeData(dI) || "Janeiro";
         salvarCicloConfig(ano, c, dI, dF, sI, sF, at);
         if (!estado.programacao) estado.programacao = [];
         if (eId) { const p = estado.programacao.find(x => x && x.id === eId); if (p) { p.ano = ano; p.ciclo = normalizarNumeroCiclo(c); p.cicloSemanaInicio = sI; p.cicloSemanaTermino = sF; p.cicloDataInicio = dI; p.cicloDataTermino = dF; p.dataInicio = dI; p.dataTermino = dF; p.semana = sI; p.mes = m; p.atividade = at; } }
         else { estado.programacao.push({ id: "prog_" + Date.now() + "_" + Math.random().toString(36).slice(2,6), ano, ciclo: normalizarNumeroCiclo(c), cicloSemanaInicio: sI, cicloSemanaTermino: sF, cicloDataInicio: dI, cicloDataTermino: dF, dataInicio: dI, dataTermino: dF, semana: sI, mes: m, atividade: at }); }
+        ajustarSemanaAtivaParaProgramacao(false);
         salvar(); resetarFormularioProg(); renderizarTabelaProgramacao(); sincronizarPeriodosSemanasCiclo(); verificarEAtualizarBadgeAtividade(); renderizar(); atualizarTotais(); try { renderizarQuarteiroesDesignados(); } catch(e) {}
         alert("✅ Programação salva!");
       }
-      function abrirModalCorrecao() { const s = semana(); if (!s) return; atualizarLimitesSemanas(obterAnoSemana(s)); document.getElementById("corrAtividade").value = estado.atividadeAtiva; document.getElementById("corrSemana").value = estado.semanaAtiva; document.getElementById("corrCiclo").value = (s.cabecalho && normalizarNumeroCiclo(s.cabecalho.ciclo)) || "1"; document.getElementById("corrDataSegunda").value = obterDataSegundaSemana(s); document.getElementById("modalCorrecao").classList.add("ativo"); }
+      function abrirModalCorrecao() { const s = semana(); if (!s) return; atualizarLimitesSemanas(obterAnoSemana(s)); document.getElementById("corrAtividade").value = "ciclo"; document.getElementById("corrSemana").value = estado.semanaAtiva; document.getElementById("corrCiclo").value = (s.cabecalho && normalizarNumeroCiclo(s.cabecalho.ciclo)) || "1"; document.getElementById("corrDataSegunda").value = obterDataSegundaSemana(s); document.getElementById("modalCorrecao").classList.add("ativo"); }
       function fecharModalCorrecao() { document.getElementById("modalCorrecao").classList.remove("ativo"); }
       function executarCorrecaoLancamento() {
-        const na = document.getElementById("corrAtividade").value; const nc = normalizarNumeroCiclo(document.getElementById("corrCiclo").value); const ns = String(Number(document.getElementById("corrSemana").value)); const nd = document.getElementById("corrDataSegunda").value;
+        const na = "ciclo"; const nc = normalizarNumeroCiclo(document.getElementById("corrCiclo").value); const ns = String(Number(document.getElementById("corrSemana").value)); const nd = document.getElementById("corrDataSegunda").value;
         const ano = anoDeISO(nd); const mx = obterTotalSemanasEpidemiologicas(ano);
         if (!ns || Number(ns) <= 0 || Number(ns) > mx) { alert(`SE inválida para ${ano}.`); return; }
         if (!nd) { alert("Selecione a segunda-feira."); return; }
-        const so = semana(); const ao = estado.atividadeAtiva; const ko = estado.semanaAtiva;
-        const rd = na === "liraa" ? estado.semanasLiraa : estado.semanas; const ro = ao === "liraa" ? estado.semanasLiraa : estado.semanas;
-        if (rd[ns] && (ns !== ko || na !== ao)) { if (!confirm(`SE ${pad2(ns)} já existe. Mesclar?`)) return; }
+        const so = semana(); const ko = estado.semanaAtiva;
+        const rd = estado.semanas || (estado.semanas = {}); const ro = rd;
+        if (rd[ns] && ns !== ko) { if (!confirm(`SE ${pad2(ns)} já existe. Mesclar?`)) return; }
         if (!rd[ns]) rd[ns] = criarSemana(nd, ns, na, nc);
         const sd = rd[ns];
         DIAS_SEMANA.forEach((d, i) => { if (!sd.dias) sd.dias = {}; if (!sd.dias[d]) sd.dias[d] = { data: "", programados: "", agentes: [] }; if (so?.dias?.[d]) { sd.dias[d].programados = so.dias[d].programados; sd.dias[d].agentes = JSON.parse(JSON.stringify(so.dias[d].agentes || [])); } sd.dias[d].data = adicionarDiasISO(nd, i); });
@@ -2843,10 +2656,10 @@
         sd.cabecalho.cicloInicio = formatarDataBR(dc.inicio); sd.cabecalho.cicloTermino = formatarDataBR(dc.termino);
         sd.cabecalho.semanaInicio = pd.inicioBR; sd.cabecalho.semanaTermino = pd.terminoBR;
         sd.atividade = na; sd.ano = ano;
-        if (ns !== ko || na !== ao) delete ro[ko];
-        estado.atividadeAtiva = na; estado.semanaAtiva = ns;
-        estado.atividadeSelecionadaPeloUsuario = na;
-        try { localStorage.setItem("pmcd_atividade_usuario", na); } catch(e) {}
+        if (ns !== ko) delete ro[ko];
+        estado.atividadeAtiva = "ciclo"; estado.semanaAtiva = ns;
+        estado.atividadeSelecionadaPeloUsuario = "ciclo";
+        try { localStorage.setItem("pmcd_atividade_usuario", "ciclo"); } catch(e) {}
         salvar(); fecharModalCorrecao(); renderizar(); atualizarTotais(); try { renderizarQuarteiroesDesignados(); } catch(e) {}
         alert(`✅ Lançamento transferido para SE ${pad2(ns)}!`);
       }
@@ -2854,7 +2667,7 @@
       function contarTotalLancamentos(dados) {
         if (!dados || typeof dados !== "object") return 0;
         let total = 0;
-        [dados.semanas, dados.semanasLiraa].forEach(col => {
+        [dados.semanas].forEach(col => {
           if (!col || typeof col !== "object") return;
           Object.keys(col).forEach(sk => {
             const sem = col[sk];
@@ -3027,13 +2840,13 @@
 
         const resultado = JSON.parse(JSON.stringify(nuvem));
 
-        resultado.atividadeAtiva = local.atividadeAtiva || nuvem.atividadeAtiva || "ciclo";
+        resultado.atividadeAtiva = "ciclo";
         resultado.semanaAtiva = local.semanaAtiva || nuvem.semanaAtiva;
         resultado.diaAtivo = local.diaAtivo || nuvem.diaAtivo || "segunda";
         resultado.cicloFiltroConsolidado = local.cicloFiltroConsolidado || nuvem.cicloFiltroConsolidado || "1";
 
-        // 1. Semanas e SemanasLiraa
-        ["semanas", "semanasLiraa"].forEach(tipoCol => {
+        // 1. Semanas
+        ["semanas"].forEach(tipoCol => {
           const colLoc = local[tipoCol] || {};
           const colNuv = resultado[tipoCol] || {};
           resultado[tipoCol] = { ...colNuv };
@@ -3319,24 +3132,13 @@
         }
 
         if (!estado.semanas) estado.semanas = {};
-        if (!estado.semanasLiraa) estado.semanasLiraa = {};
         if (!Array.isArray(estado.programacao)) estado.programacao = [];
         if (!estado.ciclosConfig) estado.ciclosConfig = {};
         if (!estado.cicloFiltroConsolidado) estado.cicloFiltroConsolidado = "1";
         if (!estado.diaAtivo) estado.diaAtivo = "segunda";
-        let ativUsuario = null;
-        try { ativUsuario = localStorage.getItem("pmcd_atividade_usuario"); } catch(e) {}
-        if (!ativUsuario && estado.atividadeSelecionadaPeloUsuario) {
-          ativUsuario = estado.atividadeSelecionadaPeloUsuario;
-        }
-        if (ativUsuario === "liraa") {
-          estado.atividadeAtiva = "liraa";
-          estado.atividadeSelecionadaPeloUsuario = "liraa";
-        } else {
-          estado.atividadeAtiva = "ciclo";
-          estado.atividadeSelecionadaPeloUsuario = "ciclo";
-          try { localStorage.setItem("pmcd_atividade_usuario", "ciclo"); } catch(e) {}
-        }
+        estado.atividadeAtiva = "ciclo";
+        estado.atividadeSelecionadaPeloUsuario = "ciclo";
+        try { localStorage.setItem("pmcd_atividade_usuario", "ciclo"); } catch(e) {}
         if (!estado.ciclo) estado.ciclo = { cabecalho: {}, rodape: {} };
         if (!estado.ciclo.rodape) estado.ciclo.rodape = {};
         if (!Array.isArray(estado.relatoriosCampo)) estado.relatoriosCampo = [];
@@ -3347,9 +3149,9 @@
         if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
         if (!estado.resumoReconhecimento || typeof estado.resumoReconhecimento !== "object") estado.resumoReconhecimento = obterResumoReconhecimentoPadrao();
         const r = repoAtivo();
-        if (Object.keys(r).length === 0) { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, estado.atividadeAtiva, "1"); estado.semanaAtiva = s; }
+        if (Object.keys(r).length === 0) { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, "ciclo", "1"); estado.semanaAtiva = s; }
         if (!estado.semanaAtiva || !r[estado.semanaAtiva]) estado.semanaAtiva = Object.keys(r)[0];
-        [estado.semanas, estado.semanasLiraa].forEach(col => {
+        [estado.semanas].forEach(col => {
           if (!col) return;
           Object.keys(col).forEach(k => {
             const s = col[k]; if (!s) return;
@@ -3370,6 +3172,7 @@
           });
         });
         sincronizarPeriodosSemanasCiclo();
+        ajustarSemanaAtivaParaProgramacao(false);
         migrarObservacaoCiclo();
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
       }
@@ -3611,7 +3414,7 @@
         let ks = [];
         if (si && st && si <= st) { for (let s = si; s <= st; s++) ks.push(String(s)); }
         else { ks = Object.keys(estado.semanas || {}).filter(k => normalizarNumeroCiclo(estado.semanas[k]?.cabecalho?.ciclo) === ciclo); }
-        return ks.filter(s => !semanaEhExclusivaLiraa(Number(s), ano, ciclo));
+        return ks;
       }
       function dashAgregarCiclo(ano, ciclo) {
         const semanas = dashSemanasDoCiclo(ano, ciclo);
@@ -4121,32 +3924,22 @@
       }
       function renderizar() {
         const s = semana(); if (!s) return;
-        const isL = estado.atividadeAtiva === "liraa";
-        const bC = document.getElementById("btnAtividadeCiclo"), bL = document.getElementById("btnAtividadeLiraa");
-        if (bC && bL) { bC.classList.toggle("ativo-ciclo", !isL); bL.classList.toggle("ativo-liraa", isL); }
-        const pC = document.getElementById("blocoProgCicloVisita"), pL = document.getElementById("blocoProgLiraa");
-        if (pC) pC.style.display = isL ? "none" : "flex"; if (pL) pL.style.display = isL ? "flex" : "none";
-        const tag = isL ? " [LIRAa]" : "";
         const lbS = document.getElementById("labelSemana"), lbR = document.getElementById("labelSemanaResumo");
-        if (lbS) lbS.textContent = `Semana ${pad2(estado.semanaAtiva)}${tag}`; if (lbR) lbR.textContent = `Semana ${pad2(estado.semanaAtiva)}${tag}`;
+        if (lbS) lbS.textContent = `Semana ${pad2(estado.semanaAtiva)}`; if (lbR) lbR.textContent = `Semana ${pad2(estado.semanaAtiva)}`;
         const ano = obterAnoSemana(s); atualizarLimitesSemanas(ano);
         const cA = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1");
         const mes = s.cabecalho?.mes || obterNomeMesDeData(obterDataSegundaSemana(s));
-        const pS = obterPeriodoDaSemana(estado.semanaAtiva, ano, cA, estado.atividadeAtiva);
+        const pS = obterPeriodoDaSemana(estado.semanaAtiva, ano, cA, "ciclo");
         const inA = document.getElementById("anoLancamento"), seC = document.getElementById("cicloLancamentoCiclo"), inM = document.getElementById("mesLancamento"), inS = document.getElementById("semanaLancamento"), inI = document.getElementById("semanaDataInicio"), inF = document.getElementById("semanaDataTermino");
         if (inA) inA.value = ano; if (seC) seC.value = cA; if (inM) inM.value = mes; if (inS) inS.value = estado.semanaAtiva; if (inI) inI.value = pS.inicioISO; if (inF) inF.value = pS.terminoISO;
         if (s.cabecalho) { s.cabecalho.semanaInicio = pS.inicioBR; s.cabecalho.semanaTermino = pS.terminoBR; }
-        const inAL = document.getElementById("anoLancamentoLiraa"), inML = document.getElementById("mesLancamentoLiraa"), seCL = document.getElementById("liraaCiclo"), inLI = document.getElementById("liraaSemanaInicio"), inLDI = document.getElementById("liraaDataInicio"), inLF = document.getElementById("liraaSemanaTermino"), inLDF = document.getElementById("liraaDataTermino");
-        if (inAL) inAL.value = ano; if (inML) inML.value = mes; if (seCL) seCL.value = cA;
-        const dL = obterDatasCicloEfetivas(ano, cA, "liraa");
-        if (inLI) inLI.value = dL.semanaInicio || estado.semanaAtiva; if (inLDI) inLDI.value = dL.inicio || pS.inicioISO; if (inLF) inLF.value = dL.semanaTermino || inLI.value || estado.semanaAtiva; if (inLDF) inLDF.value = dL.termino || pS.terminoISO;
-        document.querySelectorAll(".aba-dia").forEach(b => { b.classList.toggle("ativa", b.dataset.dia === estado.diaAtivo); b.classList.toggle("modo-liraa", isL); });
+        document.querySelectorAll(".aba-dia").forEach(b => { b.classList.toggle("ativa", b.dataset.dia === estado.diaAtivo); });
         const dA = diaAtual(); const inp = document.getElementById("dataDia"); if (inp && dA) inp.value = dA.data || hojeISO();
         const pv = document.getElementById("diaSemanaPreview"); if (pv && dA) pv.textContent = nomeDiaExibido(dA.data, estado.diaAtivo) || "—";
         const pr = document.getElementById("programadosDia"); if (pr && dA) pr.value = dA.programados || "";
         atualizarEstadoCampoProg();
         const ar = document.getElementById("areaTabelas"); if (ar) { ar.innerHTML = ""; if (dA?.agentes) { dA.agentes.forEach((ag, i) => ar.appendChild(criarColunaAgente(ag, i))); ar.appendChild(criarColunaTotal()); } }
-        verificarEAtualizarBadgeAtividade(); atualizarBannerConfirmacao();
+        verificarEAtualizarBadgeAtividade(); atualizarEstadoBotoesSemana(); atualizarBannerConfirmacao();
         renderizarCabecalhoResumo(); renderizarRodape(); renderizarResumo(); renderizarCiclo(); renderizarConfigEquipe();
         atualizarTotais(); sincronizarFontesAssinatura();
         try { if (document.getElementById("aba-quarteiroes-designados")?.classList.contains("ativo")) renderizarQuarteiroesDesignados(); } catch(e) {}
@@ -4825,26 +4618,6 @@
         tb.appendChild(trT); t.appendChild(tb);
         w.appendChild(t);
       }
-      function semanaEhDedicadaLiraa(sN, ano) {
-        const s = Number(sN);
-        if (isNaN(s)) return false;
-        const an = Number(ano) || new Date().getFullYear();
-        const progLiraa = (estado.programacao || []).some(p => {
-          if (!p || p.atividade !== "liraa") return false;
-          if (p.ano && Number(p.ano) !== an) return false;
-          const i = Number(p.cicloSemanaInicio || p.semana);
-          const f = Number(p.cicloSemanaTermino || p.semana);
-          return !isNaN(i) && !isNaN(f) && s >= i && s <= f;
-        });
-        if (progLiraa) return true;
-        const totLiraa = calcularTotaisSemana(String(s), estado.semanasLiraa);
-        if (totLiraa && (totLiraa.TOTAL > 0 || totLiraa.TRABALHADO > 0)) {
-          const totCiclo = calcularTotaisSemana(String(s), estado.semanas);
-          if (!totCiclo || (totCiclo.TOTAL === 0 && totCiclo.TRABALHADO === 0)) return true;
-        }
-        return false;
-      }
-      function semanaEhExclusivaLiraa(sN, ano, cN) { return semanaEhDedicadaLiraa(sN, ano); }
       function renderizarCiclo() {
         const w = document.getElementById("cicloWrapper"); if (!w) return;
         w.innerHTML = "";
@@ -4869,7 +4642,6 @@
         let ks = [];
         if (si && st && si <= st) { for (let s = si; s <= st; s++) ks.push(s); }
         else { ks = Object.keys(col).map(Number).filter(n => !isNaN(n) && normalizarNumeroCiclo(col[String(n)]?.cabecalho?.ciclo) === cI).sort((a, b) => a - b); }
-        ks = ks.filter(s => !semanaEhDedicadaLiraa(s, an));
         const inS = document.getElementById("cicloTotalSemanas"); if (inS) { if (si && st) inS.value = `SE ${pad2(si)} a SE ${pad2(st)} (${ks.length} semanas)`; else inS.value = `${ks.length} semana(s)`; }
         const t = document.createElement("table"); t.className = "resumo-tabela"; const cg = document.createElement("colgroup"); LARGURAS_TABELA_CICLO.forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); }); t.appendChild(cg);
         const th = document.createElement("thead"); const trH = document.createElement("tr");
@@ -4884,7 +4656,7 @@
         TIPOS_DEPOSITOS.forEach(x => tC.DEP[x] = 0);
         if (ks.length === 0) { tb.innerHTML = `<tr><td colspan="34" style="padding: 18px; color: #64748b; font-weight: 600;">Nenhuma semana para o ${formatarCicloTexto(cI)}.</td></tr>`; t.appendChild(tb); w.appendChild(t); return; }
         ks.forEach(sN => {
-          const tS = calcularTotaisSemana(String(sN), col); const pI = obterPeriodoDaSemana(sN, an, cI, estado.atividadeAtiva);
+          const tS = calcularTotaisSemana(String(sN), col); const pI = obterPeriodoDaSemana(sN, an, cI, "ciclo");
           if (tS) { tC.diasComProducao += tS.diasComProducao; tC.PROGRAMADOS += tS.PROGRAMADOS; tC.TRABALHADO += tS.TRABALHADO; tC.QUARTEIRAO += tS.QUARTEIRAO; tC.R += tS.R; tC.C += tS.C; tC.TB += tS.TB; tC.PE += tS.PE; tC.O += tS.O; tC.TOTAL += tS.TOTAL; tC.TRATADOS_GERAL += tS.TRATADOS_GERAL; tC.FECHADOS += tS.FECHADOS; tC.RECUPERADOS += tS.RECUPERADOS; tC.RECUSADOS += tS.RECUSADOS; tC.ABANDONADOS += tS.ABANDONADOS; tC.INFORMADOS += tS.INFORMADOS; tC.PENDENCIAS += tS.PENDENCIAS; TIPOS_DEPOSITOS.forEach(x => { tC.DEP[x] += tS.DEP[x]; }); tC.DEP_TRATADOS += tS.DEP_TRATADOS; tC.DEP_LITROS += tS.DEP_LITROS; tC.DEP_GRAMAS += tS.DEP_GRAMAS; tC.ELIMINADOS += tS.ELIMINADOS; tC.DEP_FOCADOS += tS.DEP_FOCADOS; tC.SUPERVISAO += tS.SUPERVISAO; }
           const tr = document.createElement("tr");
           tr.innerHTML = `<td class="celula-data">SE ${pad2(sN)}</td><td class="celula-dia-semana">${pI.texto}</td><td>${tS ? (tS.PROGRAMADOS ? fmtIntCell(tS.PROGRAMADOS) : "—") : "—"}</td><td>${fmtIntCell(tS?.TRABALHADO || 0)}</td><td>${fmtIntCell(tS?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(tS?.R || 0)}</td><td>${fmtIntCell(tS?.C || 0)}</td><td>${fmtIntCell(tS?.TB || 0)}</td><td>${fmtIntCell(tS?.PE_CONTABILIZADO || 0)}</td><td>${fmtIntCell(tS?.O || 0)}</td><td class="col-total">${fmtIntCell(tS?.TOTAL || 0)}</td><td>${fmtIntCell(tS?.TRATADOS_GERAL || 0)}</td><td>${fmtIntCell(tS?.FECHADOS || 0)}</td><td>${fmtIntCell(tS?.RECUPERADOS || 0)}</td><td>${fmtIntCell(tS?.RECUSADOS || 0)}</td><td>${fmtIntCell(tS?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.PENDENCIAS || 0)}</td><td class="col-calculada">${fmtPct(tS?.IP || 0)}</td><td class="col-calculada">${fmtRendimento(tS?.RENDIMENTO || null)}</td>${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(tS?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(tS?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(tS?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_LITROS || 0)}</td><td>${fmtDecCell(tS?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(tS?.ELIMINADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(tS?.SUPERVISAO || 0)}</td>`;
@@ -4899,8 +4671,8 @@
       function renderizarProducaoIndividual() {
         const w = document.getElementById("prodIndWrapper"); if (!w) return; w.innerHTML = "";
         const s = semana(); if (!s) return;
-        const l = document.getElementById("labelSemanaProdInd"); if (l) l.textContent = `Semana ${pad2(estado.semanaAtiva)}${estado.atividadeAtiva === "liraa" ? " [LIRAa]" : ""}`;
-        const b = document.getElementById("badgeProdIndAtividade"); if (b) { if (estado.atividadeAtiva === "liraa") { b.textContent = "🔍 LIRAa"; b.className = "badge-aviso-atividade liraa"; } else { b.textContent = "🏡 Ciclo de Visita"; b.className = "badge-aviso-atividade ciclo"; } }
+        const l = document.getElementById("labelSemanaProdInd"); if (l) l.textContent = `Semana ${pad2(estado.semanaAtiva)}`;
+        const b = document.getElementById("badgeProdIndAtividade"); if (b) { b.textContent = "🏡 Ciclo de Visita"; b.className = "badge-aviso-atividade ciclo"; }
         let ags = [];
         if (estado.configEquipe?.agentes?.length > 0) ags = estado.configEquipe.agentes.map(a => ({ id: a.id, nome: (a.nome || "Agente").trim(), ativo: a.ativo !== false }));
         else { const u = new Map(); DIAS_SEMANA.forEach(dk => { const d = s.dias?.[dk]; if (d?.agentes) d.agentes.forEach(a => { if (!a || !a.nome) return; const ch = String(a.nome).trim().toLowerCase(); if (!u.has(ch)) u.set(ch, { id: a.id, nome: a.nome.trim(), ativo: a.ativo !== false }); }); }); ags = Array.from(u.values()); }
@@ -5351,18 +5123,78 @@
       }
       function toggleAgente(id) { const d = diaAtual(); if (!d?.agentes) return; const ag = d.agentes.find(x => x && x.id === id); if (!ag) return; ag.ativo = !ag.ativo; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(x => x.id === id || (x.nome && ag.nome && x.nome.trim().toLowerCase() === ag.nome.trim().toLowerCase())); if (c) c.ativo = ag.ativo; } const s = semana(); if (s?.cabecalho) s.cabecalho.agentesEquipe = obterTextoAgentesEquipe(s); salvar(); renderizar(); atualizarTotais(); renderizarConfigEquipe(); }
       function adicionarAgente() { const d = diaAtual(); if (!d?.agentes) return; const n = prompt("Nome do novo agente:", `Agente ${d.agentes.length + 1}`); if (!n || !n.trim()) return; cadastrarAgenteConfig(n.trim()); }
-      function irParaSemana(num) { const k = String(num); const r = repoAtivo(); if (!r[k]) { const s = semana(); const cH = (s?.cabecalho?.ciclo) || "1"; const mH = (s?.cabecalho?.mes) || ""; const p = obterPeriodoDaSemana(k, obterAnoSemana(s), cH, estado.atividadeAtiva); r[k] = criarSemana(p.inicioISO, k, estado.atividadeAtiva, cH, mH); } estado.semanaAtiva = k; salvar(); renderizar(); atualizarTotais(); if (document.getElementById("aba-fad7")?.classList.contains("ativo")) { try { renderizarFad7(); } catch(e) {} } if (document.getElementById("aba-producao-individual")?.classList.contains("ativo")) { try { renderizarProducaoIndividual(); } catch(e) {} } }
-      function novaSemana() { const r = repoAtivo(); const ns = Object.keys(r).map(Number).filter(n => !isNaN(n)); const s = semana(); const an = obterAnoSemana(s); const mx = obterTotalSemanasEpidemiologicas(an); const m = ns.length > 0 ? Math.max(...ns) : semanaAtualDoAno(); const sg = m < mx ? String(m + 1) : String(mx); const resp = prompt(`Nova SE (1 a ${mx}):`, sg); if (!resp) return; const nS = Number(resp); if (isNaN(nS) || nS <= 0 || nS > mx) { alert("Inválido."); return; } if (r[String(nS)]) { estado.semanaAtiva = String(nS); salvar(); renderizar(); atualizarTotais(); return; } const cH = s?.cabecalho?.ciclo || "1"; const mH = s?.cabecalho?.mes || ""; const p = obterPeriodoDaSemana(nS, an, cH, estado.atividadeAtiva); r[String(nS)] = criarSemana(p.inicioISO, String(nS), estado.atividadeAtiva, cH, mH); estado.semanaAtiva = String(nS); salvar(); renderizar(); atualizarTotais(); }
+      function navegarSemana(direcao) {
+        const lista = obterSemanasProgramadas("ciclo");
+        if (lista.length === 0) {
+          alert("ℹ️ Nenhuma semana programada para Ciclo de Visitas na aba SUGARBO – Programação Anual.");
+          return;
+        }
+        const seAtual = Number(estado.semanaAtiva);
+        const idx = lista.findIndex(x => x.se === seAtual);
+        let alvo = null;
+        if (idx === -1) {
+          if (direcao < 0) alvo = [...lista].reverse().find(x => x.se < seAtual) || lista[lista.length - 1];
+          else alvo = lista.find(x => x.se > seAtual) || lista[0];
+        } else {
+          const novoIdx = idx + (direcao < 0 ? -1 : 1);
+          if (novoIdx < 0 || novoIdx >= lista.length) return;
+          alvo = lista[novoIdx];
+        }
+        if (!alvo) return;
+        garantirSemanaCriadaNaProgramacao(alvo);
+        estado.semanaAtiva = String(alvo.se);
+        if (!estado._ultimaSemanaPorAtividade) estado._ultimaSemanaPorAtividade = {};
+        estado._ultimaSemanaPorAtividade.ciclo = String(alvo.se);
+        salvar(); renderizar(); atualizarTotais();
+        if (document.getElementById("aba-producao-individual")?.classList.contains("ativo")) { try { renderizarProducaoIndividual(); } catch(e) {} }
+      }
+      function irParaSemana(num) {
+        const lista = obterSemanasProgramadas("ciclo");
+        if (lista.length === 0) {
+          alert("ℹ️ Nenhuma semana programada para Ciclo de Visitas na aba SUGARBO – Programação Anual.");
+          return false;
+        }
+        const alvo = lista.find(x => x.se === Number(num));
+        if (!alvo) {
+          const seList = lista.map(x => pad2(x.se)).join(", ");
+          alert(`⚠️ A SE ${pad2(num)} não está programada para Ciclo de Visitas na aba SUGARBO – Programação Anual.\n\nSemanas programadas: ${seList}`);
+          return false;
+        }
+        garantirSemanaCriadaNaProgramacao(alvo);
+        estado.semanaAtiva = String(alvo.se);
+        if (!estado._ultimaSemanaPorAtividade) estado._ultimaSemanaPorAtividade = {};
+        estado._ultimaSemanaPorAtividade.ciclo = String(alvo.se);
+        salvar(); renderizar(); atualizarTotais();
+        if (document.getElementById("aba-producao-individual")?.classList.contains("ativo")) { try { renderizarProducaoIndividual(); } catch(e) {} }
+        return true;
+      }
+      function novaSemana() {
+        const lista = obterSemanasProgramadas("ciclo");
+        if (lista.length === 0) {
+          alert("ℹ️ Nenhuma semana programada para Ciclo de Visitas na aba SUGARBO – Programação Anual. Cadastre a programação antes de abrir uma semana.");
+          return;
+        }
+        const r = repoAtivo();
+        const proxNaoAberta = lista.find(x => !r[String(x.se)]);
+        const idxAtual = lista.findIndex(x => x.se === Number(estado.semanaAtiva));
+        const sugestao = proxNaoAberta ? proxNaoAberta.se : (idxAtual !== -1 && idxAtual + 1 < lista.length ? lista[idxAtual + 1].se : lista[lista.length - 1].se);
+        const resumoLista = lista.length <= 10 ? lista.map(x => pad2(x.se)).join(", ") : `${pad2(lista[0].se)} a ${pad2(lista[lista.length - 1].se)}`;
+        const resp = prompt(`Selecionar SE programada para Ciclo de Visitas (${resumoLista}):`, String(sugestao));
+        if (!resp) return;
+        const nS = Number(resp);
+        if (isNaN(nS) || nS <= 0) { alert("Número de semana inválido."); return; }
+        irParaSemana(nS);
+      }
       function autoPreencherDatasSemana() { const d = diaAtual(); if (!d?.data) return; const o = { segunda: 0, terca: 1, quarta: 2, quinta: 3, sexta: 4 }[estado.diaAtivo] || 0; const seg = adicionarDiasISO(d.data, -o); const s = semana(); if (s?.dias) { DIAS_SEMANA.forEach((dia, i) => { if (s.dias[dia]) s.dias[dia].data = adicionarDiasISO(seg, i); }); if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio(); s.cabecalho.semanaInicio = formatarDataBR(seg); s.cabecalho.semanaTermino = formatarDataBR(adicionarDiasISO(seg, 4)); } salvar(); renderizar(); atualizarTotais(); }
       function haInformadosExcedidosSemana(sR) { const s = sR || semana(); if (!s?.dias) return false; for (const dk of DIAS_SEMANA) { const d = s.dias[dk]; if (!d) continue; const a = (d.agentes || []).filter(x => x && x.ativo); for (const ag of a) { const v = ag.valores || {}; for (let c = 1; c <= 7; c++) { if (calcularInformadoColuna(v, c) > 19) return true; } } } return false; }
-      function haInformadosExcedidosGlobal() { for (const col of [estado.semanas, estado.semanasLiraa]) { if (!col) continue; for (const k of Object.keys(col)) { if (haInformadosExcedidosSemana(col[k])) return true; } } return false; }
+      function haInformadosExcedidosGlobal() { for (const col of [estado.semanas]) { if (!col) continue; for (const k of Object.keys(col)) { if (haInformadosExcedidosSemana(col[k])) return true; } } return false; }
       function instalarNavegacaoSetas() {
         const teclas = new Set(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"]); const ign = new Set(["checkbox","radio","date","time","file","submit","button","range","color","hidden","reset"]);
         document.addEventListener("keydown", function (e) {
           if (!teclas.has(e.key) || e.ctrlKey || e.metaKey || e.altKey) return;
           const a = e.target; if (!a || !a.tagName || (a.tagName !== "INPUT" && a.tagName !== "SELECT")) return;
           if (a.tagName === "INPUT" && ign.has(a.type)) return;
-          const cont = a.closest(".coluna-agente") || a.closest(".resumo-wrapper") || a.closest(".tabela-agentes-config-wrap") || a.closest(".fad7-form") || a.closest(".rc-form") || a.closest(".estrato-container") || a.closest(".reconhecimento-container");
+          const cont = a.closest(".coluna-agente") || a.closest(".resumo-wrapper") || a.closest(".tabela-agentes-config-wrap") || a.closest(".rc-form") || a.closest(".estrato-container") || a.closest(".reconhecimento-container");
           if (!cont) return;
           if (a.tagName === "SELECT" && (e.key === "ArrowUp" || e.key === "ArrowDown")) return;
           if (a.tagName === "INPUT" && a.type === "text") { if (e.shiftKey) return; const v = a.value || ""; const p1 = a.selectionStart ?? 0, p2 = a.selectionEnd ?? 0; if (p1 !== p2) return; if (e.key === "ArrowLeft" && p1 > 0) return; if (e.key === "ArrowRight" && p1 < v.length) return; }
@@ -5373,60 +5205,6 @@
           cs.forEach(el => { if (el === a) return; const r = el.getBoundingClientRect(); const ex = r.left + r.width/2, ey = r.top + r.height/2; const dx = ex - cx, dy = ey - cy; let pas = false, cst = Infinity; if (e.key === "ArrowRight" && dx >= lx && Math.abs(dy) <= Math.abs(dx)*0.5) { pas = true; cst = Math.abs(dx) + Math.abs(dy)*3; } else if (e.key === "ArrowLeft" && dx <= -lx && Math.abs(dy) <= Math.abs(dx)*0.5) { pas = true; cst = Math.abs(dx) + Math.abs(dy)*3; } else if (e.key === "ArrowDown" && dy >= ly && Math.abs(dx) <= Math.abs(dy)*0.5) { pas = true; cst = Math.abs(dy) + Math.abs(dx)*3; } else if (e.key === "ArrowUp" && dy <= -ly && Math.abs(dx) <= Math.abs(dy)*0.5) { pas = true; cst = Math.abs(dy) + Math.abs(dx)*3; } if (pas && cst < mC) { mC = cst; melhor = el; } });
           if (melhor) { e.preventDefault(); melhor.focus(); if (melhor.tagName === "INPUT" && melhor.type === "text") { try { melhor.select(); } catch(_) {} } }
         });
-      }
-      function criarFad7Vazio() {
-        return {
-          municipio: "", localidade: "", categoria: "", tipo: "", cicloAno: "", concluido: "", semana: "", dataInicio: "", dataFinal: "", quartConc: "",
-          residencia: "", comercio: "", tb: "", pe: "", outros: "", totalImoveisTrab: "",
-          residenciaTratados: "", residenciaFocados: "",
-          comercioTratados: "", comercioFocados: "",
-          tbTratados: "", tbFocados: "",
-          peTratados: "", peFocados: "",
-          outrosTratados: "", outrosFocados: "",
-          totalImoveisTratados: "", totalImoveisFocados: "",
-          tratFocal: "", tratPerifocal: "", inspecionados: "", amostras: "", recusa: "", fechado: "", recuperado: "", indiceInfestacao: "", indiceBreteau: "",
-          depA1: "", depA2: "", depB: "", depC: "", depD1: "", depD2: "", depE: "", depTotal: "",
-          depTratA1: "", depTratA2: "", depTratB: "", depTratC: "", depTratD1: "", depTratD2: "", depTratE: "", depTratTotal: "",
-          depFocA1: "", depFocA2: "", depFocB: "", depFocC: "", depFocD1: "", depFocD2: "", depFocE: "", depFocTotal: "",
-          depEliminados: "",
-          idxA1: "", idxA2: "", idxB: "", idxC: "", idxD1: "", idxD2: "", idxE: "", idxTotal: "",
-          larv1Tipo: "", larv1Gramas: "", larv1DepTrat: "", larv2Tipo: "", larv2Gramas: "", larv2DepTrat: "", adultTipo: "", adultCargas: "",
-          agentesDia: "", nomeResp: "", assinatura: "", dataAssinatura: "",
-          atv1: false, atv2: false, atv3: false, atv4: false, atv5: false, atv6: false
-        };
-      }
-      function obterSemanaLiraaAtual() { if (!estado.semanasLiraa) estado.semanasLiraa = {}; const k = String(estado.semanaAtiva); if (!estado.semanasLiraa[k]) { const sc = (estado.semanas && estado.semanas[k]) || null; const an = sc ? obterAnoSemana(sc) : new Date().getFullYear(); const c = normalizarNumeroCiclo(sc?.cabecalho?.ciclo || "1"); const p = obterPeriodoDaSemana(k, an, c, "liraa"); estado.semanasLiraa[k] = criarSemana(p.inicioISO, k, "liraa", c); } if (!estado.semanasLiraa[k].fad7) estado.semanasLiraa[k].fad7 = criarFad7Vazio(); return estado.semanasLiraa[k]; }
-      function renderizarFad7() {
-        const s = obterSemanaLiraaAtual(); const f = s.fad7;
-        const l = document.getElementById("labelSemanaFad7"); if (l) l.textContent = `Semana ${pad2(estado.semanaAtiva)} [LIRAa]`;
-        const an = obterAnoSemana(s); const c = normalizarNumeroCiclo(s?.cabecalho?.ciclo || "1"); const p = obterPeriodoDaSemana(estado.semanaAtiva, an, c, "liraa");
-        if (!f.semana) f.semana = String(estado.semanaAtiva); if (!f.cicloAno) f.cicloAno = `${c}/${an}`; if (!f.dataInicio) f.dataInicio = p.inicioISO; if (!f.dataFinal) f.dataFinal = p.terminoISO;
-        if (!f.municipio && estado.configEquipe?.bairro) f.municipio = estado.configEquipe.bairro; if (!f.localidade && s.cabecalho) f.localidade = s.cabecalho.bairro || "";
-        document.querySelectorAll("[data-fad7]").forEach(inp => { const k = inp.dataset.fad7; if (inp.type === "checkbox") inp.checked = !!f[k]; else inp.value = (f[k] !== undefined && f[k] !== null) ? f[k] : ""; });
-      }
-      function configurarListenersFad7() {
-        document.querySelectorAll("[data-fad7]").forEach(inp => {
-          const k = inp.dataset.fad7;
-          const ev = (inp.tagName === "SELECT" || inp.type === "checkbox") ? "change" : "input";
-          inp.addEventListener(ev, () => {
-            const s = obterSemanaLiraaAtual();
-            if (!s.fad7) s.fad7 = criarFad7Vazio();
-            if (inp.type === "checkbox") s.fad7[k] = !!inp.checked;
-            else s.fad7[k] = inp.value;
-            salvar();
-          });
-          inp.addEventListener("blur", () => {
-            if (inp.type === "text" && inp.value && /^\d+$/.test(inp.value.trim())) {
-              inp.value = formatarNumeroMilhar(inp.value);
-              const s = obterSemanaLiraaAtual();
-              if (s?.fad7) { s.fad7[k] = inp.value; salvar(); }
-            }
-          });
-        });
-        const bA = document.getElementById("btnSemanaAnteriorFad7"), bP = document.getElementById("btnSemanaProximaFad7"), bPdf = document.getElementById("btnImprimirFad7");
-        if (bA) bA.addEventListener("click", () => { irParaSemana(Number(estado.semanaAtiva) - 1); renderizarFad7(); });
-        if (bP) bP.addEventListener("click", () => { irParaSemana(Number(estado.semanaAtiva) + 1); renderizarFad7(); });
-        if (bPdf) bPdf.addEventListener("click", () => gerarPDF("areaImpressaoFad7", `PMCD_FAD7_SE${pad2(estado.semanaAtiva)}_${hojeISO()}.pdf`).catch(e => alert("❌ " + (e?.message || e))));
       }
       let relatorioCampoAtivoId = "";
       function garantirRepoRelatorios() { if (!Array.isArray(estado.relatoriosCampo)) estado.relatoriosCampo = []; }
@@ -6034,7 +5812,7 @@
           aplicarFonte(fS);
           const selF = document.getElementById("selectFonte"); if (selF) selF.addEventListener("change", e => aplicarFonte(e.target.value));
           const inPA = document.getElementById("progAno"); if (inPA && !inPA.value) inPA.value = new Date().getFullYear();
-          const MAPA = { "dashboard": { icone: "📈", titulo: "Dashboard" }, "sugarbo": { icone: "🍬", titulo: "SUGARBO" }, "config-equipe": { icone: "⚙️", titulo: "Configuração da Equipe" }, "config-estrato": { icone: "🗺️", titulo: "Configuração do Estrato" }, "lancamentos": { icone: "📝", titulo: "Lançamentos Diários" }, "resumo": { icone: "📊", titulo: "Resumo da Semana" }, "ciclo": { icone: "🔄", titulo: "Resumo do Ciclo" }, "producao-individual": { icone: "👤", titulo: "Produção Individual" }, "quarteiroes-designados": { icone: "🧱", titulo: "Quarteirões Designados" }, "resumo-reconhecimento": { icone: "🗺️", titulo: "Resumo de reconhecimento" }, "fad7": { icone: "📋", titulo: "FAD 7" }, "relatorio-campo": { icone: "📄", titulo: "Relatório de Campo" } };
+          const MAPA = { "dashboard": { icone: "📈", titulo: "Dashboard" }, "sugarbo": { icone: "🍬", titulo: "SUGARBO" }, "config-equipe": { icone: "⚙️", titulo: "Configuração da Equipe" }, "config-estrato": { icone: "🗺️", titulo: "Configuração do Estrato" }, "lancamentos": { icone: "📝", titulo: "Lançamentos Diários" }, "resumo": { icone: "📊", titulo: "Resumo da Semana" }, "ciclo": { icone: "🔄", titulo: "Resumo do Ciclo" }, "producao-individual": { icone: "👤", titulo: "Produção Individual" }, "quarteiroes-designados": { icone: "🧱", titulo: "Quarteirões Designados" }, "resumo-reconhecimento": { icone: "🗺️", titulo: "Resumo de reconhecimento" }, "relatorio-campo": { icone: "📄", titulo: "Relatório de Campo" } };
           function alternarAba(id) {
             if (!MAPA[id]) id = "lancamentos"; const m = MAPA[id];
             document.querySelectorAll(".btn-aba-nav, .btn-aba").forEach(o => {
@@ -6054,7 +5832,7 @@
             if (id === "resumo") { renderizarResumo(); renderizarCabecalhoResumo(); sincronizarFontesAssinatura(); atualizarTextoGeracao(); }
             if (id === "ciclo") { estado.cicloFiltroConsolidado = identificarCicloAtivo(); sincronizarPeriodosSemanasCiclo(); renderizarCiclo(); sincronizarFontesAssinatura(); atualizarTextoGeracao(); }
             if (id === "sugarbo") { renderizarTabelaProgramacao(); atualizarPreviewPeriodoCiclo(); }
-            if (id === "lancamentos") { renderizar(); atualizarTotais(); }
+            if (id === "lancamentos") { ajustarSemanaAtivaParaProgramacao(false); renderizar(); atualizarTotais(); }
             if (id === "config-equipe") { renderizarConfigEquipe(); }
             if (id === "config-estrato") { renderizarConfigEstrato(); }
             if (id === "producao-individual") { renderizarProducaoIndividual(); }
@@ -6075,7 +5853,6 @@
                 }).catch(() => {});
               }
             }
-            if (id === "fad7") { renderizarFad7(); }
             if (id === "relatorio-campo") { renderizarRelatorioCampo(); }
             if (id === "dashboard") {
               const anoEl = document.getElementById("dashAno"), cicEl = document.getElementById("dashCiclo"), semEl = document.getElementById("dashSemanaRef");
@@ -6103,25 +5880,18 @@
           if (inPA) inPA.addEventListener("change", e => { atualizarLimitesSemanas(e.target.value); const c = document.getElementById("progCiclo"); preencherDadosCicloNoModalProg(e.target.value, c ? c.value : "1"); });
           const iPc = document.getElementById("progCiclo"); if (iPc) iPc.addEventListener("change", e => preencherDadosCicloNoModalProg(inPA ? inPA.value : new Date().getFullYear(), e.target.value));
           const iPa = document.getElementById("progAtividade"); if (iPa) iPa.addEventListener("change", () => preencherDadosCicloNoModalProg(inPA ? inPA.value : new Date().getFullYear(), iPc ? iPc.value : "1"));
-          const bAC = document.getElementById("btnAtividadeCiclo"); if (bAC) bAC.addEventListener("click", () => alternarAtividade("ciclo"));
-          const bAL = document.getElementById("btnAtividadeLiraa"); if (bAL) bAL.addEventListener("click", () => alternarAtividade("liraa"));
-          const bSA = document.getElementById("btnSemanaAnterior"); if (bSA) bSA.addEventListener("click", () => irParaSemana(Number(estado.semanaAtiva) - 1));
-          const bSPx = document.getElementById("btnSemanaProxima"); if (bSPx) bSPx.addEventListener("click", () => irParaSemana(Number(estado.semanaAtiva) + 1));
-          const bSAR = document.getElementById("btnSemanaAnteriorResumo"); if (bSAR) bSAR.addEventListener("click", () => irParaSemana(Number(estado.semanaAtiva) - 1));
-          const bSPR = document.getElementById("btnSemanaProximaResumo"); if (bSPR) bSPR.addEventListener("click", () => irParaSemana(Number(estado.semanaAtiva) + 1));
+          const bSA = document.getElementById("btnSemanaAnterior"); if (bSA) bSA.addEventListener("click", () => navegarSemana(-1));
+          const bSPx = document.getElementById("btnSemanaProxima"); if (bSPx) bSPx.addEventListener("click", () => navegarSemana(1));
+          const bSAR = document.getElementById("btnSemanaAnteriorResumo"); if (bSAR) bSAR.addEventListener("click", () => navegarSemana(-1));
+          const bSPR = document.getElementById("btnSemanaProximaResumo"); if (bSPR) bSPR.addEventListener("click", () => navegarSemana(1));
           const bNS = document.getElementById("btnNovaSemana"); if (bNS) bNS.addEventListener("click", novaSemana);
           document.querySelectorAll(".aba-dia").forEach(b => b.addEventListener("click", () => { estado.diaAtivo = b.dataset.dia; salvar(); renderizar(); atualizarTotais(); }));
-          const eA = document.getElementById("anoLancamento"); if (eA) eA.addEventListener("change", e => { const s = semana(); const a = Number(e.target.value) || new Date().getFullYear(); if (s) s.ano = a; atualizarLimitesSemanas(a); salvar(); renderizar(); });
+          const eA = document.getElementById("anoLancamento"); if (eA) eA.addEventListener("change", e => { const s = semana(); const a = Number(e.target.value) || new Date().getFullYear(); if (s) s.ano = a; atualizarLimitesSemanas(a); ajustarSemanaAtivaParaProgramacao(false); salvar(); renderizar(); atualizarTotais(); });
           const sCL = document.getElementById("cicloLancamentoCiclo"); if (sCL) sCL.addEventListener("change", e => { const c = normalizarNumeroCiclo(e.target.value); const s = semana(); if (s?.cabecalho) s.cabecalho.ciclo = c; salvar(); renderizarCabecalhoResumo(); renderizarCiclo(); });
           const eM = document.getElementById("mesLancamento"); if (eM) eM.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) s.cabecalho.mes = e.target.value; salvar(); renderizarCabecalhoResumo(); });
-          const eSL = document.getElementById("semanaLancamento"); if (eSL) eSL.addEventListener("change", e => { const v = Number(e.target.value); const mx = obterTotalSemanasEpidemiologicas(obterAnoSemana(semana())); if (v >= 1 && v <= mx) irParaSemana(v); else e.target.value = estado.semanaAtiva; });
+          const eSL = document.getElementById("semanaLancamento"); if (eSL) eSL.addEventListener("change", e => { const v = Number(e.target.value); const mx = obterTotalSemanasEpidemiologicas(obterAnoSemana(semana())); if (v >= 1 && v <= mx) { if (!irParaSemana(v)) e.target.value = estado.semanaAtiva; } else e.target.value = estado.semanaAtiva; });
           const eSI2 = document.getElementById("semanaDataInicio"); if (eSI2) eSI2.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) s.cabecalho.semanaInicio = formatarDataBR(e.target.value); salvar(); renderizarCabecalhoResumo(); });
           const eSF2 = document.getElementById("semanaDataTermino"); if (eSF2) eSF2.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) s.cabecalho.semanaTermino = formatarDataBR(e.target.value); salvar(); renderizarCabecalhoResumo(); });
-          const iAL = document.getElementById("anoLancamentoLiraa"); if (iAL) iAL.addEventListener("change", e => { const s = semana(); const a = Number(e.target.value) || new Date().getFullYear(); if (s) s.ano = a; atualizarLimitesSemanas(a); salvar(); renderizar(); });
-          const iML = document.getElementById("mesLancamentoLiraa"); if (iML) iML.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) s.cabecalho.mes = e.target.value; salvar(); renderizarCabecalhoResumo(); });
-          const sLC = document.getElementById("liraaCiclo"); if (sLC) sLC.addEventListener("change", e => { const c = normalizarNumeroCiclo(e.target.value); const s = semana(); if (s?.cabecalho) s.cabecalho.ciclo = c; salvar(); renderizarCabecalhoResumo(); renderizarCiclo(); });
-          const upL = () => { const s = semana(); const an = obterAnoSemana(s); const c = (s?.cabecalho) ? normalizarNumeroCiclo(s.cabecalho.ciclo) : "1"; const i = document.getElementById("liraaDataInicio")?.value || ""; const f = document.getElementById("liraaDataTermino")?.value || ""; const si = document.getElementById("liraaSemanaInicio")?.value || ""; const sf = document.getElementById("liraaSemanaTermino")?.value || ""; salvarCicloConfig(an, c, i, f, si, sf, "liraa"); if (s?.cabecalho) { s.cabecalho.cicloInicio = formatarDataBR(i); s.cabecalho.cicloTermino = formatarDataBR(f); } salvar(); renderizarCabecalhoResumo(); renderizarCiclo(); };
-          ["liraaDataInicio","liraaDataTermino","liraaSemanaInicio","liraaSemanaTermino"].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener("change", upL); });
           const eDD = document.getElementById("dataDia"); if (eDD) eDD.addEventListener("change", e => { const d = diaAtual(); if (d) { d.data = e.target.value; if (!autoDetectarProgramacaoPorData(e.target.value, true)) { salvar(); renderizar(); atualizarTotais(); } } });
           const ePD = document.getElementById("programadosDia");
           if (ePD) {
@@ -6181,7 +5951,7 @@
           }
           document.querySelectorAll("[data-ciclocab]").forEach(inp => inp.addEventListener("input", () => { if (!estado.ciclo.cabecalho) estado.ciclo.cabecalho = {}; estado.ciclo.cabecalho[inp.dataset.ciclocab] = inp.value; if (estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(inp.dataset.ciclocab)) estado.configEquipe[inp.dataset.ciclocab] = inp.value; salvar(); renderizarConfigEquipe(); }));
           document.querySelectorAll("[data-ciclorodape]").forEach(inp => inp.addEventListener("input", () => { if (!estado.ciclo.rodape) estado.ciclo.rodape = {}; estado.ciclo.rodape[inp.dataset.ciclorodape] = inp.value; if (estado.configEquipe && inp.dataset.ciclorodape === "responsavel") estado.configEquipe.responsavel = inp.value; salvar(); renderizarConfigEquipe(); }));
-          configurarListenersConfigEquipe(); configurarListenersConfigEstrato(); configurarListenersResumoReconhecimento(); configurarListenersFad7(); configurarListenersRelatorioCampo(); instalarNavegacaoSetas(); configurarDashboard();
+          configurarListenersConfigEquipe(); configurarListenersConfigEstrato(); configurarListenersResumoReconhecimento(); configurarListenersRelatorioCampo(); instalarNavegacaoSetas(); configurarDashboard();
           document.querySelectorAll(".font-assinatura-select").forEach(sel => sel.addEventListener("change", () => aplicarFonteAssinatura(sel)));
           sincronizarFontesAssinatura();
           const bOC = document.getElementById("btnCorrigirSemana"); if (bOC) bOC.addEventListener("click", abrirModalCorrecao);
@@ -6220,8 +5990,8 @@
             }
             gerarPDF("areaImpressaoCiclo", `PMCD_Resumo_Ciclo_${pad2(c)}_${hojeISO()}.pdf`).catch(e => alert("❌ " + (e?.message || e)));
           });
-          const bPA = document.getElementById("btnSemanaAnteriorProdInd"); if (bPA) bPA.addEventListener("click", () => { irParaSemana(Number(estado.semanaAtiva) - 1); renderizarProducaoIndividual(); });
-          const bPP = document.getElementById("btnSemanaProximaProdInd"); if (bPP) bPP.addEventListener("click", () => { irParaSemana(Number(estado.semanaAtiva) + 1); renderizarProducaoIndividual(); });
+          const bPA = document.getElementById("btnSemanaAnteriorProdInd"); if (bPA) bPA.addEventListener("click", () => { navegarSemana(-1); renderizarProducaoIndividual(); });
+          const bPP = document.getElementById("btnSemanaProximaProdInd"); if (bPP) bPP.addEventListener("click", () => { navegarSemana(1); renderizarProducaoIndividual(); });
           const bPPI = document.getElementById("btnImprimirPDFProdInd");
           if (bPPI) bPPI.addEventListener("click", () => {
             const sAtiva = semana();
@@ -6440,6 +6210,7 @@
           atualizarTextoGeracao(); obterLocalizacao().then(() => atualizarTextoGeracao()).catch(() => {});
           renderizarTabelaProgramacao(); atualizarPreviewPeriodoCiclo();
           autoDetectarProgramacaoPorData(hojeISO(), false);
+          ajustarSemanaAtivaParaProgramacao(false);
           sincronizarPeriodosSemanasCiclo();
           alternarAba("lancamentos");
           renderizarDashboard();
@@ -6447,6 +6218,7 @@
             window.salvar = salvar;
             window.renderizar = renderizar;
             window.calcularSomasDia = calcularSomasDia;
+            window.obterSemanasProgramadas = obterSemanasProgramadas;
           }
         } catch (eg) { console.error("[PMCD Erro]:", eg); }
       });
