@@ -1874,7 +1874,10 @@
       function aplicarModoAcesso(modo, persistir = true) {
         _modoAcessoAtual = (modo === "leitura") ? "leitura" : "admin";
         if (persistir) {
-          try { localStorage.setItem(STORAGE_MODO_ACESSO, _modoAcessoAtual); } catch(e) {}
+          try {
+            if (_modoAcessoAtual === "admin") localStorage.removeItem(STORAGE_MODO_ACESSO);
+            else localStorage.setItem(STORAGE_MODO_ACESSO, _modoAcessoAtual);
+          } catch(e) {}
         }
         const badge = document.getElementById("badgeModoAcesso");
         const banner = document.getElementById("bannerModoLeitura");
@@ -1901,15 +1904,9 @@
       function inicializarModoAcesso() {
         const urlParams = new URLSearchParams(window.location.search);
         const paramModo = (urlParams.get("modo") || urlParams.get("m") || "").toLowerCase();
-        let modoInicial = "admin";
-        if (paramModo === "leitura" || paramModo === "visualizador" || paramModo === "readonly") {
-          modoInicial = "leitura";
-        } else if (paramModo === "admin" || paramModo === "editor") {
-          modoInicial = "admin";
-        } else {
-          try { modoInicial = localStorage.getItem(STORAGE_MODO_ACESSO) || "admin"; } catch(e) { modoInicial = "admin"; }
-        }
-        aplicarModoAcesso(modoInicial, true);
+        const modoInicial = (paramModo === "leitura" || paramModo === "visualizador" || paramModo === "readonly") ? "leitura" : "admin";
+        try { localStorage.removeItem(STORAGE_MODO_ACESSO); } catch(e) {}
+        aplicarModoAcesso(modoInicial, false);
       }
       function gerarUrlModo(modo) {
         try {
@@ -6155,7 +6152,7 @@
           const bTestarL = document.getElementById("btnTestarModoLeitura");
           if (bTestarL) {
             bTestarL.addEventListener("click", () => {
-              aplicarModoAcesso("leitura", true);
+              aplicarModoAcesso("leitura", false);
               fecharModalCompartilharAcesso();
             });
           }
