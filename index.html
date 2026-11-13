@@ -441,6 +441,14 @@
       .tabela-programacao { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
       .tabela-programacao th, .tabela-programacao td { border: 1px solid #cbd5e1; padding: 5px 3px; text-align: center; }
       .tabela-programacao th { background: #f1f5f9; font-weight: 700; }
+      .lista-chips-semanas { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 6px; }
+      .chip-semana-ciclo { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 5px; font-size: 0.7rem; font-weight: 700; cursor: pointer; border: 1.5px solid #86efac; background: #dcfce7; color: #14532d; transition: all 0.15s ease; }
+      .chip-semana-ciclo:hover { filter: brightness(0.95); transform: translateY(-1px); }
+      .chip-semana-ciclo.inativa { background: #fee2e2; color: #991b1b; border-color: #fca5a5; text-decoration: line-through; opacity: 0.88; }
+      .painel-semanas-inativas { margin-top: 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; }
+      .painel-semanas-inativas-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+      .linha-semana-gerenciar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; flex-wrap: wrap; }
+      .linha-semana-gerenciar.inativa { background: #fef2f2; border-color: #fecaca; }
       .form-prog-linha { display: flex; flex-direction: column; gap: 8px; }
       .grid-prog-ciclo { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 6px; }
       .form-prog-linha label { display: block; font-size: 0.72rem; font-weight: 700; color: #334155; margin-bottom: 1px; }
@@ -780,8 +788,16 @@
       body.modo-leitura-ativo .btn-remover-agente,
       body.modo-leitura-ativo .btn-acao-edicao,
       body.modo-leitura-ativo .btn-editar-prog,
-      body.modo-leitura-ativo .btn-excluir-prog {
+      body.modo-leitura-ativo .btn-excluir-prog,
+      body.modo-leitura-ativo .btn-remover-prog,
+      body.modo-leitura-ativo #btnGerenciarSemanasCiclo,
+      body.modo-leitura-ativo .btn-toggle-semana-ciclo,
+      body.modo-leitura-ativo #boxInativarSemanaManualSugarbo {
         display: none !important;
+      }
+      body.modo-leitura-ativo .chip-semana-ciclo {
+        pointer-events: none !important;
+        cursor: default !important;
       }
     </style>
   </head>
@@ -949,11 +965,33 @@
               </div>
             </div>
           </form>
-          <div style="max-height: 420px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; margin-top:16px;">
+          <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:0.8rem; font-weight:700; color:#334155;">📋 Ciclos Cadastrados (clique em uma semana SE para <strong>Inativar</strong> ou <strong>Reativar</strong> no Ciclo de Visita):</span>
+            <span style="font-size:0.74rem; color:#64748b;">✅ Verde = Ativa no Ciclo &nbsp;|&nbsp; 🚫 Vermelha = Inativa (não entra no Ciclo de Visita)</span>
+          </div>
+          <div style="max-height: 420px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; margin-top:8px;">
             <table class="tabela-programacao">
-              <thead><tr><th>Ano</th><th>Atividade</th><th>Ciclo</th><th>Período</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Ano</th><th>Atividade</th><th>Ciclo</th><th>Período e Semanas do Ciclo</th><th>Ações</th></tr></thead>
               <tbody id="corpoTabelaProg"></tbody>
             </table>
+          </div>
+          <div class="painel-semanas-inativas" id="painelSemanasSugarbo">
+            <div class="painel-semanas-inativas-header">
+              <div>
+                <strong style="color:#14532d; font-size:0.88rem;">🗓️ Controle de Semanas do Ciclo de Visita (Inativar / Reativar)</strong>
+                <div style="font-size:0.75rem; color:#475569; margin-top:2px;">Semanas inativadas não aparecem na navegação semanal, no Resumo do Ciclo nem nos cálculos do Dashboard (seus dados salvos permanecem preservados).</div>
+              </div>
+              <span id="badgeResumoSemanasInativas" class="badge-aviso-atividade ciclo">✅ Todas ativas</span>
+            </div>
+            <div id="boxInativarSemanaManualSugarbo" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 10px; background:#fff; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:10px;">
+              <label for="inativarManualAno" style="font-size:0.76rem; font-weight:700; color:#334155;">Ano:</label>
+              <input type="number" id="inativarManualAno" min="2020" max="2035" style="width:72px; padding:4px 6px; border:1px solid #cbd5e1; border-radius:5px; font-size:0.8rem;" />
+              <label for="inativarManualSE" style="font-size:0.76rem; font-weight:700; color:#334155;">SE:</label>
+              <input type="number" id="inativarManualSE" min="1" max="53" placeholder="Ex: 12" style="width:68px; padding:4px 6px; border:1px solid #cbd5e1; border-radius:5px; font-size:0.8rem;" />
+              <button type="button" class="btn btn-cinza" id="btnInativarManualSE" style="padding:5px 10px; font-size:0.76rem; background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;">🚫 Inativar SE</button>
+              <button type="button" class="btn btn-verde" id="btnReativarManualSE" style="padding:5px 10px; font-size:0.76rem;">✅ Reativar SE</button>
+            </div>
+            <div id="listaSemanasInativasSugarbo" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
           </div>
         </div>
       </section>
@@ -974,6 +1012,7 @@
             <button class="btn-semana" id="btnSemanaProxima">▶</button>
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="btn btn-cinza" id="btnGerenciarSemanasCiclo" title="Inativar ou reativar semanas que não fazem parte do Ciclo de Visita">🗓️ Semanas Ativas/Inativas</button>
             <button class="btn btn-cinza" id="btnCorrigirSemana">✏️ Corrigir Lançamento</button>
             <button class="btn btn-verde" id="btnNovaSemana">+ Nova semana</button>
           </div>
@@ -1668,6 +1707,29 @@
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
           <button type="button" class="btn btn-cinza" id="btnFecharModalDiagnostico2">Fechar</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="modalGerenciarSemanasCiclo">
+      <div class="modal-conteudo" style="max-width: 680px;">
+        <div class="modal-header">
+          <h3>🗓️ Gerenciar Semanas do Ciclo de Visita</h3>
+          <button type="button" class="btn-fechar-modal" id="btnFecharModalGerenciarSemanas">&times;</button>
+        </div>
+        <div style="font-size: 0.82rem; color: #475569; line-height: 1.45;">
+          Inative as semanas que <strong>não farão parte do Ciclo de Visita</strong> ou reative quando necessário. Semanas inativas não aparecem na navegação semanal, no Resumo do Ciclo nem no Dashboard, sem perder nenhum dado já digitado.
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px;">
+          <label for="modalInativarAno" style="font-size:0.78rem; font-weight:700; color:#334155;">Ano:</label>
+          <input type="number" id="modalInativarAno" min="2020" max="2035" style="width:74px; padding:5px 6px; border:1px solid #cbd5e1; border-radius:5px; font-size:0.82rem;" />
+          <label for="modalInativarSE" style="font-size:0.78rem; font-weight:700; color:#334155;">SE:</label>
+          <input type="number" id="modalInativarSE" min="1" max="53" placeholder="Ex: 12" style="width:74px; padding:5px 6px; border:1px solid #cbd5e1; border-radius:5px; font-size:0.82rem;" />
+          <button type="button" class="btn btn-cinza" id="btnModalInativarSE" style="padding:5px 10px; font-size:0.78rem; background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;">🚫 Inativar SE</button>
+          <button type="button" class="btn btn-verde" id="btnModalReativarSE" style="padding:5px 10px; font-size:0.78rem;">✅ Reativar SE</button>
+        </div>
+        <div id="listaSemanasGerenciarModal" style="display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; padding-right:2px;"></div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+          <button type="button" class="btn btn-cinza" id="btnFecharModalGerenciarSemanas2">Fechar</button>
         </div>
       </div>
     </div>
@@ -2375,7 +2437,85 @@
       }
       function consultarProgramacaoPorData(iso) { if (!iso || !estado.programacao) return []; return estado.programacao.filter(p => p && (!p.atividade || p.atividade === "ciclo") && (p.cicloDataInicio || p.dataInicio) && (p.cicloDataTermino || p.dataTermino) && iso >= (p.cicloDataInicio || p.dataInicio) && iso <= (p.cicloDataTermino || p.dataTermino)); }
       function identificarCicloAtivo() { const s = semana(); const ph = consultarProgramacaoPorData(hojeISO()); if (ph.length > 0 && ph[0].ciclo) return normalizarNumeroCiclo(ph[0].ciclo); if (s?.cabecalho?.ciclo) return normalizarNumeroCiclo(s.cabecalho.ciclo); return estado.cicloFiltroConsolidado || "1"; }
-      function obterSemanasProgramadas(atividade = null, anoAlvo = null) {
+      function chaveSemanaInativa(se, ano = null) {
+        const nSe = Number(se);
+        const y = Number(ano || (semana() ? obterAnoSemana(semana()) : new Date().getFullYear())) || new Date().getFullYear();
+        return `${y}_${nSe}`;
+      }
+      function semanaEstaInativa(se, ano = null) {
+        const nSe = Number(se);
+        if (!nSe || isNaN(nSe) || !estado || !estado.semanasInativas) return false;
+        const y = Number(ano || (semana() ? obterAnoSemana(semana()) : new Date().getFullYear())) || new Date().getFullYear();
+        const reg = estado.semanasInativas[`${y}_${nSe}`];
+        if (reg === true) return true;
+        if (reg && typeof reg === "object") return !!reg.inativa;
+        return false;
+      }
+      function listarSemanasInativas(anoFiltro = null) {
+        const mapa = estado?.semanasInativas || {};
+        const lista = [];
+        Object.keys(mapa).forEach(k => {
+          const reg = mapa[k];
+          const ativaInativa = reg === true || (reg && typeof reg === "object" && !!reg.inativa);
+          if (!ativaInativa) return;
+          const partes = String(k).split("_");
+          if (partes.length !== 2) return;
+          const y = Number(partes[0]), se = Number(partes[1]);
+          if (isNaN(y) || isNaN(se) || se <= 0) return;
+          if (anoFiltro && y !== Number(anoFiltro)) return;
+          lista.push({ ano: y, se, chave: k });
+        });
+        return lista.sort((a, b) => a.ano !== b.ano ? a.ano - b.ano : a.se - b.se);
+      }
+      function atualizarBotaoGerenciarSemanas() {
+        const btn = document.getElementById("btnGerenciarSemanasCiclo");
+        if (!btn) return;
+        const anoAtual = obterAnoSemana(semana());
+        const inativasAno = listarSemanasInativas(anoAtual);
+        if (inativasAno.length > 0) {
+          btn.innerHTML = `🗓️ Semanas (${inativasAno.length} inativa${inativasAno.length > 1 ? "s" : ""})`;
+          btn.style.borderColor = "#fca5a5";
+          btn.style.background = "#fef2f2";
+          btn.style.color = "#991b1b";
+        } else {
+          btn.innerHTML = "🗓️ Semanas Ativas/Inativas";
+          btn.style.borderColor = "";
+          btn.style.background = "";
+          btn.style.color = "";
+        }
+      }
+      function definirSemanaInativa(se, ano, inativa) {
+        if (estaModoLeitura()) return false;
+        const nSe = Number(se);
+        const y = Number(ano || (semana() ? obterAnoSemana(semana()) : new Date().getFullYear())) || new Date().getFullYear();
+        const mx = obterTotalSemanasEpidemiologicas(y);
+        if (!nSe || isNaN(nSe) || nSe < 1 || nSe > mx) {
+          alert(`⚠️ Informe uma semana epidemiológica válida entre 1 e ${mx} para ${y}.`);
+          return false;
+        }
+        if (!estado.semanasInativas || typeof estado.semanasInativas !== "object") estado.semanasInativas = {};
+        const ch = `${y}_${nSe}`;
+        estado.semanasInativas[ch] = { inativa: !!inativa, atualizadoEm: Date.now() };
+        ajustarSemanaAtivaParaProgramacao(false);
+        salvar();
+        renderizarTabelaProgramacao();
+        renderizarPainelSemanasInativas();
+        if (document.getElementById("modalGerenciarSemanasCiclo")?.classList.contains("ativo")) {
+          renderizarListaModalSemanasCiclo();
+        }
+        verificarEAtualizarBadgeAtividade();
+        atualizarBotaoGerenciarSemanas();
+        renderizar();
+        atualizarTotais();
+        try { renderizarQuarteiroesDesignados(); } catch(e) {}
+        try { if (document.getElementById("aba-dashboard")?.classList.contains("ativo")) renderizarDashboard(); } catch(e) {}
+        return true;
+      }
+      function alternarSemanaInativa(se, ano) {
+        return definirSemanaInativa(se, ano, !semanaEstaInativa(se, ano));
+      }
+      function obterSemanasProgramadas(atividade = null, anoAlvo = null, opcoes = {}) {
+        const incluirInativas = !!(opcoes && opcoes.incluirInativas);
         const s = semana();
         const ano = Number(anoAlvo || (s ? obterAnoSemana(s) : new Date().getFullYear())) || new Date().getFullYear();
         const todas = (estado.programacao || []).filter(p => p && (!p.atividade || p.atividade === "ciclo"));
@@ -2383,20 +2523,24 @@
         const progsAno = todas.filter(p => !p.ano || Number(p.ano) === ano);
         const mapa = new Map();
         progsAno.forEach(p => {
+          const anoProg = Number(p.ano) || ano;
           const sI = Number(p.cicloSemanaInicio || p.semana || obterSemanaEpidemiologicaDeISO(p.cicloDataInicio || p.dataInicio));
           const sF = Number(p.cicloSemanaTermino || p.semana || obterSemanaEpidemiologicaDeISO(p.cicloDataTermino || p.dataTermino) || sI);
           if (isNaN(sI) || isNaN(sF) || sI <= 0 || sF < sI) return;
           const dIni = p.cicloDataInicio || p.dataInicio || "";
           for (let w = sI; w <= sF; w++) {
+            const inativa = semanaEstaInativa(w, anoProg);
+            if (!incluirInativas && inativa) continue;
             if (!mapa.has(w)) {
               const dataSort = dIni ? adicionarDiasISO(dIni, (w - sI) * 7) : "";
               mapa.set(w, {
                 se: w,
-                ano: Number(p.ano) || ano,
+                ano: anoProg,
                 ciclo: normalizarNumeroCiclo(p.ciclo || "1"),
                 mes: p.mes || (dataSort ? obterNomeMesDeData(dataSort) : ""),
                 prog: p,
-                dataSort
+                dataSort,
+                inativa
               });
             }
           }
@@ -2504,14 +2648,22 @@
         const s = semana(); const d = diaAtual(); const b = document.getElementById("badgeStatusProgramacao"); if (!s || !d || !b) return;
         const ano = obterAnoSemana(s);
         const lista = obterSemanasProgramadas("ciclo", ano);
+        const listaTodas = obterSemanasProgramadas("ciclo", ano, { incluirInativas: true });
         const item = lista.find(x => x.se === Number(estado.semanaAtiva));
-        if (item && item.prog) {
+        if (semanaEstaInativa(estado.semanaAtiva, ano)) {
+          b.className = "badge-aviso-atividade alerta";
+          b.textContent = `🚫 SE ${pad2(estado.semanaAtiva)} inativa (não faz parte do Ciclo de Visita)`;
+        } else if (item && item.prog) {
           const p = item.prog;
           const sI = p.cicloSemanaInicio || p.semana;
           const sF = p.cicloSemanaTermino || p.semana;
           const faixaSE = String(sI) === String(sF) ? `SE ${pad2(sI)}` : `SE ${pad2(sI)} a ${pad2(sF)}`;
+          const qInat = listaTodas.filter(x => x.prog && x.prog.id === p.id && x.inativa).length;
           b.className = "badge-aviso-atividade ciclo";
-          b.textContent = `📋 Programado: Ciclo (${formatarCicloTexto(p.ciclo)} - ${faixaSE})`;
+          b.textContent = `📋 Programado: Ciclo (${formatarCicloTexto(p.ciclo)} - ${faixaSE}${qInat > 0 ? ` · ${qInat} SE inativa${qInat > 1 ? "s" : ""}` : ""})`;
+        } else if (listaTodas.length > 0 && lista.length === 0) {
+          b.className = "badge-aviso-atividade alerta";
+          b.textContent = "🚫 Todas as semanas programadas estão inativas";
         } else if (lista.length === 0) {
           b.className = "badge-aviso-atividade alerta";
           b.textContent = "ℹ️ Sem programação de Ciclo de Visitas na SUGARBO";
@@ -2519,6 +2671,7 @@
           b.className = "badge-aviso-atividade alerta";
           b.textContent = `ℹ️ SE ${pad2(estado.semanaAtiva)} fora da programação de Ciclo`;
         }
+        atualizarBotaoGerenciarSemanas();
         const br = document.getElementById("badgeResumoAtividade"); const st = document.getElementById("subtituloResumoSemana");
         if (br) { br.textContent = "🏡 Ciclo de Visita"; br.className = "badge-aviso-atividade ciclo"; if (st) st.textContent = "RESUMO DOS TRABALHOS DE CAMPO"; }
       }
@@ -2594,21 +2747,128 @@
       function solicitarExclusaoProgramacao(id) { idProgramacaoParaExcluir = id; const p = (estado.programacao || []).find(x => x && x.id === id); const d = document.getElementById("detalhesExclusaoProg"); if (d) { if (p) d.innerHTML = `<strong>Ano:</strong> ${p.ano || "—"}<br><strong>Atividade:</strong> Ciclo<br><strong>Ciclo:</strong> ${formatarCicloTexto(p.ciclo)}<br><strong>Período:</strong> ${formatarDataBR(p.cicloDataInicio || p.dataInicio)} a ${formatarDataBR(p.cicloDataTermino || p.dataTermino)}<br><strong>Semanas:</strong> SE ${pad2(p.cicloSemanaInicio || p.semana)} a SE ${pad2(p.cicloSemanaTermino || p.semana)}`; else d.textContent = "—"; } document.getElementById("modalConfirmarExclusaoProg").classList.add("ativo"); }
       function fecharModalExclusaoProg() { idProgramacaoParaExcluir = null; document.getElementById("modalConfirmarExclusaoProg").classList.remove("ativo"); }
       function executarExclusaoProgramacaoConfirmada() { if (!idProgramacaoParaExcluir) { fecharModalExclusaoProg(); return; } const id = idProgramacaoParaExcluir; estado.programacao = (estado.programacao || []).filter(x => x && x.id !== id); ajustarSemanaAtivaParaProgramacao(false); salvar(); fecharModalExclusaoProg(); renderizarTabelaProgramacao(); sincronizarPeriodosSemanasCiclo(); try { verificarEAtualizarBadgeAtividade(); } catch(e) {} try { atualizarPreviewPeriodoCiclo(); } catch(e) {} try { renderizar(); atualizarTotais(); } catch(e) {} try { renderizarQuarteiroesDesignados(); } catch(e) {} }
+      function renderizarPainelSemanasInativas() {
+        const cont = document.getElementById("listaSemanasInativasSugarbo");
+        const bdg = document.getElementById("badgeResumoSemanasInativas");
+        const inAno = document.getElementById("inativarManualAno");
+        if (inAno && !inAno.value) inAno.value = obterAnoSemana(semana()) || new Date().getFullYear();
+        if (!cont) return;
+        const todasProg = obterSemanasProgramadas("ciclo", null, { incluirInativas: true });
+        const inativasGlobal = listarSemanasInativas();
+        if (bdg) {
+          if (inativasGlobal.length > 0) {
+            bdg.className = "badge-aviso-atividade alerta";
+            bdg.textContent = `🚫 ${inativasGlobal.length} inativa${inativasGlobal.length > 1 ? "s" : ""}` + (todasProg.length > 0 ? ` · ${todasProg.filter(x => !x.inativa).length} ativas no ciclo` : "");
+          } else {
+            bdg.className = "badge-aviso-atividade ciclo";
+            bdg.textContent = todasProg.length > 0 ? `✅ Todas as ${todasProg.length} semanas ativas` : "✅ Nenhuma semana inativa";
+          }
+        }
+        cont.innerHTML = "";
+        if (inativasGlobal.length === 0) {
+          cont.innerHTML = `<span style="font-size:0.78rem; color:#64748b;">Nenhuma semana inativada. Clique em qualquer semana verde na tabela acima ou informe Ano/SE para inativar.</span>`;
+          return;
+        }
+        inativasGlobal.forEach(item => {
+          const pInfo = obterPeriodoDaSemana(item.se, item.ano, "1", "ciclo");
+          const pill = document.createElement("div");
+          pill.style.cssText = "display:inline-flex; align-items:center; gap:6px; background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; padding:4px 8px; border-radius:6px; font-size:0.76rem; font-weight:700;";
+          pill.innerHTML = `<span>🚫 ${item.ano} · SE ${pad2(item.se)} (${pInfo.texto})</span>`;
+          const bt = document.createElement("button");
+          bt.type = "button";
+          bt.className = "btn btn-verde btn-toggle-semana-ciclo";
+          bt.style.cssText = "padding:2px 7px; font-size:0.72rem;";
+          bt.textContent = "✅ Reativar";
+          bt.addEventListener("click", () => definirSemanaInativa(item.se, item.ano, false));
+          pill.appendChild(bt);
+          cont.appendChild(pill);
+        });
+      }
+      function renderizarListaModalSemanasCiclo() {
+        const cont = document.getElementById("listaSemanasGerenciarModal");
+        const inAno = document.getElementById("modalInativarAno");
+        const anoBase = Number(inAno?.value) || obterAnoSemana(semana()) || new Date().getFullYear();
+        if (inAno && !inAno.value) inAno.value = anoBase;
+        if (!cont) return;
+        cont.innerHTML = "";
+        const lista = obterSemanasProgramadas("ciclo", anoBase, { incluirInativas: true });
+        const inativasExtras = listarSemanasInativas(anoBase).filter(x => !lista.some(y => y.se === x.se));
+        if (lista.length === 0 && inativasExtras.length === 0) {
+          cont.innerHTML = `<div style="padding:14px; text-align:center; color:#64748b; background:#f8fafc; border-radius:6px; border:1px solid #e2e8f0;">Nenhuma semana cadastrada para ${anoBase} na aba SUGARBO – Programação Anual. Você ainda pode informar um Ano e SE acima para inativar ou reativar.</div>`;
+          return;
+        }
+        const itens = [...lista];
+        inativasExtras.forEach(x => {
+          itens.push({ se: x.se, ano: x.ano, ciclo: "—", mes: "", prog: null, dataSort: "", inativa: true });
+        });
+        itens.sort((a, b) => a.se - b.se);
+        itens.forEach(item => {
+          const pInfo = obterPeriodoDaSemana(item.se, item.ano, item.ciclo !== "—" ? item.ciclo : "1", "ciclo");
+          const row = document.createElement("div");
+          row.className = `linha-semana-gerenciar ${item.inativa ? "inativa" : ""}`;
+          const cicloLabel = item.ciclo && item.ciclo !== "—" ? `${formatarCicloTexto(item.ciclo)} · ` : "";
+          row.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <div style="font-weight:800; font-size:0.84rem; color:${item.inativa ? "#991b1b" : "#14532d"};">
+                ${item.inativa ? "🚫" : "✅"} SE ${pad2(item.se)} (${item.ano})
+                <span style="font-weight:600; font-size:0.75rem; color:#475569; margin-left:4px;">${cicloLabel}${pInfo.texto}</span>
+              </div>
+              <div style="font-size:0.72rem; color:${item.inativa ? "#b91c1c" : "#15803d"}; font-weight:700;">
+                ${item.inativa ? "Inativa (fora do Ciclo de Visita)" : "Ativa no Ciclo de Visita"}
+              </div>
+            </div>
+            <button type="button" class="btn ${item.inativa ? "btn-verde" : "btn-cinza"} btn-toggle-semana-ciclo" style="padding:5px 12px; font-size:0.76rem; font-weight:700; ${item.inativa ? "" : "background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;"}">
+              ${item.inativa ? "✅ Reativar" : "🚫 Inativar"}
+            </button>
+          `;
+          row.querySelector("button").addEventListener("click", () => alternarSemanaInativa(item.se, item.ano));
+          cont.appendChild(row);
+        });
+      }
+      function abrirModalGerenciarSemanasCiclo() {
+        const m = document.getElementById("modalGerenciarSemanasCiclo");
+        if (!m) return;
+        const inAno = document.getElementById("modalInativarAno");
+        const inSE = document.getElementById("modalInativarSE");
+        const anoBase = obterAnoSemana(semana()) || new Date().getFullYear();
+        if (inAno) inAno.value = anoBase;
+        if (inSE) inSE.value = estado.semanaAtiva || "";
+        renderizarListaModalSemanasCiclo();
+        m.classList.add("ativo");
+      }
+      function fecharModalGerenciarSemanasCiclo() {
+        const m = document.getElementById("modalGerenciarSemanasCiclo");
+        if (m) m.classList.remove("ativo");
+      }
       function renderizarTabelaProgramacao() {
         const c = document.getElementById("corpoTabelaProg"); if (!c) return;
         c.innerHTML = "";
         const listaCiclo = (estado.programacao || []).filter(p => p && (!p.atividade || p.atividade === "ciclo"));
-        if (listaCiclo.length === 0) { c.innerHTML = `<tr><td colspan="5" style="padding: 12px; color: #64748b;">Nenhuma programação cadastrada.</td></tr>`; return; }
+        if (listaCiclo.length === 0) { c.innerHTML = `<tr><td colspan="5" style="padding: 12px; color: #64748b;">Nenhuma programação cadastrada.</td></tr>`; renderizarPainelSemanasInativas(); return; }
         const ord = [...listaCiclo].sort((a,b) => a.ano !== b.ano ? a.ano - b.ano : (a.cicloSemanaInicio||0) - (b.cicloSemanaInicio||0));
         ord.forEach(p => {
           const tr = document.createElement("tr");
           const t = `<span style="background:#dcfce7; color:#14532d; font-weight:700; padding:2px 6px; border-radius:4px;">Ciclo</span>`;
-          const sFaixa = (p.cicloSemanaInicio || p.semana) ? `<br><small style="color:#166534; font-weight:700;">SE: ${pad2(p.cicloSemanaInicio || p.semana)} a ${pad2(p.cicloSemanaTermino || p.semana)}</small>` : "";
-          tr.innerHTML = `<td><strong>${p.ano}</strong></td><td>${t}</td><td>${formatarCicloTexto(p.ciclo)}</td><td>${formatarDataBR(p.cicloDataInicio || p.dataInicio)} a ${formatarDataBR(p.cicloDataTermino || p.dataTermino)}${sFaixa}</td><td style="display:flex; justify-content:center; gap:4px;"><button class="btn btn-cinza btn-editar-prog" data-id="${p.id}" style="padding: 4px 8px; color: #0284c7;">✏️</button><button class="btn btn-cinza btn-remover-prog" data-id="${p.id}" style="padding: 4px 8px; color: #dc2626; background:#fee2e2;">🗑️</button></td>`;
+          const sI = Number(p.cicloSemanaInicio || p.semana);
+          const sF = Number(p.cicloSemanaTermino || p.semana || sI);
+          const anoP = Number(p.ano) || new Date().getFullYear();
+          const sFaixa = (p.cicloSemanaInicio || p.semana) ? `<br><small style="color:#166534; font-weight:700;">SE: ${pad2(sI)} a ${pad2(sF)}</small>` : "";
+          let chipsHtml = "";
+          if (!isNaN(sI) && !isNaN(sF) && sI > 0 && sF >= sI) {
+            const chips = [];
+            for (let w = sI; w <= sF; w++) {
+              const inat = semanaEstaInativa(w, anoP);
+              chips.push(`<button type="button" class="chip-semana-ciclo ${inat ? "inativa" : ""}" data-se="${w}" data-ano="${anoP}" title="${inat ? `SE ${pad2(w)} inativa — clique para reativar no Ciclo de Visita` : `SE ${pad2(w)} ativa — clique para inativar do Ciclo de Visita`}">${inat ? "🚫" : "✅"} SE ${pad2(w)}</button>`);
+            }
+            chipsHtml = `<div class="lista-chips-semanas">${chips.join("")}</div>`;
+          }
+          tr.innerHTML = `<td><strong>${p.ano}</strong></td><td>${t}</td><td>${formatarCicloTexto(p.ciclo)}</td><td>${formatarDataBR(p.cicloDataInicio || p.dataInicio)} a ${formatarDataBR(p.cicloDataTermino || p.dataTermino)}${sFaixa}${chipsHtml}</td><td style="display:flex; justify-content:center; gap:4px;"><button class="btn btn-cinza btn-editar-prog" data-id="${p.id}" style="padding: 4px 8px; color: #0284c7;">✏️</button><button class="btn btn-cinza btn-remover-prog" data-id="${p.id}" style="padding: 4px 8px; color: #dc2626; background:#fee2e2;">🗑️</button></td>`;
           c.appendChild(tr);
         });
+        c.querySelectorAll(".chip-semana-ciclo").forEach(b => b.addEventListener("click", () => alternarSemanaInativa(Number(b.dataset.se), Number(b.dataset.ano))));
         c.querySelectorAll(".btn-editar-prog").forEach(b => b.addEventListener("click", () => editarProgramacao(b.dataset.id)));
         c.querySelectorAll(".btn-remover-prog").forEach(b => b.addEventListener("click", () => solicitarExclusaoProgramacao(b.dataset.id)));
+        renderizarPainelSemanasInativas();
       }
       function salvarNovaProgramacao(e) {
         if (e && e.preventDefault) e.preventDefault();
@@ -2963,6 +3223,20 @@
           resultado.ciclosConfig = { ...(resultado.ciclosConfig || {}), ...local.ciclosConfig };
         }
 
+        // 5b. Semanas Inativas
+        if (local.semanasInativas || nuvem.semanasInativas) {
+          const resInat = { ...(nuvem.semanasInativas || {}) };
+          const locInat = local.semanasInativas || {};
+          Object.keys(locInat).forEach(k => {
+            const vL = locInat[k];
+            const vN = resInat[k];
+            const tsL = (vL && typeof vL === "object") ? (Number(vL.atualizadoEm) || 0) : (vL ? 1 : 0);
+            const tsN = (vN && typeof vN === "object") ? (Number(vN.atualizadoEm) || 0) : (vN ? 1 : 0);
+            if (!vN || tsL >= tsN) resInat[k] = vL;
+          });
+          resultado.semanasInativas = resInat;
+        }
+
         // 6. Configuração da Equipe e Estrato
         if (local.configEquipe && Array.isArray(local.configEquipe.agentes)) {
           if (!resultado.configEquipe) resultado.configEquipe = local.configEquipe;
@@ -3130,6 +3404,7 @@
 
         if (!estado.semanas) estado.semanas = {};
         if (!Array.isArray(estado.programacao)) estado.programacao = [];
+        if (!estado.semanasInativas || typeof estado.semanasInativas !== "object") estado.semanasInativas = {};
         if (!estado.ciclosConfig) estado.ciclosConfig = {};
         if (!estado.cicloFiltroConsolidado) estado.cicloFiltroConsolidado = "1";
         if (!estado.diaAtivo) estado.diaAtivo = "segunda";
@@ -3258,7 +3533,9 @@
         const pend = [];
         Object.keys(col || {}).forEach(k => {
           if (filtroChaves && !filtroChaves.includes(k)) return;
-          if (semanaTemProgPendente(col[k])) pend.push(k);
+          const sObj = col[k];
+          if (semanaEstaInativa(k, obterAnoSemana(sObj))) return;
+          if (semanaTemProgPendente(sObj)) pend.push(k);
         });
         return pend;
       }
@@ -3312,6 +3589,7 @@
           const sCiclo = normalizarNumeroCiclo(sem.cabecalho?.ciclo || "1");
           const sAno = obterAnoSemana(sem);
           if (sCiclo !== ctx.ciclo || sAno !== ctx.ano) return;
+          if (semanaEstaInativa(sk, sAno)) return;
           DIAS_SEMANA.forEach(dk => {
             const dia = sem.dias?.[dk]; if (!dia) return;
             const iso = dia.data || ""; if (!iso) return;
@@ -3411,7 +3689,7 @@
         let ks = [];
         if (si && st && si <= st) { for (let s = si; s <= st; s++) ks.push(String(s)); }
         else { ks = Object.keys(estado.semanas || {}).filter(k => normalizarNumeroCiclo(estado.semanas[k]?.cabecalho?.ciclo) === ciclo); }
-        return ks;
+        return ks.filter(k => !semanaEstaInativa(k, ano));
       }
       function dashAgregarCiclo(ano, ciclo) {
         const semanas = dashSemanasDoCiclo(ano, ciclo);
@@ -4636,10 +4914,15 @@
           else if (k === "agentesEquipe") i.value = cC.agentesEquipe || cA?.agentesEquipe || obterTextoAgentesEquipe() || "";
           else { const vd = (estado.configEquipe && estado.configEquipe[k]) ? estado.configEquipe[k] : ""; i.value = cC[k] || cA?.[k] || vd || ""; }
         });
-        let ks = [];
-        if (si && st && si <= st) { for (let s = si; s <= st; s++) ks.push(s); }
-        else { ks = Object.keys(col).map(Number).filter(n => !isNaN(n) && normalizarNumeroCiclo(col[String(n)]?.cabecalho?.ciclo) === cI).sort((a, b) => a - b); }
-        const inS = document.getElementById("cicloTotalSemanas"); if (inS) { if (si && st) inS.value = `SE ${pad2(si)} a SE ${pad2(st)} (${ks.length} semanas)`; else inS.value = `${ks.length} semana(s)`; }
+        let ksTodos = [];
+        if (si && st && si <= st) { for (let s = si; s <= st; s++) ksTodos.push(s); }
+        else { ksTodos = Object.keys(col).map(Number).filter(n => !isNaN(n) && normalizarNumeroCiclo(col[String(n)]?.cabecalho?.ciclo) === cI).sort((a, b) => a - b); }
+        const ks = ksTodos.filter(s => !semanaEstaInativa(s, an));
+        const qtdInativasCiclo = ksTodos.length - ks.length;
+        if (bdg && si && st && qtdInativasCiclo > 0) {
+          bdg.textContent = `📋 SE ${pad2(si)} a SE ${pad2(st)} (${ks.length} ativas, ${qtdInativasCiclo} inativa${qtdInativasCiclo > 1 ? "s" : ""})`;
+        }
+        const inS = document.getElementById("cicloTotalSemanas"); if (inS) { if (si && st) inS.value = qtdInativasCiclo > 0 ? `SE ${pad2(si)} a SE ${pad2(st)} (${ks.length} ativas, ${qtdInativasCiclo} inativa${qtdInativasCiclo > 1 ? "s" : ""})` : `SE ${pad2(si)} a SE ${pad2(st)} (${ks.length} semanas)`; else inS.value = `${ks.length} semana(s)`; }
         const t = document.createElement("table"); t.className = "resumo-tabela"; const cg = document.createElement("colgroup"); LARGURAS_TABELA_CICLO.forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); }); t.appendChild(cg);
         const th = document.createElement("thead"); const trH = document.createElement("tr");
         COLUNAS_CICLO_1_5.forEach(x => trH.innerHTML += `<th class="cabecalho-titulo">${x}</th>`);
@@ -5147,14 +5430,20 @@
       }
       function irParaSemana(num) {
         const lista = obterSemanasProgramadas("ciclo");
+        const listaTodas = obterSemanasProgramadas("ciclo", null, { incluirInativas: true });
+        const itemInativo = listaTodas.find(x => x.se === Number(num) && x.inativa);
+        if (itemInativo || semanaEstaInativa(num, obterAnoSemana(semana()))) {
+          alert(`🚫 A SE ${pad2(num)} está inativa para o Ciclo de Visita.\n\nVocê pode reativá-la na aba SUGARBO – Programação Anual ou pelo botão "🗓️ Semanas Ativas/Inativas".`);
+          return false;
+        }
         if (lista.length === 0) {
-          alert("ℹ️ Nenhuma semana programada para Ciclo de Visitas na aba SUGARBO – Programação Anual.");
+          alert(listaTodas.length > 0 ? "ℹ️ Todas as semanas programadas estão inativas no momento. Reative pelo menos uma semana em SUGARBO – Programação Anual." : "ℹ️ Nenhuma semana programada para Ciclo de Visitas na aba SUGARBO – Programação Anual.");
           return false;
         }
         const alvo = lista.find(x => x.se === Number(num));
         if (!alvo) {
           const seList = lista.map(x => pad2(x.se)).join(", ");
-          alert(`⚠️ A SE ${pad2(num)} não está programada para Ciclo de Visitas na aba SUGARBO – Programação Anual.\n\nSemanas programadas: ${seList}`);
+          alert(`⚠️ A SE ${pad2(num)} não está programada para Ciclo de Visitas na aba SUGARBO – Programação Anual.\n\nSemanas ativas programadas: ${seList}`);
           return false;
         }
         garantirSemanaCriadaNaProgramacao(alvo);
@@ -5167,8 +5456,9 @@
       }
       function novaSemana() {
         const lista = obterSemanasProgramadas("ciclo");
+        const listaTodas = obterSemanasProgramadas("ciclo", null, { incluirInativas: true });
         if (lista.length === 0) {
-          alert("ℹ️ Nenhuma semana programada para Ciclo de Visitas na aba SUGARBO – Programação Anual. Cadastre a programação antes de abrir uma semana.");
+          alert(listaTodas.length > 0 ? "ℹ️ Todas as semanas programadas estão inativas no momento. Reative pelo menos uma semana em SUGARBO – Programação Anual." : "ℹ️ Nenhuma semana programada para Ciclo de Visitas na aba SUGARBO – Programação Anual. Cadastre a programação antes de abrir uma semana.");
           return;
         }
         const r = repoAtivo();
@@ -5882,6 +6172,15 @@
           const bSAR = document.getElementById("btnSemanaAnteriorResumo"); if (bSAR) bSAR.addEventListener("click", () => navegarSemana(-1));
           const bSPR = document.getElementById("btnSemanaProximaResumo"); if (bSPR) bSPR.addEventListener("click", () => navegarSemana(1));
           const bNS = document.getElementById("btnNovaSemana"); if (bNS) bNS.addEventListener("click", novaSemana);
+          const bGerSem = document.getElementById("btnGerenciarSemanasCiclo"); if (bGerSem) bGerSem.addEventListener("click", abrirModalGerenciarSemanasCiclo);
+          const bFGS1 = document.getElementById("btnFecharModalGerenciarSemanas"); if (bFGS1) bFGS1.addEventListener("click", fecharModalGerenciarSemanasCiclo);
+          const bFGS2 = document.getElementById("btnFecharModalGerenciarSemanas2"); if (bFGS2) bFGS2.addEventListener("click", fecharModalGerenciarSemanasCiclo);
+          const mGerSem = document.getElementById("modalGerenciarSemanasCiclo"); if (mGerSem) mGerSem.addEventListener("click", (e) => { if (e.target === mGerSem) fecharModalGerenciarSemanasCiclo(); });
+          const bInatMan = document.getElementById("btnInativarManualSE"); if (bInatMan) bInatMan.addEventListener("click", () => { definirSemanaInativa(document.getElementById("inativarManualSE")?.value, document.getElementById("inativarManualAno")?.value, true); });
+          const bReatMan = document.getElementById("btnReativarManualSE"); if (bReatMan) bReatMan.addEventListener("click", () => { definirSemanaInativa(document.getElementById("inativarManualSE")?.value, document.getElementById("inativarManualAno")?.value, false); });
+          const bModInat = document.getElementById("btnModalInativarSE"); if (bModInat) bModInat.addEventListener("click", () => { definirSemanaInativa(document.getElementById("modalInativarSE")?.value, document.getElementById("modalInativarAno")?.value, true); });
+          const bModReat = document.getElementById("btnModalReativarSE"); if (bModReat) bModReat.addEventListener("click", () => { definirSemanaInativa(document.getElementById("modalInativarSE")?.value, document.getElementById("modalInativarAno")?.value, false); });
+          const inModAno = document.getElementById("modalInativarAno"); if (inModAno) inModAno.addEventListener("change", renderizarListaModalSemanasCiclo);
           document.querySelectorAll(".aba-dia").forEach(b => b.addEventListener("click", () => { estado.diaAtivo = b.dataset.dia; salvar(); renderizar(); atualizarTotais(); }));
           const eA = document.getElementById("anoLancamento"); if (eA) eA.addEventListener("change", e => { const s = semana(); const a = Number(e.target.value) || new Date().getFullYear(); if (s) s.ano = a; atualizarLimitesSemanas(a); ajustarSemanaAtivaParaProgramacao(false); salvar(); renderizar(); atualizarTotais(); });
           const sCL = document.getElementById("cicloLancamentoCiclo"); if (sCL) sCL.addEventListener("change", e => { const c = normalizarNumeroCiclo(e.target.value); const s = semana(); if (s?.cabecalho) s.cabecalho.ciclo = c; salvar(); renderizarCabecalhoResumo(); renderizarCiclo(); });
@@ -6216,6 +6515,9 @@
             window.renderizar = renderizar;
             window.calcularSomasDia = calcularSomasDia;
             window.obterSemanasProgramadas = obterSemanasProgramadas;
+            window.definirSemanaInativa = definirSemanaInativa;
+            window.alternarSemanaInativa = alternarSemanaInativa;
+            window.semanaEstaInativa = semanaEstaInativa;
           }
         } catch (eg) { console.error("[PMCD Erro]:", eg); }
       });
