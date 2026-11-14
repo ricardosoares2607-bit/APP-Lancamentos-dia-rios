@@ -836,11 +836,11 @@
     </header>
     <nav class="barra-abas-horizontal" aria-label="Navegação do aplicativo">
       <div class="abas-navegacao-lista">
-        <button type="button" class="btn-aba-nav" data-aba="dashboard"><span class="aba-icone">📈</span><span class="aba-rotulo">Dashboard</span></button>
+        <button type="button" class="btn-aba-nav ativa" data-aba="dashboard"><span class="aba-icone">📈</span><span class="aba-rotulo">Dashboard</span></button>
         <button type="button" class="btn-aba-nav" data-aba="sugarbo"><span class="aba-icone">🍬</span><span class="aba-rotulo">SUGARBO</span></button>
         <button type="button" class="btn-aba-nav" data-aba="config-equipe"><span class="aba-icone">⚙️</span><span class="aba-rotulo">Configuração da Equipe</span></button>
         <button type="button" class="btn-aba-nav" data-aba="config-estrato"><span class="aba-icone">🗺️</span><span class="aba-rotulo">Configuração do Estrato</span></button>
-        <button type="button" class="btn-aba-nav ativa" data-aba="lancamentos"><span class="aba-icone">📝</span><span class="aba-rotulo">Lançamentos Diários</span></button>
+        <button type="button" class="btn-aba-nav" data-aba="lancamentos"><span class="aba-icone">📝</span><span class="aba-rotulo">Lançamentos Diários</span></button>
         <button type="button" class="btn-aba-nav" data-aba="resumo"><span class="aba-icone">📊</span><span class="aba-rotulo">Resumo da Semana</span></button>
         <button type="button" class="btn-aba-nav" data-aba="ciclo"><span class="aba-icone">🔄</span><span class="aba-rotulo">Resumo do Ciclo</span></button>
         <button type="button" class="btn-aba-nav" data-aba="producao-individual"><span class="aba-icone">👤</span><span class="aba-rotulo">Produção Individual</span></button>
@@ -863,7 +863,7 @@
       </div>
     </div>
     <main>
-      <section id="aba-dashboard" class="conteudo-aba">
+      <section id="aba-dashboard" class="conteudo-aba ativo">
         <h2>📈 Dashboard</h2>
         <div class="dash-container">
           <div class="dash-barra">
@@ -995,7 +995,7 @@
           </div>
         </div>
       </section>
-      <section id="aba-lancamentos" class="conteudo-aba ativo">
+      <section id="aba-lancamentos" class="conteudo-aba">
         <div class="faixa-programacao">
           <div class="seletor-atividade">
             <span style="font-weight: 700; font-size: 0.82rem; color: #166534;">Atividade:</span>
@@ -4218,6 +4218,7 @@
         renderizarCabecalhoResumo(); renderizarRodape(); renderizarResumo(); renderizarCiclo(); renderizarConfigEquipe();
         atualizarTotais(); sincronizarFontesAssinatura();
         try { if (document.getElementById("aba-quarteiroes-designados")?.classList.contains("ativo")) renderizarQuarteiroesDesignados(); } catch(e) {}
+        try { if (document.getElementById("aba-dashboard")?.classList.contains("ativo")) renderizarDashboard(); } catch(e) {}
       }
       function renderizarCabecalhoResumo() {
         const s = semana(); const cab = s ? s.cabecalho : {}; const ano = obterAnoSemana(s); const cN = normalizarNumeroCiclo(cab ? cab.ciclo : "1"); const dc = obterDatasCicloEfetivas(ano, cN, estado.atividadeAtiva); const pA = obterPeriodoDaSemana(estado.semanaAtiva, ano, cN, estado.atividadeAtiva);
@@ -6508,8 +6509,9 @@
           autoDetectarProgramacaoPorData(hojeISO(), false);
           ajustarSemanaAtivaParaProgramacao(false);
           sincronizarPeriodosSemanasCiclo();
-          alternarAba("lancamentos");
-          renderizarDashboard();
+          renderizar();
+          atualizarTotais();
+          alternarAba("dashboard");
           if (typeof window !== "undefined") {
             window.salvar = salvar;
             window.renderizar = renderizar;
