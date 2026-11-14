@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-title" content="PMCD Campo" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@400;500;700;900&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Satisfy&family=Allura&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=Montserrat:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto:wght@400;500;700;900&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Satisfy&family=Allura&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -530,7 +530,8 @@
       @media print {
         @page { size: A4 landscape; margin: 4mm; }
         body { background: #fff; }
-        header, nav.barra-navegacao-abas, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao { display: none !important; }
+        header, nav.barra-navegacao-abas, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao, #telaAberturaAnimada, #telaLoginSistema { display: none !important; }
+        body.autenticacao-pendente * { display: none !important; }
         main { padding: 0 !important; }
         .conteudo-aba { display: none !important; }
         #aba-resumo.ativo, #aba-ciclo.ativo, #aba-producao-individual.ativo, #aba-relatorio-campo.ativo, #aba-quarteiroes-designados.ativo, #aba-config-estrato.ativo, #aba-resumo-reconhecimento.ativo { display: block !important; }
@@ -799,9 +800,493 @@
         pointer-events: none !important;
         cursor: default !important;
       }
+      /* Bloqueio total sem login + Tela de Abertura 10s + Tela de Login */
+      body.autenticacao-pendente header,
+      body.autenticacao-pendente nav.barra-abas-horizontal,
+      body.autenticacao-pendente main,
+      body.autenticacao-pendente #bannerModoLeitura {
+        display: none !important;
+      }
+      body.autenticacao-pendente {
+        overflow: hidden;
+        background: #071e12;
+      }
+      #telaAberturaAnimada, #telaAberturaAnimada *,
+      #telaLoginSistema, #telaLoginSistema * {
+        font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif !important;
+      }
+      #telaAberturaAnimada .abertura-titulo,
+      #telaLoginSistema .login-titulo-serif {
+        font-family: 'Merriweather', Georgia, serif !important;
+      }
+      .tela-abertura {
+        position: fixed;
+        inset: 0;
+        z-index: 25000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        color: #f8fafc;
+        background:
+          radial-gradient(circle at 50% 30%, rgba(34, 197, 94, 0.22) 0%, rgba(20, 83, 45, 0.45) 38%, transparent 70%),
+          linear-gradient(160deg, #06180e 0%, #0b2919 48%, #0c1824 100%);
+        overflow: hidden;
+        opacity: 1;
+        transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .tela-abertura.ocultando {
+        opacity: 0;
+        transform: scale(1.02);
+        pointer-events: none;
+      }
+      .abertura-grade-fundo {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(134, 239, 172, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(134, 239, 172, 0.045) 1px, transparent 1px);
+        background-size: 48px 48px;
+        opacity: 0;
+        animation: aberturaGridFade 1.8s ease-out 0.2s forwards;
+        pointer-events: none;
+      }
+      .abertura-conteudo {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        max-width: 680px;
+        width: 100%;
+      }
+      .abertura-emblema-wrap {
+        position: relative;
+        width: 124px;
+        height: 124px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        opacity: 0;
+        transform: scale(0.84);
+        animation: aberturaLogoIn 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+      }
+      .abertura-anel-externo {
+        position: absolute;
+        inset: -10px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(134, 239, 172, 0.28);
+        opacity: 0;
+        animation: aberturaAnelExpand 3.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s infinite;
+      }
+      .abertura-anel-segundo {
+        position: absolute;
+        inset: -24px;
+        border-radius: 50%;
+        border: 1px solid rgba(74, 222, 128, 0.18);
+        opacity: 0;
+        animation: aberturaAnelExpand 3.6s cubic-bezier(0.16, 1, 0.3, 1) 1.8s infinite;
+      }
+      .abertura-svg-escudo {
+        width: 112px;
+        height: 112px;
+        filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+      }
+      .abertura-traco-escudo {
+        stroke-dasharray: 420;
+        stroke-dashoffset: 420;
+        animation: aberturaDesenhoSvg 2.1s cubic-bezier(0.22, 1, 0.36, 1) 0.25s forwards;
+      }
+      .abertura-traco-folha {
+        stroke-dasharray: 220;
+        stroke-dashoffset: 220;
+        animation: aberturaDesenhoSvg 1.7s cubic-bezier(0.22, 1, 0.36, 1) 1.0s forwards;
+      }
+      .abertura-sigla {
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: #86efac;
+        margin-bottom: 10px;
+        opacity: 0;
+        transform: translateY(14px);
+        animation: aberturaFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.3s forwards;
+      }
+      .abertura-titulo {
+        font-size: clamp(1.65rem, 3.6vw, 2.5rem);
+        font-weight: 900;
+        line-height: 1.18;
+        color: #ffffff;
+        margin-bottom: 12px;
+        text-wrap: balance;
+        opacity: 0;
+        transform: translateY(18px);
+        animation: aberturaFadeUp 1.0s cubic-bezier(0.16, 1, 0.3, 1) 2.2s forwards;
+      }
+      .abertura-subtitulo {
+        font-size: clamp(0.95rem, 1.8vw, 1.12rem);
+        font-weight: 500;
+        color: #cbd5e1;
+        line-height: 1.5;
+        max-width: 520px;
+        margin-bottom: 28px;
+        opacity: 0;
+        transform: translateY(16px);
+        animation: aberturaFadeUp 1.0s cubic-bezier(0.16, 1, 0.3, 1) 3.4s forwards;
+      }
+      .abertura-pilares {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: #bbf7d0;
+        margin-bottom: 34px;
+        opacity: 0;
+        transform: translateY(14px);
+        animation: aberturaFadeUp 1.0s cubic-bezier(0.16, 1, 0.3, 1) 4.7s forwards;
+      }
+      .abertura-sep { color: rgba(134, 239, 172, 0.45); }
+      .abertura-progresso-box {
+        width: 100%;
+        max-width: 360px;
+        opacity: 0;
+        transform: translateY(10px);
+        animation: aberturaFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.6s forwards;
+      }
+      .abertura-progresso-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        margin-bottom: 8px;
+        font-variant-numeric: tabular-nums;
+      }
+      .abertura-progresso-trilha {
+        width: 100%;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+      .abertura-progresso-barra {
+        width: 100%;
+        height: 100%;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, #22c55e, #86efac);
+        transform-origin: left center;
+        transform: scaleX(0);
+      }
+      .btn-pular-abertura {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 25002;
+        background: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        padding: 9px 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.15s ease;
+      }
+      .btn-pular-abertura:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+      }
+      @keyframes aberturaGridFade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes aberturaLogoIn {
+        from { opacity: 0; transform: scale(0.84); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes aberturaDesenhoSvg {
+        to { stroke-dashoffset: 0; }
+      }
+      @keyframes aberturaAnelExpand {
+        0% { opacity: 0.6; transform: scale(0.88); }
+        100% { opacity: 0; transform: scale(1.38); }
+      }
+      @keyframes aberturaFadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .abertura-emblema-wrap, .abertura-sigla, .abertura-titulo, .abertura-subtitulo, .abertura-pilares, .abertura-progresso-box, .abertura-grade-fundo {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+        .abertura-anel-externo, .abertura-anel-segundo { animation: none !important; display: none; }
+        .abertura-traco-escudo, .abertura-traco-folha { animation: none !important; stroke-dashoffset: 0 !important; }
+      }
+      /* Tela de Login Completa */
+      .tela-login {
+        position: fixed;
+        inset: 0;
+        z-index: 24000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(22, 163, 74, 0.22) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(20, 83, 45, 0.3) 0%, transparent 55%),
+          linear-gradient(155deg, #071b10 0%, #0d2f1c 52%, #0f172a 100%);
+        overflow-y: auto;
+      }
+      .tela-login.ativo {
+        display: flex;
+      }
+      .login-cartao {
+        width: 100%;
+        max-width: 440px;
+        background: #ffffff;
+        border-radius: 14px;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.38);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+      .login-topo {
+        background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+        color: #ffffff;
+        padding: 26px 28px 22px;
+        text-align: center;
+      }
+      .login-topo-icone {
+        width: 54px;
+        height: 54px;
+        margin: 0 auto 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .login-topo h2 {
+        font-size: 1.28rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0 0 6px;
+        border: none;
+        padding: 0;
+      }
+      .login-topo p {
+        font-size: 0.84rem;
+        color: #dcfce7;
+        margin: 0;
+        line-height: 1.45;
+      }
+      .login-corpo {
+        padding: 26px 28px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .login-campo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .login-campo label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1e293b;
+      }
+      .login-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .login-input-wrap input {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 14px;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0f172a;
+        background: #f8fafc;
+        outline: none;
+        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+      }
+      .login-input-wrap input:focus {
+        border-color: #16a34a;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.16);
+      }
+      .btn-olho-senha {
+        position: absolute;
+        right: 8px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 6px 8px;
+        font-size: 1rem;
+        color: #475569;
+        border-radius: 6px;
+      }
+      .btn-olho-senha:hover { background: #e2e8f0; }
+      .login-manter-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        user-select: none;
+        cursor: pointer;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: #334155;
+        padding: 4px 0;
+      }
+      .login-manter-row input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #166534;
+        cursor: pointer;
+      }
+      .login-erro-box {
+        display: none;
+        background: #fef2f2;
+        border: 1px solid #fca5a5;
+        color: #991b1b;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+      .btn-entrar-sistema {
+        width: 100%;
+        min-height: 46px;
+        background: #166534;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.96rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.12s ease;
+      }
+      .btn-entrar-sistema:hover {
+        background: #15803d;
+      }
+      .btn-entrar-sistema:active {
+        transform: translateY(1px);
+      }
+      .login-rodape-nota {
+        text-align: center;
+        font-size: 0.76rem;
+        color: #64748b;
+        line-height: 1.4;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 14px;
+      }
+      .usuario-card-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+      .usuario-card-item.bloqueado {
+        background: #fef2f2;
+        border-color: #fecaca;
+      }
     </style>
   </head>
-  <body class="fonte-merriweather">
+  <body class="fonte-merriweather autenticacao-pendente">
+    <!-- Tela de Abertura Animada (10 segundos) -->
+    <div id="telaAberturaAnimada" class="tela-abertura" role="dialog" aria-label="Abertura do aplicativo PMCD">
+      <div class="abertura-grade-fundo"></div>
+      <div class="abertura-conteudo">
+        <div class="abertura-emblema-wrap">
+          <div class="abertura-anel-externo"></div>
+          <div class="abertura-anel-segundo"></div>
+          <svg class="abertura-svg-escudo" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path class="abertura-traco-escudo" d="M60 10L102 26V58C102 83.5 84 102.5 60 110C36 102.5 18 83.5 18 58V26L60 10Z" fill="rgba(22, 101, 52, 0.45)" stroke="#86efac" stroke-width="3.2" stroke-linejoin="round"/>
+            <path class="abertura-traco-folha" d="M60 32C45 41 39 56 44 71C48.5 82 60 88 60 88C60 88 71.5 82 76 71C81 56 75 41 60 32Z" fill="rgba(34, 197, 94, 0.25)" stroke="#dcfce7" stroke-width="2.6" stroke-linejoin="round"/>
+            <path class="abertura-traco-folha" d="M60 40V84M60 56L70 49M60 66L50 58" stroke="#bbf7d0" stroke-width="2.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="abertura-sigla">PMCD · Vigilância e Campo</div>
+        <h1 class="abertura-titulo">Lançamentos de Campo &amp; Produção</h1>
+        <p class="abertura-subtitulo">Programa Municipal de Controle da Dengue — Controle semanal, ciclos de visita e acompanhamento operacional em tempo real.</p>
+        <div class="abertura-pilares">
+          <span>Dashboard Executivo</span>
+          <span class="abertura-sep" aria-hidden="true">·</span>
+          <span>Lançamentos Diários</span>
+          <span class="abertura-sep" aria-hidden="true">·</span>
+          <span>Resumo do Ciclo</span>
+        </div>
+        <div class="abertura-progresso-box">
+          <div class="abertura-progresso-meta">
+            <span id="aberturaStatusTexto">Preparando ambiente do sistema...</span>
+            <span id="aberturaContagemTempo">10s</span>
+          </div>
+          <div class="abertura-progresso-trilha">
+            <div id="aberturaProgressoBarra" class="abertura-progresso-barra"></div>
+          </div>
+        </div>
+      </div>
+      <button type="button" id="btnPularAbertura" class="btn-pular-abertura">Pular abertura →</button>
+    </div>
+
+    <!-- Tela de Login Obrigatório -->
+    <div id="telaLoginSistema" class="tela-login" role="dialog" aria-modal="true" aria-labelledby="tituloLoginSistema">
+      <div class="login-cartao">
+        <div class="login-topo">
+          <div class="login-topo-icone" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dcfce7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <h2 id="tituloLoginSistema" class="login-titulo-serif">PMCD · Acesso Restrito</h2>
+          <p>Faça login com um usuário autorizado para acessar os lançamentos, relatórios e indicadores.</p>
+        </div>
+        <form id="formLoginSistema" class="login-corpo" autocomplete="on">
+          <div class="login-campo">
+            <label for="loginUsuario">Usuário</label>
+            <div class="login-input-wrap">
+              <input type="text" id="loginUsuario" name="username" autocomplete="username" placeholder="Digite seu nome de usuário" required />
+            </div>
+          </div>
+          <div class="login-campo">
+            <label for="loginSenha">Senha</label>
+            <div class="login-input-wrap">
+              <input type="password" id="loginSenha" name="password" autocomplete="current-password" placeholder="Digite sua senha" required style="padding-right: 44px;" />
+              <button type="button" id="btnAlternarVisibilidadeSenha" class="btn-olho-senha" title="Mostrar ou ocultar senha" aria-label="Mostrar ou ocultar senha">👁️</button>
+            </div>
+          </div>
+          <label class="login-manter-row" for="checkManterConectado">
+            <input type="checkbox" id="checkManterConectado" />
+            <span>Manter conectado neste dispositivo</span>
+          </label>
+          <div id="msgErroLogin" class="login-erro-box" role="alert"></div>
+          <button type="submit" id="btnEntrarSistema" class="btn-entrar-sistema">Entrar no Sistema</button>
+          <div class="login-rodape-nota">
+            Acesso exclusivo para o administrador e usuários previamente autorizados.
+          </div>
+        </form>
+      </div>
+    </div>
     <header>
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <h1>🌿 Lançamentos de Campo</h1>
@@ -825,10 +1310,13 @@
           </select>
         </div>
         <div class="acoes-backup">
+          <span id="badgeUsuarioLogado" style="font-size:0.78rem; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.28); color:#fff; font-weight:700; padding:4px 10px; border-radius:6px; display:none;">👤 Usuário</span>
+          <button class="btn-backup" id="btnGerenciarUsuarios" style="display:none; background:#0f766e; border-color:#5eead4;" title="Permitir, bloquear ou remover usuários com acesso ao aplicativo">👥 Acessos</button>
           <button class="btn-backup btn-baixar-html" id="btnBaixarCodigo">💻 Baixar index.html</button>
           <button class="btn-backup" id="btnExportarJSON">💾 Exportar JSON</button>
           <button class="btn-backup" id="btnImportarJSON">📂 Importar JSON</button>
           <button class="btn-backup" id="btnDiagnosticoRecuperacao" style="background:#059669; border-color:#34d399;" title="Verificar e restaurar lançamentos salvos no navegador">🔍 Recuperar Dados</button>
+          <button class="btn-backup" id="btnSairSistema" style="background:#991b1b; border-color:#fca5a5;" title="Encerrar sessão e bloquear o sistema">🚪 Sair</button>
           <button class="btn-backup" id="btnCompartilharAcesso" style="display: none;"></button>
           <input type="file" id="inputImportarJSON" accept=".json,application/json" style="display: none;" />
         </div>
@@ -1893,6 +2381,58 @@
       </div>
     </div>
 
+    <!-- Modal Gerenciar Acessos / Usuários Permitidos (Apenas Admin) -->
+    <div id="modalGerenciarUsuarios" class="modal-overlay">
+      <div class="modal-conteudo" style="max-width: 660px;">
+        <div class="modal-header">
+          <h3>👥 Gerenciar Usuários com Acesso</h3>
+          <button type="button" class="btn-fechar-modal" id="btnFecharModalUsuarios">&times;</button>
+        </div>
+        <div style="font-size: 0.82rem; color: #475569; line-height: 1.45;">
+          Controle quem pode entrar no aplicativo. Sem usuário autorizado e senha, o acesso fica totalmente bloqueado.
+        </div>
+        <div class="usuario-card-item" style="background:#f0fdf4; border-color:#86efac;">
+          <div>
+            <strong style="color:#14532d; font-size:0.9rem;">👑 Ricardo</strong>
+            <div style="font-size:0.76rem; color:#166534;">Login: <strong>Ricardo</strong> · Administrador Principal (Acesso Permanente)</div>
+          </div>
+          <span style="font-size:0.76rem; font-weight:800; color:#14532d;">✅ Sempre Ativo</span>
+        </div>
+        <form id="formNovoUsuarioPermitido" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:10px;">
+          <div style="font-weight:800; font-size:0.84rem; color:#1e293b;">➕ Permitir Novo Usuário</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px;">
+            <div>
+              <label for="novoUsuarioLogin" style="display:block; font-size:0.74rem; font-weight:700; color:#334155; margin-bottom:2px;">Usuário (Login):</label>
+              <input type="text" id="novoUsuarioLogin" placeholder="Ex: Maria" required style="width:100%; padding:6px 8px; border:1px solid #cbd5e1; border-radius:5px; font-size:0.82rem;" />
+            </div>
+            <div>
+              <label for="novoUsuarioNome" style="display:block; font-size:0.74rem; font-weight:700; color:#334155; margin-bottom:2px;">Nome Completo:</label>
+              <input type="text" id="novoUsuarioNome" placeholder="Ex: Maria Silva" style="width:100%; padding:6px 8px; border:1px solid #cbd5e1; border-radius:5px; font-size:0.82rem;" />
+            </div>
+            <div>
+              <label for="novoUsuarioSenha" style="display:block; font-size:0.74rem; font-weight:700; color:#334155; margin-bottom:2px;">Senha:</label>
+              <input type="text" id="novoUsuarioSenha" placeholder="Digite a senha" required style="width:100%; padding:6px 8px; border:1px solid #cbd5e1; border-radius:5px; font-size:0.82rem;" />
+            </div>
+            <div>
+              <label for="novoUsuarioPapel" style="display:block; font-size:0.74rem; font-weight:700; color:#334155; margin-bottom:2px;">Perfil:</label>
+              <select id="novoUsuarioPapel" style="width:100%; padding:6px 8px; border:1px solid #cbd5e1; border-radius:5px; font-size:0.82rem;">
+                <option value="editor">Editor (Padrão)</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end;">
+            <button type="submit" class="btn btn-verde" id="btnAdicionarUsuarioPermitido" style="padding:7px 14px; font-size:0.8rem; font-weight:700;">+ Permitir Acesso</button>
+          </div>
+        </form>
+        <div style="font-weight:800; font-size:0.84rem; color:#1e293b;">📋 Usuários Autorizados</div>
+        <div id="listaUsuariosPermitidos" style="display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto;"></div>
+        <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+          <button type="button" class="btn btn-cinza" id="btnFecharModalUsuarios2">Fechar</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyA1YbZ9uGY3WW5fiMLVpTC2_fC2qKB6vos",
@@ -1964,11 +2504,270 @@
         }
       }
       function inicializarModoAcesso() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const paramModo = (urlParams.get("modo") || urlParams.get("m") || "").toLowerCase();
-        const modoInicial = (paramModo === "leitura" || paramModo === "visualizador" || paramModo === "readonly") ? "leitura" : "admin";
         try { localStorage.removeItem(STORAGE_MODO_ACESSO); } catch(e) {}
-        aplicarModoAcesso(modoInicial, false);
+        aplicarModoAcesso("admin", false);
+      }
+      // ============ AUTENTICAÇÃO E TELA DE ABERTURA (10s) ============
+      const STORAGE_SESSAO_LOCAL = "pmcd_sessao_usuario_v1";
+      const STORAGE_USUARIOS_CACHE = "pmcd_usuarios_permitidos_cache_v1";
+      const ADMIN_PRINCIPAL = { usuario: "Ricardo", senha: "3106905", nome: "Ricardo", papel: "admin" };
+      const DURACAO_ABERTURA_MS = 10000;
+      let _sessaoUsuarioAtual = null;
+      let _aberturaFinalizada = false;
+      let _aberturaRafId = null;
+
+      function obterUsuariosPermitidos() {
+        let lista = [];
+        if (typeof estado !== "undefined" && estado && Array.isArray(estado.usuariosPermitidos)) {
+          lista = estado.usuariosPermitidos;
+        } else {
+          try {
+            const raw = localStorage.getItem(STORAGE_USUARIOS_CACHE);
+            if (raw) {
+              const p = JSON.parse(raw);
+              if (Array.isArray(p)) lista = p;
+            }
+          } catch(e) {}
+        }
+        return lista.filter(u => u && !u.removido && u.usuario);
+      }
+      function sincronizarCacheUsuariosPermitidos() {
+        try {
+          if (typeof estado !== "undefined" && estado && Array.isArray(estado.usuariosPermitidos)) {
+            localStorage.setItem(STORAGE_USUARIOS_CACHE, JSON.stringify(estado.usuariosPermitidos));
+          }
+        } catch(e) {}
+      }
+      function lerSessaoArmazenada() {
+        try {
+          const sLoc = localStorage.getItem(STORAGE_SESSAO_LOCAL);
+          if (sLoc) {
+            const parsed = JSON.parse(sLoc);
+            if (parsed && parsed.usuario) return parsed;
+          }
+        } catch(e) {}
+        try {
+          const sTab = sessionStorage.getItem(STORAGE_SESSAO_LOCAL);
+          if (sTab) {
+            const parsed = JSON.parse(sTab);
+            if (parsed && parsed.usuario) return parsed;
+          }
+        } catch(e) {}
+        return null;
+      }
+      function salvarSessaoArmazenada(sessao, manterConectado) {
+        try {
+          sessionStorage.setItem(STORAGE_SESSAO_LOCAL, JSON.stringify(sessao));
+          if (manterConectado) localStorage.setItem(STORAGE_SESSAO_LOCAL, JSON.stringify(sessao));
+          else localStorage.removeItem(STORAGE_SESSAO_LOCAL);
+        } catch(e) {}
+      }
+      function limparSessaoArmazenada() {
+        try { localStorage.removeItem(STORAGE_SESSAO_LOCAL); } catch(e) {}
+        try { sessionStorage.removeItem(STORAGE_SESSAO_LOCAL); } catch(e) {}
+      }
+      function validarCredenciaisLogin(usuarioRaw, senhaRaw) {
+        const uNorm = String(usuarioRaw || "").trim().toLowerCase();
+        const sNorm = String(senhaRaw || "");
+        if (!uNorm || !sNorm) return { ok: false, erro: "Informe usuário e senha." };
+        if (uNorm === ADMIN_PRINCIPAL.usuario.toLowerCase()) {
+          if (sNorm === ADMIN_PRINCIPAL.senha) {
+            return { ok: true, usuario: ADMIN_PRINCIPAL.usuario, nome: ADMIN_PRINCIPAL.nome, papel: "admin", id: "admin_principal" };
+          }
+          return { ok: false, erro: "❌ Usuário ou senha incorretos." };
+        }
+        const enc = obterUsuariosPermitidos().find(u => String(u.usuario || "").trim().toLowerCase() === uNorm);
+        if (!enc) return { ok: false, erro: "❌ Usuário ou senha incorretos." };
+        if (enc.ativo === false) return { ok: false, erro: "🚫 Seu acesso foi desativado pelo administrador." };
+        if (String(enc.senha || "") !== sNorm) return { ok: false, erro: "❌ Usuário ou senha incorretos." };
+        return { ok: true, usuario: enc.usuario, nome: enc.nome || enc.usuario, papel: enc.papel === "admin" ? "admin" : "editor", id: enc.id };
+      }
+      function sessaoAindaEhValida(sessao) {
+        if (!sessao || !sessao.usuario) return null;
+        const uNorm = String(sessao.usuario).trim().toLowerCase();
+        if (uNorm === ADMIN_PRINCIPAL.usuario.toLowerCase()) {
+          return { usuario: ADMIN_PRINCIPAL.usuario, nome: ADMIN_PRINCIPAL.nome, papel: "admin", id: "admin_principal", manterConectado: !!sessao.manterConectado };
+        }
+        const enc = obterUsuariosPermitidos().find(u => String(u.usuario || "").trim().toLowerCase() === uNorm);
+        if (!enc || enc.ativo === false) return null;
+        return { usuario: enc.usuario, nome: enc.nome || enc.usuario, papel: enc.papel === "admin" ? "admin" : "editor", id: enc.id, manterConectado: !!sessao.manterConectado };
+      }
+      function atualizarHeaderSessao() {
+        const bdg = document.getElementById("badgeUsuarioLogado");
+        const btnGer = document.getElementById("btnGerenciarUsuarios");
+        if (_sessaoUsuarioAtual) {
+          if (bdg) {
+            bdg.style.display = "inline-flex";
+            bdg.textContent = `${_sessaoUsuarioAtual.papel === "admin" ? "👑" : "👤"} ${_sessaoUsuarioAtual.nome || _sessaoUsuarioAtual.usuario}`;
+          }
+          if (btnGer) {
+            btnGer.style.display = _sessaoUsuarioAtual.papel === "admin" ? "inline-flex" : "none";
+          }
+        } else {
+          if (bdg) bdg.style.display = "none";
+          if (btnGer) btnGer.style.display = "none";
+        }
+      }
+      function desbloquearSistemaComSessao(sessao) {
+        _sessaoUsuarioAtual = sessao;
+        document.body.classList.remove("autenticacao-pendente");
+        const loginEl = document.getElementById("telaLoginSistema");
+        if (loginEl) loginEl.classList.remove("ativo");
+        aplicarModoAcesso("admin", false);
+        atualizarHeaderSessao();
+        try {
+          renderizar();
+          atualizarTotais();
+          if (document.getElementById("aba-dashboard")?.classList.contains("ativo")) renderizarDashboard();
+        } catch(e) {}
+      }
+      function bloquearSistemaParaLogin(msgErro = "") {
+        _sessaoUsuarioAtual = null;
+        limparSessaoArmazenada();
+        document.body.classList.add("autenticacao-pendente");
+        atualizarHeaderSessao();
+        fecharModalGerenciarUsuarios();
+        const loginEl = document.getElementById("telaLoginSistema");
+        const errEl = document.getElementById("msgErroLogin");
+        const inpU = document.getElementById("loginUsuario");
+        const inpS = document.getElementById("loginSenha");
+        if (inpS) inpS.value = "";
+        if (errEl) {
+          if (msgErro) { errEl.textContent = msgErro; errEl.style.display = "block"; }
+          else { errEl.textContent = ""; errEl.style.display = "none"; }
+        }
+        if (loginEl) loginEl.classList.add("ativo");
+        setTimeout(() => { if (inpU) inpU.focus(); }, 100);
+      }
+      function validarSessaoAposSync() {
+        if (document.body.classList.contains("autenticacao-pendente") || !_sessaoUsuarioAtual) return;
+        const valida = sessaoAindaEhValida(_sessaoUsuarioAtual);
+        if (!valida) {
+          bloquearSistemaParaLogin("🚫 Seu acesso foi revogado pelo administrador.");
+        } else {
+          _sessaoUsuarioAtual = valida;
+          atualizarHeaderSessao();
+        }
+      }
+      function concluirTelaAbertura() {
+        if (_aberturaFinalizada) return;
+        _aberturaFinalizada = true;
+        if (_aberturaRafId) { cancelAnimationFrame(_aberturaRafId); _aberturaRafId = null; }
+        const tela = document.getElementById("telaAberturaAnimada");
+        const sessaoSalva = sessaoAindaEhValida(lerSessaoArmazenada());
+        if (sessaoSalva) {
+          desbloquearSistemaComSessao(sessaoSalva);
+        } else {
+          bloquearSistemaParaLogin();
+        }
+        if (tela) {
+          tela.classList.add("ocultando");
+          setTimeout(() => { tela.style.display = "none"; }, 460);
+        }
+      }
+      function iniciarAnimacaoAbertura() {
+        const tela = document.getElementById("telaAberturaAnimada");
+        const barra = document.getElementById("aberturaProgressoBarra");
+        const tempoTxt = document.getElementById("aberturaContagemTempo");
+        const statusTxt = document.getElementById("aberturaStatusTexto");
+        if (!tela) { concluirTelaAbertura(); return; }
+        const inicio = performance.now();
+        const etapas = [
+          { t: 0, msg: "Iniciando PMCD..." },
+          { t: 0.28, msg: "Sincronizando base e programação anual..." },
+          { t: 0.60, msg: "Preparando indicadores e ciclos..." },
+          { t: 0.86, msg: "Verificando credenciais de acesso..." }
+        ];
+        function frame(agora) {
+          if (_aberturaFinalizada) return;
+          const decorrido = agora - inicio;
+          const p = Math.min(1, decorrido / DURACAO_ABERTURA_MS);
+          if (barra) barra.style.transform = `scaleX(${p.toFixed(4)})`;
+          if (tempoTxt) {
+            const rest = Math.max(0, Math.ceil((DURACAO_ABERTURA_MS - decorrido) / 1000));
+            tempoTxt.textContent = `${rest}s`;
+          }
+          if (statusTxt) {
+            let msg = etapas[0].msg;
+            for (let i = 0; i < etapas.length; i++) { if (p >= etapas[i].t) msg = etapas[i].msg; }
+            statusTxt.textContent = msg;
+          }
+          if (p >= 1) {
+            concluirTelaAbertura();
+          } else {
+            _aberturaRafId = requestAnimationFrame(frame);
+          }
+        }
+        _aberturaRafId = requestAnimationFrame(frame);
+      }
+      function renderizarListaUsuariosPermitidos() {
+        const cont = document.getElementById("listaUsuariosPermitidos");
+        if (!cont) return;
+        cont.innerHTML = "";
+        const usuarios = obterUsuariosPermitidos();
+        if (usuarios.length === 0) {
+          cont.innerHTML = `<div style="padding:14px; text-align:center; color:#64748b; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:0.8rem;">Nenhum usuário adicional autorizado ainda. Use o formulário acima para liberar acesso a outras pessoas.</div>`;
+          return;
+        }
+        usuarios.forEach(u => {
+          const ativo = u.ativo !== false;
+          const card = document.createElement("div");
+          card.className = `usuario-card-item ${ativo ? "" : "bloqueado"}`;
+          card.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:2px; min-width:180px;">
+              <div style="font-weight:800; font-size:0.86rem; color:${ativo ? "#0f172a" : "#991b1b"};">
+                ${u.papel === "admin" ? "🛡️" : "👤"} ${u.nome || u.usuario}
+                <span style="font-weight:600; font-size:0.76rem; color:#475569; margin-left:4px;">(login: ${u.usuario})</span>
+              </div>
+              <div style="font-size:0.74rem; color:${ativo ? "#15803d" : "#b91c1c"}; font-weight:700;">
+                ${ativo ? "✅ Ativo" : "🚫 Bloqueado"} · ${u.papel === "admin" ? "Administrador" : "Editor"}
+              </div>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-cinza btn-alt-senha-user" style="padding:4px 8px; font-size:0.74rem;">🔑 Senha</button>
+              <button type="button" class="btn ${ativo ? "btn-cinza" : "btn-verde"} btn-toggle-user" style="padding:4px 8px; font-size:0.74rem; ${ativo ? "background:#fef3c7; color:#92400e; border:1px solid #fcd34d;" : ""}">${ativo ? "🚫 Bloquear" : "✅ Liberar"}</button>
+              <button type="button" class="btn btn-cinza btn-rem-user" style="padding:4px 8px; font-size:0.74rem; background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;">🗑️</button>
+            </div>
+          `;
+          card.querySelector(".btn-alt-senha-user").addEventListener("click", () => {
+            const nova = prompt(`Nova senha para "${u.usuario}":`, u.senha || "");
+            if (nova === null) return;
+            if (!nova.trim()) { alert("⚠️ A senha não pode ficar vazia."); return; }
+            u.senha = nova.trim();
+            u.atualizadoEm = Date.now();
+            sincronizarCacheUsuariosPermitidos();
+            salvar();
+            renderizarListaUsuariosPermitidos();
+          });
+          card.querySelector(".btn-toggle-user").addEventListener("click", () => {
+            u.ativo = !ativo;
+            u.atualizadoEm = Date.now();
+            sincronizarCacheUsuariosPermitidos();
+            salvar();
+            renderizarListaUsuariosPermitidos();
+          });
+          card.querySelector(".btn-rem-user").addEventListener("click", () => {
+            if (!confirm(`Remover o acesso de "${u.usuario}"?`)) return;
+            u.removido = true;
+            u.ativo = false;
+            u.atualizadoEm = Date.now();
+            sincronizarCacheUsuariosPermitidos();
+            salvar();
+            renderizarListaUsuariosPermitidos();
+          });
+          cont.appendChild(card);
+        });
+      }
+      function abrirModalGerenciarUsuarios() {
+        if (!_sessaoUsuarioAtual || _sessaoUsuarioAtual.papel !== "admin") return;
+        const m = document.getElementById("modalGerenciarUsuarios");
+        if (!m) return;
+        renderizarListaUsuariosPermitidos();
+        m.classList.add("ativo");
+      }
+      function fecharModalGerenciarUsuarios() {
+        const m = document.getElementById("modalGerenciarUsuarios");
+        if (m) m.classList.remove("ativo");
       }
       function gerarUrlModo(modo) {
         try {
@@ -3223,6 +4022,21 @@
           resultado.ciclosConfig = { ...(resultado.ciclosConfig || {}), ...local.ciclosConfig };
         }
 
+        // 5a. Usuários Permitidos
+        if (Array.isArray(local.usuariosPermitidos) || Array.isArray(nuvem.usuariosPermitidos)) {
+          const mapaU = new Map();
+          const pushU = (u) => {
+            if (!u || !u.id) return;
+            const ant = mapaU.get(u.id);
+            const tsNovo = Number(u.atualizadoEm) || 0;
+            const tsAnt = ant ? (Number(ant.atualizadoEm) || 0) : -1;
+            if (!ant || tsNovo >= tsAnt) mapaU.set(u.id, JSON.parse(JSON.stringify(u)));
+          };
+          (nuvem.usuariosPermitidos || []).forEach(pushU);
+          (local.usuariosPermitidos || []).forEach(pushU);
+          resultado.usuariosPermitidos = Array.from(mapaU.values());
+        }
+
         // 5b. Semanas Inativas
         if (local.semanasInativas || nuvem.semanasInativas) {
           const resInat = { ...(nuvem.semanasInativas || {}) };
@@ -3328,6 +4142,7 @@
             sincronizarPeriodosSemanasCiclo();
             renderizar();
             atualizarTotais();
+            validarSessaoAposSync();
             // Propaga os dados mesclados para a nuvem para que outros dispositivos também recebam
             salvarNuvem(true);
           } else {
@@ -3339,6 +4154,7 @@
             sincronizarPeriodosSemanasCiclo();
             renderizar();
             atualizarTotais();
+            validarSessaoAposSync();
             atualizarStatusNuvem("☁️ Nuvem OK", "online");
           }
         }, err => {
@@ -3404,6 +4220,8 @@
 
         if (!estado.semanas) estado.semanas = {};
         if (!Array.isArray(estado.programacao)) estado.programacao = [];
+        if (!Array.isArray(estado.usuariosPermitidos)) estado.usuariosPermitidos = [];
+        sincronizarCacheUsuariosPermitidos();
         if (!estado.semanasInativas || typeof estado.semanasInativas !== "object") estado.semanasInativas = {};
         if (!estado.ciclosConfig) estado.ciclosConfig = {};
         if (!estado.cicloFiltroConsolidado) estado.cicloFiltroConsolidado = "1";
@@ -6501,8 +7319,99 @@
             if (e.key === "Escape") {
               fecharModalCompartilharAcesso();
               fecharModalLoginEditor();
+              fecharModalGerenciarUsuarios();
+              fecharModalGerenciarSemanasCiclo();
             }
           });
+
+          // Listeners da Abertura (10s), Login e Gerenciamento de Acessos
+          const btnPularAb = document.getElementById("btnPularAbertura");
+          if (btnPularAb) btnPularAb.addEventListener("click", concluirTelaAbertura);
+
+          const btnOlhoSenha = document.getElementById("btnAlternarVisibilidadeSenha");
+          if (btnOlhoSenha) {
+            btnOlhoSenha.addEventListener("click", () => {
+              const inp = document.getElementById("loginSenha");
+              if (!inp) return;
+              inp.type = inp.type === "password" ? "text" : "password";
+            });
+          }
+
+          const formLoginSis = document.getElementById("formLoginSistema");
+          if (formLoginSis) {
+            formLoginSis.addEventListener("submit", (e) => {
+              e.preventDefault();
+              const u = document.getElementById("loginUsuario")?.value || "";
+              const s = document.getElementById("loginSenha")?.value || "";
+              const manter = !!document.getElementById("checkManterConectado")?.checked;
+              const errEl = document.getElementById("msgErroLogin");
+              const res = validarCredenciaisLogin(u, s);
+              if (!res.ok) {
+                if (errEl) { errEl.textContent = res.erro; errEl.style.display = "block"; }
+                const inpS = document.getElementById("loginSenha");
+                if (inpS) { inpS.focus(); inpS.select(); }
+                return;
+              }
+              if (errEl) { errEl.textContent = ""; errEl.style.display = "none"; }
+              const sessao = { usuario: res.usuario, nome: res.nome, papel: res.papel, id: res.id, manterConectado: manter, autenticadoEm: Date.now() };
+              salvarSessaoArmazenada(sessao, manter);
+              desbloquearSistemaComSessao(sessao);
+            });
+          }
+
+          const btnSairSis = document.getElementById("btnSairSistema");
+          if (btnSairSis) {
+            btnSairSis.addEventListener("click", () => {
+              bloquearSistemaParaLogin();
+            });
+          }
+
+          const btnGerUsers = document.getElementById("btnGerenciarUsuarios");
+          if (btnGerUsers) btnGerUsers.addEventListener("click", abrirModalGerenciarUsuarios);
+          const btnFUser1 = document.getElementById("btnFecharModalUsuarios");
+          if (btnFUser1) btnFUser1.addEventListener("click", fecharModalGerenciarUsuarios);
+          const btnFUser2 = document.getElementById("btnFecharModalUsuarios2");
+          if (btnFUser2) btnFUser2.addEventListener("click", fecharModalGerenciarUsuarios);
+          const mGerUsers = document.getElementById("modalGerenciarUsuarios");
+          if (mGerUsers) mGerUsers.addEventListener("click", (e) => { if (e.target === mGerUsers) fecharModalGerenciarUsuarios(); });
+
+          const formNovoUser = document.getElementById("formNovoUsuarioPermitido");
+          if (formNovoUser) {
+            formNovoUser.addEventListener("submit", (e) => {
+              e.preventDefault();
+              if (!_sessaoUsuarioAtual || _sessaoUsuarioAtual.papel !== "admin") return;
+              const login = (document.getElementById("novoUsuarioLogin")?.value || "").trim();
+              const nome = (document.getElementById("novoUsuarioNome")?.value || "").trim() || login;
+              const senha = (document.getElementById("novoUsuarioSenha")?.value || "").trim();
+              const papel = document.getElementById("novoUsuarioPapel")?.value === "admin" ? "admin" : "editor";
+              if (!login || !senha) { alert("⚠️ Informe o usuário e a senha."); return; }
+              if (login.toLowerCase() === ADMIN_PRINCIPAL.usuario.toLowerCase()) {
+                alert("⚠️ O usuário 'Ricardo' já é o administrador principal.");
+                return;
+              }
+              const existentes = obterUsuariosPermitidos();
+              if (existentes.some(x => String(x.usuario || "").trim().toLowerCase() === login.toLowerCase())) {
+                alert(`⚠️ O usuário "${login}" já está cadastrado.`);
+                return;
+              }
+              if (!Array.isArray(estado.usuariosPermitidos)) estado.usuariosPermitidos = [];
+              estado.usuariosPermitidos.push({
+                id: "usr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+                usuario: login,
+                nome,
+                senha,
+                papel,
+                ativo: true,
+                removido: false,
+                criadoEm: Date.now(),
+                atualizadoEm: Date.now()
+              });
+              sincronizarCacheUsuariosPermitidos();
+              salvar();
+              formNovoUser.reset();
+              renderizarListaUsuariosPermitidos();
+            });
+          }
 
           atualizarTextoGeracao(); obterLocalizacao().then(() => atualizarTextoGeracao()).catch(() => {});
           renderizarTabelaProgramacao(); atualizarPreviewPeriodoCiclo();
@@ -6512,6 +7421,7 @@
           renderizar();
           atualizarTotais();
           alternarAba("dashboard");
+          iniciarAnimacaoAbertura();
           if (typeof window !== "undefined") {
             window.salvar = salvar;
             window.renderizar = renderizar;
@@ -6520,6 +7430,8 @@
             window.definirSemanaInativa = definirSemanaInativa;
             window.alternarSemanaInativa = alternarSemanaInativa;
             window.semanaEstaInativa = semanaEstaInativa;
+            window.concluirTelaAbertura = concluirTelaAbertura;
+            window.bloquearSistemaParaLogin = bloquearSistemaParaLogin;
           }
         } catch (eg) { console.error("[PMCD Erro]:", eg); }
       });
