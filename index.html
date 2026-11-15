@@ -2198,6 +2198,8 @@
       #aba-quarteiroes-liraa .btn-backup:hover { background: #065f46; }
       #aba-quarteiroes-liraa .btn-import { background: #475569; color: #fff; }
       #aba-quarteiroes-liraa .btn-import:hover { background: #334155; }
+      #aba-quarteiroes-liraa .btn-sync-boletins { background: #7c3aed; color: #fff; }
+      #aba-quarteiroes-liraa .btn-sync-boletins:hover { background: #6d28d9; }
       #aba-quarteiroes-liraa .btn-limpar-sel { background: #fff; color: #d97706; border-color: #fcd34d; }
       #aba-quarteiroes-liraa .btn-limpar-sel:hover { background: #fffbeb; }
       #aba-quarteiroes-liraa .btn-limpar-tudo { background: #fff; color: #b91c1c; border-color: #f87171; }
@@ -3839,6 +3841,7 @@
           <button type="button" class="btn btn-backup" id="btn-backup-ql">💾 Exportar Backup (.json)</button>
           <button type="button" class="btn btn-import" id="btn-import-ql">📂 Importar Backup</button>
           <input type="file" id="input-import" accept=".json" style="display:none">
+          <button type="button" class="btn btn-sync-boletins" id="btn-sync-boletins-ql">🔄 Atualizar dos Boletins</button>
           <button type="button" class="btn btn-limpar-sel" id="btn-limpar-sel-ql">🗑 Limpar Seleções</button>
           <button type="button" class="btn btn-limpar-tudo" id="btn-limpar-tudo-ql">⚠️ Limpar Tudo</button>
         </div>
@@ -4823,6 +4826,7 @@
           renderizarCabecalhoResumo();
           renderizarRodape();
           if (alvo === "liraa" && typeof renderizarIndicesLiraa === "function") renderizarIndicesLiraa();
+          if (alvo === "liraa" && typeof window._sincronizarQuarteiroesLiraaComBoletins === "function") window._sincronizarQuarteiroesLiraaComBoletins();
         } catch(e) { console.error("[SelecaoAtividade]", e); }
         salvar();
       }
@@ -6506,6 +6510,17 @@
             aplicarAtualizacaoReconhecimentoNuvem(dados, "Andamento");
           }
         }).catch(() => {});
+
+        // Ouvinte somente leitura para Boletins de Reconhecimento do Andamento dos quarteirões do LIRAa
+        try {
+          db.ref("andamento_quarteiroes_liraa/diario_producao_pmcd").on("value", snapshot => {
+            const val = snapshot.val();
+            const pQ = val && val.dadosFormularios && val.dadosFormularios.boletins && val.dadosFormularios.boletins.porQuarteirao;
+            if (pQ && typeof pQ === "object" && typeof window._sincronizarQuarteiroesLiraaComBoletins === "function") {
+              window._sincronizarQuarteiroesLiraaComBoletins({ cloudPorQ: pQ, cloudTs: Number(val.timestamp) || 0 });
+            }
+          }, () => {});
+        } catch (e) {}
       }
       function salvar() {
         if (estaModoLeitura()) return;
@@ -9824,6 +9839,7 @@
             if (id === "lancamentos") { ajustarSemanaAtivaParaProgramacao(false); renderizar(); atualizarTotais(); }
             if (id === "config-equipe") { renderizarConfigEquipe(); }
             if (id === "config-estrato") { renderizarConfigEstrato(); }
+            if (id === "quarteiroes-liraa" && typeof window._sincronizarQuarteiroesLiraaComBoletins === "function") { window._sincronizarQuarteiroesLiraaComBoletins(); }
             if (id === "producao-individual") { renderizarProducaoIndividual(); }
             if (id === "quarteiroes-designados") { renderizarQuarteiroesDesignados(); }
             if (id === "resumo-reconhecimento") {
@@ -10587,15 +10603,10 @@
               return { cabecalho, linhas, atualizadoEm: new Date().toISOString() };
             }
 
-            function salvarNoLocalStorage() {
+            function salvarNoLocalStorage(imediato = false) {
               clearTimeout(timeoutSalvar);
               const statusEl = secQL.querySelector("#status-storage");
-              if (statusEl) {
-                statusEl.textContent = "⏳ Salvando...";
-                statusEl.style.color = "#d97706";
-              }
-
-              timeoutSalvar = setTimeout(() => {
+              const gravar = () => {
                 try {
                   const dados = coletarDadosCompletos();
                   localStorage.setItem(STORAGE_KEY_QL, JSON.stringify(dados));
@@ -10606,7 +10617,18 @@
                 } catch (e) {
                   console.warn("[QuarteiroesLIRAa] Erro ao salvar:", e);
                 }
-              }, 250);
+              };
+
+              if (imediato) {
+                gravar();
+                return;
+              }
+
+              if (statusEl) {
+                statusEl.textContent = "⏳ Salvando...";
+                statusEl.style.color = "#d97706";
+              }
+              timeoutSalvar = setTimeout(gravar, 250);
             }
 
             function restaurarDadosCompletos(dados) {
@@ -10854,11 +10876,247 @@
               }
             }
 
+            function normalizarChaveQuarteiraoQL(val) {
+              if (val === null || val === undefined) return "";
+              let s = String(val).trim();
+              if (!s || s === "_legacy") return "";
+              s = s.replace(/^quarteir[aã]o\s*/i, "").trim();
+              if (/^\d+$/.test(s)) {
+                const n = parseInt(s, 10);
+                return isNaN(n) ? s : String(n);
+              }
+              return s.toLowerCase();
+            }
+
+            function imovelTemComplementoBoletimQL(l) {
+              if (!l || typeof l !== "object") return false;
+              if (String(l.comp || "").trim() !== "") return true;
+              const numStr = String(l.numero || "").trim();
+              const seqStr = String(l.seq || "").trim();
+              if (/complemento|\bcomp\.?\s*[a-z0-9]/i.test(numStr) || /complemento|\bcomp\.?\s*[a-z0-9]/i.test(seqStr)) {
+                return true;
+              }
+              return false;
+            }
+
+            function extrairContagemBoletimQuarteiraoQL(form) {
+              if (!form || typeof form !== "object") return null;
+              const countsImoveis = { R: 0, C: 0, TB: 0, PE: 0, O: 0 };
+              let preenchidos = 0;
+              let teveLinhasOriginais = false;
+              const imoveis = form.imoveis || {};
+
+              Object.keys(imoveis).forEach(k => {
+                const l = imoveis[k];
+                if (!l || typeof l !== "object") return;
+                const temTextoBruto = Boolean(
+                  (l.rua && String(l.rua).trim()) ||
+                  (l.numero && String(l.numero).trim()) ||
+                  (l.comp && String(l.comp).trim()) ||
+                  (l.seq && String(l.seq).trim()) ||
+                  (l.tipo && String(l.tipo).trim())
+                );
+                if (!temTextoBruto) return;
+                teveLinhasOriginais = true;
+                if (imovelTemComplementoBoletimQL(l)) return;
+                preenchidos++;
+                const tipo = String(l.tipo || "").trim().toUpperCase();
+                if (tipo && Object.prototype.hasOwnProperty.call(countsImoveis, tipo)) {
+                  countsImoveis[tipo]++;
+                }
+              });
+
+              const totalImoveis = countsImoveis.R + countsImoveis.C + countsImoveis.TB + countsImoveis.PE + countsImoveis.O;
+
+              const countsResumo = { R: 0, C: 0, TB: 0, PE: 0, O: 0 };
+              if (!teveLinhasOriginais && totalImoveis === 0 && preenchidos === 0 && form.resumo) {
+                const paginasArr = Array.isArray(form.resumo)
+                  ? form.resumo
+                  : Object.keys(form.resumo).map(k => form.resumo[k]);
+                paginasArr.forEach(r => {
+                  if (!r || typeof r !== "object") return;
+                  countsResumo.R += parseInt(r.residencia || "0", 10) || 0;
+                  countsResumo.C += parseInt(r.comercio || "0", 10) || 0;
+                  countsResumo.TB += parseInt(r.terreno || "0", 10) || 0;
+                  countsResumo.PE += parseInt(r.ponto || "0", 10) || 0;
+                  countsResumo.O += parseInt(r.outros || "0", 10) || 0;
+                });
+              }
+              const totalResumo = countsResumo.R + countsResumo.C + countsResumo.TB + countsResumo.PE + countsResumo.O;
+
+              const usarImoveis = teveLinhasOriginais || preenchidos > 0 || totalImoveis >= totalResumo;
+              const c = usarImoveis ? countsImoveis : countsResumo;
+              const total = c.R + c.C + c.TB + c.PE + c.O;
+              if (total <= 0) return null;
+              return { R: c.R, C: c.C, TB: c.TB, PE: c.PE, O: c.O, total };
+            }
+
+            function lerPorQuarteiraoStorageQL(keyPrimaria, keysBackup) {
+              try {
+                const raw = localStorage.getItem(keyPrimaria);
+                if (raw) {
+                  const obj = JSON.parse(raw);
+                  const pQ = obj && obj.boletins && obj.boletins.porQuarteirao;
+                  if (pQ && typeof pQ === "object" && Object.keys(pQ).length > 0) return pQ;
+                }
+              } catch (e) {}
+              for (const bKey of (keysBackup || [])) {
+                try {
+                  const rawB = localStorage.getItem(bKey);
+                  if (rawB) {
+                    const objB = JSON.parse(rawB);
+                    const pQ = objB && objB.dadosFormularios && objB.dadosFormularios.boletins && objB.dadosFormularios.boletins.porQuarteirao;
+                    if (pQ && typeof pQ === "object" && Object.keys(pQ).length > 0) return pQ;
+                  }
+                } catch (e) {}
+              }
+              return {};
+            }
+
+            let cacheCloudBoletinsLiraaQL = null;
+            let cacheCloudBoletinsLiraaTsQL = 0;
+
+            function coletarTotaisBoletinsLiraaQL(cloudPorQ = null, cloudTs = 0) {
+              const resultado = {};
+              if (cloudPorQ && typeof cloudPorQ === "object") {
+                cacheCloudBoletinsLiraaQL = cloudPorQ;
+                cacheCloudBoletinsLiraaTsQL = Number(cloudTs) || 0;
+              }
+
+              const liraaPorQ = lerPorQuarteiraoStorageQL(
+                "diario_liraa_formularios_novos_v1",
+                ["diario_liraa_backup_completo_offline_v1", "diario_liraa_backup_emergencia_v1"]
+              );
+              const tsLiraa = (function() {
+                try { return parseInt(localStorage.getItem("diario_liraa_ultimo_timestamp_v1") || "0", 10) || 0; }
+                catch (e) { return 0; }
+              })();
+
+              Object.keys(liraaPorQ).forEach(qKey => {
+                const normQ = normalizarChaveQuarteiraoQL(qKey);
+                if (!normQ) return;
+                const contagem = extrairContagemBoletimQuarteiraoQL(liraaPorQ[qKey]);
+                if (contagem) resultado[normQ] = contagem;
+              });
+
+              const fonteCloud = cloudPorQ || cacheCloudBoletinsLiraaQL;
+              const tsNuvem = cloudPorQ ? (Number(cloudTs) || 0) : cacheCloudBoletinsLiraaTsQL;
+              if (fonteCloud && typeof fonteCloud === "object") {
+                Object.keys(fonteCloud).forEach(qKey => {
+                  const normQ = normalizarChaveQuarteiraoQL(qKey);
+                  if (!normQ) return;
+                  if (!resultado[normQ] || (tsNuvem > tsLiraa && tsLiraa > 0)) {
+                    const contagem = extrairContagemBoletimQuarteiraoQL(fonteCloud[qKey]);
+                    if (contagem) resultado[normQ] = contagem;
+                  }
+                });
+              }
+
+              // Caso o usuário tenha registrado Boletins no Ciclo e ainda não tenha aberto o módulo Andamento LIRAa,
+              // aproveita os quarteirões com imóveis sem complemento que ainda não constam no cache local do LIRAa.
+              const cicloPorQ = lerPorQuarteiraoStorageQL(
+                "diario_formularios_novos_v1",
+                ["diario_backup_completo_offline_v1", "diario_backup_emergencia_v1"]
+              );
+              Object.keys(cicloPorQ).forEach(qKey => {
+                const normQ = normalizarChaveQuarteiraoQL(qKey);
+                if (!normQ || resultado[normQ]) return;
+                const contagem = extrairContagemBoletimQuarteiraoQL(cicloPorQ[qKey]);
+                if (contagem) resultado[normQ] = contagem;
+              });
+
+              return resultado;
+            }
+
+            function sincronizarQuantitativosComBoletinsLiraa(opcoes = {}) {
+              const mapaBoletins = coletarTotaisBoletinsLiraaQL(
+                opcoes.cloudPorQ || null,
+                opcoes.cloudTs || 0
+              );
+              const chavesDisp = Object.keys(mapaBoletins);
+              if (chavesDisp.length === 0) {
+                return { atualizados: 0, correspondencias: 0 };
+              }
+
+              let atualizados = 0;
+              let correspondencias = 0;
+              let mudouSelecionada = false;
+
+              secQL.querySelectorAll(".tabela-dados tbody tr:not(.total)").forEach(tr => {
+                const quartRaw = tr.children[1].textContent.trim();
+                if (!quartRaw) return;
+                const normQ = normalizarChaveQuarteiraoQL(quartRaw);
+                if (!normQ) return;
+
+                const dadosB = mapaBoletins[normQ];
+                if (!dadosB || dadosB.total <= 0) return;
+
+                correspondencias++;
+                const novosValores = [
+                  String(dadosB.R),
+                  String(dadosB.C),
+                  String(dadosB.TB),
+                  String(dadosB.PE),
+                  String(dadosB.O)
+                ];
+
+                let linhaAlterada = false;
+                for (let idx = 0; idx < COLUNAS_SOMA.length; idx++) {
+                  const colIdx = COLUNAS_SOMA[idx];
+                  if (tr.children[colIdx].textContent.trim() !== novosValores[idx]) {
+                    tr.children[colIdx].textContent = novosValores[idx];
+                    linhaAlterada = true;
+                  }
+                }
+
+                const totalAntes = tr.children[COL_TOTAL_LINHA].textContent.trim();
+                const liraaAntes = tr.children[COL_LIRAA].textContent.trim();
+                recalcularTotalLinha(tr);
+                if (
+                  tr.children[COL_TOTAL_LINHA].textContent.trim() !== totalAntes ||
+                  tr.children[COL_LIRAA].textContent.trim() !== liraaAntes
+                ) {
+                  linhaAlterada = true;
+                }
+
+                if (linhaAlterada) {
+                  atualizados++;
+                  if (tr.classList.contains("selecionada")) {
+                    mudouSelecionada = true;
+                  }
+                }
+              });
+
+              if (atualizados > 0) {
+                recalcularTodosOsTotais();
+                if (mudouSelecionada) {
+                  atualizarTabelaLiraa();
+                }
+                salvarNoLocalStorage(true);
+              }
+
+              return { atualizados, correspondencias };
+            }
+
+            window._sincronizarQuarteiroesLiraaComBoletins = sincronizarQuantitativosComBoletinsLiraa;
+
             secQL.querySelector("#btn-pdf-acao")?.addEventListener("click", gerarPDFQuarteiroesLiraa);
             secQL.querySelector("#btn-print-ql")?.addEventListener("click", () => window.print());
             secQL.querySelector("#btn-backup-ql")?.addEventListener("click", exportarBackup);
             secQL.querySelector("#btn-import-ql")?.addEventListener("click", () => secQL.querySelector("#input-import")?.click());
             secQL.querySelector("#input-import")?.addEventListener("change", importarBackup);
+            secQL.querySelector("#btn-sync-boletins-ql")?.addEventListener("click", () => {
+              const res = sincronizarQuantitativosComBoletinsLiraa();
+              if (typeof PMCD !== "undefined" && PMCD.toast) {
+                if (res.atualizados > 0) {
+                  PMCD.toast.success(`${res.atualizados} quarteirão(ões) atualizado(s) com os Boletins de Reconhecimento!`);
+                } else if (res.correspondencias > 0) {
+                  PMCD.toast.info("Os quantitativos dos quarteirões correspondentes já estão atualizados.");
+                } else {
+                  PMCD.toast.info("Nenhum quarteirão correspondente com imóveis registrados foi encontrado nos Boletins.");
+                }
+              }
+            });
             secQL.querySelector("#btn-limpar-sel-ql")?.addEventListener("click", limparSelecoes);
             secQL.querySelector("#btn-limpar-tudo-ql")?.addEventListener("click", () => {
               const bar = secQL.querySelector("#qlConfirmLimparBar");
@@ -10883,6 +11141,28 @@
               atualizarTabelaLiraa();
               recalcularTodosOsTotais();
             }
+
+            sincronizarQuantitativosComBoletinsLiraa();
+
+            window.addEventListener("storage", e => {
+              if (!e || !e.key) return;
+              if ([
+                "diario_liraa_formularios_novos_v1",
+                "diario_liraa_backup_completo_offline_v1",
+                "diario_liraa_backup_emergencia_v1",
+                "diario_formularios_novos_v1",
+                "diario_backup_completo_offline_v1",
+                "diario_backup_emergencia_v1"
+              ].includes(e.key)) {
+                sincronizarQuantitativosComBoletinsLiraa();
+              }
+            });
+
+            document.addEventListener("visibilitychange", () => {
+              if (document.visibilityState === "visible") {
+                sincronizarQuantitativosComBoletinsLiraa();
+              }
+            });
           })();
         } catch (eg) { console.error("[PMCD Erro]:", eg); }
       });
