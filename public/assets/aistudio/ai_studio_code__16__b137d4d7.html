@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Quarteirões para o LIRAa</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root {
+    --cabecalho-tabela: #1e293b;
+    --cabecalho-liraa: #c2410c;
+    --fundo-zebrado: #f8fafc;
+    --borda-preta: #000000;
+    --posicao-bg: #f1f5f9;
+    --total-col-bg: #e2e8f0;
+    --liraa-col-bg: #fef3c7;
+    --liraa-col-texto: #9a3412;
+    --sel-bg: #ecfdf5;
+    --sel-posicao-bg: #059669;
+    --sel-liraa-bg: #fde68a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 16px;
+    background: #e2e8f0;
+    color: #000;
+  }
+
+  .topo { text-align: center; margin-bottom: 8px; }
+  .topo h1 { color: #000; font-size: 20px; margin: 0; font-weight: 900; text-transform: uppercase; }
+  .topo p { color: #475569; font-size: 13px; margin: 3px 0 0; font-weight: bold; }
+
+  /* Indicador de Status do Salvamento */
+  .status-salvamento {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #059669;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 4px;
+    transition: all .2s;
+  }
+
+  .barra-acoes {
+    display: flex; justify-content: center; gap: 8px;
+    margin: 10px 0 16px; flex-wrap: wrap;
+  }
+  .btn {
+    padding: 7px 14px; border: 1px solid transparent; border-radius: 5px; cursor: pointer;
+    font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .btn-pdf { background: #0f172a; color: #fff; }
+  .btn-pdf:hover { background: #334155; }
+  .btn-print { background: #2563eb; color: #fff; }
+  .btn-print:hover { background: #1d4ed8; }
+  .btn-backup { background: #047857; color: #fff; }
+  .btn-backup:hover { background: #065f46; }
+  .btn-import { background: #475569; color: #fff; }
+  .btn-import:hover { background: #334155; }
+  .btn-limpar-sel { background: #fff; color: #d97706; border-color: #fcd34d; }
+  .btn-limpar-sel:hover { background: #fffbeb; }
+  .btn-limpar-tudo { background: #fff; color: #b91c1c; border-color: #f87171; }
+  .btn-limpar-tudo:hover { background: #fef2f2; }
+
+  .aviso {
+    background: #fff; border-left: 4px solid #0f172a;
+    padding: 8px 12px; border-radius: 4px;
+    margin: 0 auto 16px; font-size: 12px; max-width: 900px;
+    color: #334155; border: 1px solid #cbd5e1; border-left-width: 4px;
+  }
+
+  /* ============================================================
+     CONTAINER DAS PÁGINAS A4
+     ============================================================ */
+  #conteudo-pdf {
+    width: 820px;
+    margin: 0 auto;
+  }
+
+  .folha-a4 {
+    width: 820px;
+    height: 1140px;
+    background: #fff;
+    padding: 16px 22px;
+    margin: 0 auto 24px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .folha-cabecalho-titulo {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 6px;
+  }
+  .folha-cabecalho-titulo h2 {
+    font-size: 14px;
+    margin: 0;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .folha-cabecalho-titulo span {
+    font-size: 10.5px;
+    font-weight: bold;
+    color: #334155;
+  }
+
+  /* ============ CABEÇALHO CADASTRAL ============ */
+  .tabela-identificacao {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1.5px solid #000;
+    margin-bottom: 8px;
+    font-size: 9px;
+  }
+  .tabela-identificacao td {
+    border: 1px solid #000;
+    padding: 2.5px 5px;
+    vertical-align: middle;
+    text-align: left;
+  }
+  .tabela-identificacao td.campo-label {
+    background: #f1f5f9;
+    font-weight: bold;
+    color: #000;
+    width: 17%;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+  .tabela-identificacao td.campo-valor {
+    background: #fff;
+    width: 33%;
+    font-weight: 600;
+    outline: none;
+    cursor: text;
+  }
+  .tabela-identificacao td.campo-valor:focus {
+    background: #eff6ff;
+  }
+
+  /* Grid 2 Colunas */
+  .grid-duplo {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .coluna-tabela {
+    display: table-cell;
+    width: 49%;
+    vertical-align: top;
+  }
+  .coluna-espaco {
+    display: table-cell;
+    width: 2%;
+  }
+
+  /* ============ TABELAS E BORDAS PRETAS ============ */
+  table.tabela-dados, table#tabela-liraa {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 9.5px;
+    background: #fff;
+    border: 1.5px solid var(--borda-preta);
+    font-variant-numeric: tabular-nums;
+    table-layout: fixed;
+  }
+
+  thead th {
+    background: var(--cabecalho-tabela);
+    color: #ffffff;
+    font-weight: 700;
+    padding: 3.5px 1px;
+    font-size: 8.8px;
+    text-align: center;
+    border: 1px solid var(--borda-preta);
+    white-space: nowrap;
+  }
+  thead th.col-liraa {
+    background: var(--cabecalho-liraa);
+    color: #ffffff;
+  }
+
+  td {
+    border: 1px solid var(--borda-preta);
+    padding: 3.8px 1px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #000;
+    font-size: 9.5px;
+  }
+
+  tbody tr:nth-child(even):not(.total) td { background: var(--fundo-zebrado); }
+
+  td.posicao {
+    cursor: pointer; user-select: none; font-weight: bold;
+    color: #000; background: var(--posicao-bg);
+  }
+  td.posicao:hover { background: #cbd5e1; }
+
+  td.total-linha { background: var(--total-col-bg); font-weight: bold; color: #000; }
+  td.liraa-calc { background: var(--liraa-col-bg); color: var(--liraa-col-texto); font-weight: 800; font-size: 10px; }
+
+  td.editavel { background: #fff; cursor: text; }
+  tbody tr:nth-child(even):not(.total) td.editavel { background: var(--fundo-zebrado); }
+  td.editavel:hover { background: #e2e8f0; }
+  td.editavel:focus {
+    outline: 2px solid #000; outline-offset: -2px;
+    background: #fff !important;
+  }
+
+  tr.selecionada td { background: var(--sel-bg) !important; color: #064e3b; }
+  tr.selecionada td.posicao { background: var(--sel-posicao-bg) !important; color: #fff; }
+  tr.selecionada td.liraa-calc { background: var(--sel-liraa-bg) !important; color: #78350f; }
+
+  tr.total td {
+    background: #0f172a !important;
+    color: #fff !important;
+    font-weight: bold;
+    padding: 4px 1px;
+    border: 1px solid var(--borda-preta);
+  }
+  tr.total td[data-col="7"] { background: #334155 !important; }
+  tr.total td[data-col="8"] { background: var(--cabecalho-liraa) !important; color: #fff !important; }
+
+  /* ============ RODAPÉ DA PÁGINA 1: RESUMO DO LADO ESQUERDO ============ */
+  .rodape-pagina1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 8px;
+    gap: 16px;
+  }
+
+  .tabela-resumo {
+    width: 290px;
+    border: 1.5px solid #000;
+    margin-right: auto;
+    border-collapse: collapse;
+  }
+  .tabela-resumo th {
+    background: #0f172a;
+    color: #fff;
+    padding: 3.5px;
+    font-size: 9px;
+    text-transform: uppercase;
+    border: 1px solid #000;
+  }
+  .tabela-resumo td {
+    padding: 2.8px 6px;
+    font-size: 9px;
+    font-weight: bold;
+    border: 1px solid #000;
+  }
+  .tabela-resumo td.label-resumo {
+    background: #f1f5f9;
+    text-align: left;
+    width: 65%;
+  }
+  .tabela-resumo td.valor-resumo {
+    background: #fff;
+    text-align: right;
+  }
+  .tabela-resumo tr.total-geral td {
+    background: #0f172a !important;
+    color: #fff !important;
+    font-weight: 900;
+  }
+
+  .bloco-assinatura {
+    width: 380px;
+    border: 1.5px solid #000;
+    padding: 6px 10px;
+    font-size: 8.5px;
+    background: #fafafa;
+    line-height: 1.35;
+  }
+  .linha-campo-ass {
+    border-bottom: 1px solid #000;
+    margin-top: 18px;
+    text-align: center;
+    font-size: 8.5px;
+    font-weight: bold;
+    padding-top: 2px;
+  }
+
+  .rodape-pagina2 {
+    margin-top: 8px;
+    border: 1.5px solid #000;
+    padding: 6px 10px;
+    background: #fafafa;
+    font-size: 9px;
+  }
+
+  .vazio { color: #64748b; font-style: italic; padding: 14px; background: #f8fafc; }
+
+  /* ============================================================
+     IMPRESSÃO NATIVA DIRETA (Ctrl + P)
+     ============================================================ */
+  @media print {
+    @page { size: A4 portrait; margin: 4mm; }
+    body { background: #fff; padding: 0; margin: 0; }
+    .topo, .barra-acoes, .aviso { display: none !important; }
+    #conteudo-pdf { width: 100% !important; margin: 0 !important; }
+
+    .folha-a4 {
+      width: 100% !important;
+      height: 285mm !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      page-break-after: always;
+      break-after: page;
+    }
+    .folha-a4:last-of-type {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <h1>Quarteirões para o LIRAa</h1>
+  <p>Imóveis bases</p>
+  <div class="status-salvamento" id="status-storage">● Salvo no navegador</div>
+</div>
+
+<div class="barra-acoes">
+  <button class="btn btn-pdf" id="btn-pdf-acao" onclick="gerarPDF()">📄 Baixar PDF</button>
+  <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir (Ctrl+P)</button>
+  <button class="btn btn-backup" onclick="exportarBackup()">💾 Exportar Backup (.json)</button>
+  <button class="btn btn-import" onclick="document.getElementById('input-import').click()">📂 Importar Backup</button>
+  <input type="file" id="input-import" accept=".json" style="display:none" onchange="importarBackup(event)">
+  <button class="btn btn-limpar-sel" onclick="limparSelecoes()">🗑 Limpar Seleções</button>
+  <button class="btn btn-limpar-tudo" onclick="limparTudo()">⚠️ Limpar Tudo</button>
+</div>
+
+<div class="aviso">
+  <strong>Salvamento Automático Ativo:</strong> Seus dados ficam salvos neste navegador. Você pode fechar a página ou desligar o computador com segurança. Utilize <strong>Exportar Backup</strong> para salvar uma cópia definitiva em seu computador.
+</div>
+
+<div id="conteudo-pdf">
+
+  <!-- ===================== PÁGINA 1 ===================== -->
+  <div class="folha-a4" data-pdf-folha>
+    <div>
+      <div class="folha-cabecalho-titulo">
+        <h2>Quarteirões para o LIRAa</h2>
+        <span>Imóveis bases • Página 1</span>
+      </div>
+
+      <!-- CABEÇALHO CADASTRAL PÁGINA 1 -->
+      <table class="tabela-identificacao">
+        <tr>
+          <td class="campo-label">Unidade Federal:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="uf" spellcheck="false"></td>
+          <td class="campo-label">Subdistrito:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="subdistrito" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Distrito:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="distrito" spellcheck="false"></td>
+          <td class="campo-label">Sublocal:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="sublocal" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Município:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="municipio" spellcheck="false"></td>
+          <td class="campo-label">Categoria:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="categoria" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Localidade:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="localidade" spellcheck="false"></td>
+          <td class="campo-label">Total de Quarteirões:</td>
+          <td class="campo-valor campo-total-quarteiroes" contenteditable="true" data-sync="total_quart" spellcheck="false">0</td>
+        </tr>
+      </table>
+
+      <div class="grid-duplo">
+        <div class="coluna-tabela">
+          <table id="tabela-1" class="tabela-dados" data-offset="0">
+            <colgroup>
+              <col style="width:10%"><col style="width:16%"><col style="width:7%"><col style="width:7%">
+              <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:13%"><col style="width:12%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
+                <th>PE</th><th>O</th><th>TOTAL</th><th class="col-liraa">LIRAa</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="coluna-espaco"></div>
+
+        <div class="coluna-tabela">
+          <table id="tabela-2" class="tabela-dados" data-offset="32">
+            <colgroup>
+              <col style="width:10%"><col style="width:16%"><col style="width:7%"><col style="width:7%">
+              <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:13%"><col style="width:12%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
+                <th>PE</th><th>O</th><th>TOTAL</th><th class="col-liraa">LIRAa</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RODAPÉ DA PÁGINA 1 -->
+    <div class="rodape-pagina1">
+      <table class="tabela-resumo">
+        <thead>
+          <tr>
+            <th colspan="2">Resumo Geral de Imóveis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="label-resumo">R (Residencial)</td>
+            <td class="valor-resumo" id="resumo-r">0</td>
+          </tr>
+          <tr>
+            <td class="label-resumo">C (Comércio)</td>
+            <td class="valor-resumo" id="resumo-c">0</td>
+          </tr>
+          <tr>
+            <td class="label-resumo">TB (Terreno Baldio)</td>
+            <td class="valor-resumo" id="resumo-tb">0</td>
+          </tr>
+          <tr>
+            <td class="label-resumo">PE (Ponto Estratégico)</td>
+            <td class="valor-resumo" id="resumo-pe">0</td>
+          </tr>
+          <tr>
+            <td class="label-resumo">O (Outros)</td>
+            <td class="valor-resumo" id="resumo-o">0</td>
+          </tr>
+          <tr class="total-geral">
+            <td class="label-resumo" style="background:#0f172a; color:#fff;">TOTAL GERAL</td>
+            <td class="valor-resumo" id="resumo-total" style="background:#0f172a; color:#fff;">0</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="bloco-assinatura">
+        <strong>Controle e Validação dos Imóveis Bases</strong><br>
+        <span>Declaro que os dados dos estratos e contagem dos quarteirões conferem com o cadastro de campo atualizado.</span>
+        <div class="linha-campo-ass">Assinatura do Supervisor / Coordenador</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PÁGINA 2 ===================== -->
+  <div class="folha-a4" data-pdf-folha>
+    <div>
+      <div class="folha-cabecalho-titulo">
+        <h2>Quarteirões para o LIRAa</h2>
+        <span>Imóveis bases • Página 2</span>
+      </div>
+
+      <!-- CABEÇALHO CADASTRAL PÁGINA 2 -->
+      <table class="tabela-identificacao">
+        <tr>
+          <td class="campo-label">Unidade Federal:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="uf" spellcheck="false"></td>
+          <td class="campo-label">Subdistrito:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="subdistrito" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Distrito:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="distrito" spellcheck="false"></td>
+          <td class="campo-label">Sublocal:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="sublocal" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Município:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="municipio" spellcheck="false"></td>
+          <td class="campo-label">Categoria:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="categoria" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Localidade:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="localidade" spellcheck="false"></td>
+          <td class="campo-label">Total de Quarteirões:</td>
+          <td class="campo-valor campo-total-quarteiroes" contenteditable="true" data-sync="total_quart" spellcheck="false">0</td>
+        </tr>
+      </table>
+
+      <div class="grid-duplo">
+        <div class="coluna-tabela">
+          <table id="tabela-3" class="tabela-dados" data-offset="64">
+            <colgroup>
+              <col style="width:10%"><col style="width:16%"><col style="width:7%"><col style="width:7%">
+              <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:13%"><col style="width:12%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
+                <th>PE</th><th>O</th><th>TOTAL</th><th class="col-liraa">LIRAa</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="coluna-espaco"></div>
+
+        <div class="coluna-tabela">
+          <table id="tabela-4" class="tabela-dados" data-offset="96">
+            <colgroup>
+              <col style="width:10%"><col style="width:16%"><col style="width:7%"><col style="width:7%">
+              <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:13%"><col style="width:12%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
+                <th>PE</th><th>O</th><th>TOTAL</th><th class="col-liraa">LIRAa</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RODAPÉ DA PÁGINA 2 -->
+    <div class="rodape-pagina2">
+      <strong>Observações e Ocorrências de Campo:</strong><br>
+      <div style="height: 34px; border-bottom: 1px dotted #94a3b8; margin-top: 4px;"></div>
+      <div style="margin-top: 6px; display: flex; justify-content: space-between; font-size: 8.5px;">
+        <span>Data de Levantamento: ____/____/________</span>
+        <span>Município/Estrato: _________________________</span>
+        <span>Equipe Responsável: _________________________</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PÁGINA 3: TABELA LIRAa ===================== -->
+  <div class="folha-a4" data-pdf-folha>
+    <div>
+      <div class="folha-cabecalho-titulo">
+        <h2>Quarteirões para o LIRAa</h2>
+        <span>Quarteirões Selecionados para Inspeção</span>
+      </div>
+
+      <!-- CABEÇALHO CADASTRAL PÁGINA 3 -->
+      <table class="tabela-identificacao">
+        <tr>
+          <td class="campo-label">Unidade Federal:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="uf" spellcheck="false"></td>
+          <td class="campo-label">Subdistrito:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="subdistrito" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Distrito:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="distrito" spellcheck="false"></td>
+          <td class="campo-label">Sublocal:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="sublocal" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Município:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="municipio" spellcheck="false"></td>
+          <td class="campo-label">Categoria:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="categoria" spellcheck="false"></td>
+        </tr>
+        <tr>
+          <td class="campo-label">Localidade:</td>
+          <td class="campo-valor" contenteditable="true" data-sync="localidade" spellcheck="false"></td>
+          <td class="campo-label">Total de Quarteirões:</td>
+          <td class="campo-valor campo-total-quarteiroes" contenteditable="true" data-sync="total_quart" spellcheck="false">0</td>
+        </tr>
+      </table>
+
+      <table id="tabela-liraa">
+        <colgroup>
+          <col style="width:10%"><col style="width:16%"><col style="width:7%"><col style="width:7%">
+          <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:13%"><col style="width:12%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
+            <th>PE</th><th>O</th><th>TOTAL</th><th class="col-liraa">LIRAa</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const STORAGE_KEY = 'LIRAA_FORM_DATA_STORAGE';
+  const NUM_LINHAS = 32;
+  const NUM_COLUNAS = 9;
+  const COLUNAS_SOMA = [2, 3, 4, 5, 6];
+  const COL_TOTAL_LINHA = 7;
+  const COL_LIRAA = 8;
+  const selecionadas = new Map();
+
+  function criarLinhas(tabelaId) {
+    const tabela = document.querySelector(`#${tabelaId}`);
+    const tbody = tabela.querySelector('tbody');
+    const offset = parseInt(tabela.dataset.offset, 10) || 0;
+    tbody.innerHTML = '';
+
+    for (let i = 1; i <= NUM_LINHAS; i++) {
+      const numeroPosicao = offset + i;
+      const tr = document.createElement('tr');
+      tr.dataset.tabela = tabelaId;
+      tr.dataset.linha = i;
+      tr.dataset.posicao = numeroPosicao;
+
+      for (let c = 0; c < NUM_COLUNAS; c++) {
+        const td = document.createElement('td');
+        if (c === 0) {
+          td.textContent = numeroPosicao;
+          td.classList.add('posicao');
+          td.addEventListener('click', () => toggleLinha(tr));
+        } else if (c === COL_TOTAL_LINHA) {
+          td.classList.add('total-linha');
+        } else if (c === COL_LIRAA) {
+          td.classList.add('liraa-calc');
+        } else {
+          td.classList.add('editavel');
+          td.setAttribute('contenteditable', 'true');
+          td.setAttribute('spellcheck', 'false');
+        }
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+
+    const trTotal = document.createElement('tr');
+    trTotal.classList.add('total');
+    trTotal.dataset.tabela = tabelaId;
+
+    const tdTotalLabel = document.createElement('td');
+    tdTotalLabel.colSpan = 2;
+    tdTotalLabel.textContent = 'TOTAL';
+    trTotal.appendChild(tdTotalLabel);
+
+    for (let c = 2; c < NUM_COLUNAS; c++) {
+      const td = document.createElement('td');
+      td.dataset.col = c;
+      trTotal.appendChild(td);
+    }
+    tbody.appendChild(trTotal);
+  }
+
+  ['tabela-1','tabela-2','tabela-3','tabela-4'].forEach(criarLinhas);
+
+  function calcularLiraa(total) {
+    if (total <= 0) return '';
+    return String(Math.ceil(total / 5)).padStart(2, '0');
+  }
+
+  function recalcularTotalLinha(tr) {
+    if (tr.classList.contains('total')) return;
+    const valores = COLUNAS_SOMA.map(c => {
+      const v = parseInt(tr.children[c].textContent.trim(), 10);
+      return isNaN(v) ? 0 : v;
+    });
+    const soma = valores.reduce((a, b) => a + b, 0);
+    tr.children[COL_TOTAL_LINHA].textContent = soma > 0 ? soma : '';
+    tr.children[COL_LIRAA].textContent = calcularLiraa(soma);
+  }
+
+  function recalcularTotalTabela(tabelaId) {
+    const tabela = document.querySelector(`#${tabelaId}`);
+    if (!tabela) return;
+    const tbody = tabela.querySelector('tbody');
+    const linhas = Array.from(tbody.querySelectorAll('tr:not(.total)'));
+    const trTotal = tbody.querySelector('tr.total');
+    if (!trTotal) return;
+
+    const somas = {};
+    COLUNAS_SOMA.forEach(c => somas[c] = 0);
+    let somaTotalGeral = 0, somaLiraa = 0;
+
+    linhas.forEach(tr => {
+      COLUNAS_SOMA.forEach(c => {
+        const v = parseInt(tr.children[c].textContent.trim(), 10);
+        if (!isNaN(v)) somas[c] += v;
+      });
+      const t = parseInt(tr.children[COL_TOTAL_LINHA].textContent.trim(), 10);
+      if (!isNaN(t)) somaTotalGeral += t;
+      const l = parseInt(tr.children[COL_LIRAA].textContent.trim(), 10);
+      if (!isNaN(l)) somaLiraa += l;
+    });
+
+    COLUNAS_SOMA.forEach(c => {
+      const td = trTotal.querySelector(`td[data-col="${c}"]`);
+      if (td) td.textContent = somas[c] > 0 ? somas[c] : '';
+    });
+    const tdTotal = trTotal.querySelector(`td[data-col="${COL_TOTAL_LINHA}"]`);
+    if (tdTotal) tdTotal.textContent = somaTotalGeral > 0 ? somaTotalGeral : '';
+    const tdLiraa = trTotal.querySelector(`td[data-col="${COL_LIRAA}"]`);
+    if (tdLiraa) tdLiraa.textContent = somaLiraa > 0 ? String(somaLiraa).padStart(2, '0') : '';
+
+    recalcularResumoGeral();
+    atualizarContagemQuarteiroes();
+  }
+
+  function recalcularResumoGeral() {
+    let totR = 0, totC = 0, totTB = 0, totPE = 0, totO = 0;
+
+    ['tabela-1','tabela-2','tabela-3','tabela-4'].forEach(id => {
+      const tb = document.getElementById(id);
+      if (!tb) return;
+      const trTotal = tb.querySelector('tr.total');
+      if (!trTotal) return;
+
+      totR += parseInt(trTotal.querySelector('td[data-col="2"]')?.textContent || 0, 10) || 0;
+      totC += parseInt(trTotal.querySelector('td[data-col="3"]')?.textContent || 0, 10) || 0;
+      totTB += parseInt(trTotal.querySelector('td[data-col="4"]')?.textContent || 0, 10) || 0;
+      totPE += parseInt(trTotal.querySelector('td[data-col="5"]')?.textContent || 0, 10) || 0;
+      totO += parseInt(trTotal.querySelector('td[data-col="6"]')?.textContent || 0, 10) || 0;
+    });
+
+    const geral = totR + totC + totTB + totPE + totO;
+
+    document.getElementById('resumo-r').textContent = totR;
+    document.getElementById('resumo-c').textContent = totC;
+    document.getElementById('resumo-tb').textContent = totTB;
+    document.getElementById('resumo-pe').textContent = totPE;
+    document.getElementById('resumo-o').textContent = totO;
+    document.getElementById('resumo-total').textContent = geral;
+  }
+
+  function atualizarContagemQuarteiroes() {
+    let contagem = 0;
+    document.querySelectorAll('.tabela-dados tbody tr:not(.total)').forEach(tr => {
+      const quart = tr.children[1].textContent.trim();
+      const total = tr.children[COL_TOTAL_LINHA].textContent.trim();
+      if (quart !== '' || total !== '') contagem++;
+    });
+    document.querySelectorAll('.campo-total-quarteiroes').forEach(el => {
+      el.textContent = contagem;
+    });
+  }
+
+  function recalcularTodosOsTotais() {
+    ['tabela-1','tabela-2','tabela-3','tabela-4'].forEach(recalcularTotalTabela);
+  }
+
+  // ============================================================
+  // SINCRONIZAÇÃO DO CABEÇALHO
+  // ============================================================
+  document.addEventListener('input', e => {
+    const alvo = e.target.closest('[data-sync]');
+    if (!alvo) return;
+    const chave = alvo.dataset.sync;
+    const texto = alvo.textContent;
+
+    document.querySelectorAll(`[data-sync="${chave}"]`).forEach(campo => {
+      if (campo !== alvo) campo.textContent = texto;
+    });
+    salvarNoLocalStorage();
+  });
+
+  // ============================================================
+  // COLAR DO EXCEL
+  // ============================================================
+  function colarDoExcel(evento, tabela) {
+    const texto = (evento.clipboardData || window.clipboardData).getData('text/plain');
+    if (!texto) return;
+    evento.preventDefault();
+
+    const linhas = texto.replace(/\r/g, '').split('\n').filter(l => l.length > 0);
+    const alvo = evento.target.closest('td');
+    if (!alvo) return;
+
+    const tbody = tabela.querySelector('tbody');
+    const trAlvo = alvo.parentElement;
+    const todasAsLinhas = Array.from(tbody.querySelectorAll('tr:not(.total)'));
+    const idxLinhaIni = todasAsLinhas.indexOf(trAlvo);
+    const idxColIni = Array.from(trAlvo.children).indexOf(alvo);
+    if (idxLinhaIni < 0) return;
+
+    linhas.forEach((linhaTexto, i) => {
+      const idxLinha = idxLinhaIni + i;
+      if (idxLinha >= todasAsLinhas.length) return;
+      const celulas = linhaTexto.split('\t');
+      const tr = todasAsLinhas[idxLinha];
+
+      celulas.forEach((valor, j) => {
+        const idxCol = idxColIni + j;
+        if (idxCol >= NUM_COLUNAS || idxCol === 0 || idxCol === COL_TOTAL_LINHA || idxCol === COL_LIRAA) return;
+        tr.children[idxCol].textContent = valor.trim();
+      });
+      recalcularTotalLinha(tr);
+    });
+
+    recalcularTotalTabela(tabela.id);
+    atualizarTabelaLiraa();
+    salvarNoLocalStorage();
+  }
+
+  document.querySelectorAll('.tabela-dados').forEach(tabela => {
+    tabela.addEventListener('paste', e => colarDoExcel(e, tabela));
+  });
+
+  // ============================================================
+  // SELEÇÃO / TOGGLE
+  // ============================================================
+  function chaveLinha(tr) { return tr.dataset.posicao; }
+
+  function toggleLinha(tr) {
+    const chave = chaveLinha(tr);
+    if (selecionadas.has(chave)) {
+      tr.classList.remove('selecionada');
+      selecionadas.delete(chave);
+    } else {
+      tr.classList.add('selecionada');
+      selecionadas.set(chave, tr);
+    }
+    atualizarTabelaLiraa();
+    salvarNoLocalStorage();
+  }
+
+  function atualizarTabelaLiraa() {
+    const tbodyLiraa = document.querySelector('#tabela-liraa tbody');
+    tbodyLiraa.innerHTML = '';
+
+    const lista = Array.from(selecionadas.values()).sort(
+      (a, b) => parseInt(a.dataset.posicao) - parseInt(b.dataset.posicao)
+    );
+
+    if (lista.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = NUM_COLUNAS;
+      td.textContent = 'Nenhum quarteirão selecionado ainda.';
+      td.classList.add('vazio');
+      tr.appendChild(td);
+      tbodyLiraa.appendChild(tr);
+      return;
+    }
+
+    lista.forEach(origem => {
+      const tr = document.createElement('tr');
+      for (let i = 0; i < NUM_COLUNAS; i++) {
+        const td = document.createElement('td');
+        td.textContent = origem.children[i].textContent;
+        if (i === 0) td.classList.add('posicao');
+        if (i === COL_TOTAL_LINHA) td.classList.add('total-linha');
+        if (i === COL_LIRAA) td.classList.add('liraa-calc');
+        tr.appendChild(td);
+      }
+      tbodyLiraa.appendChild(tr);
+    });
+  }
+
+  function limparSelecoes() {
+    selecionadas.forEach(tr => tr.classList.remove('selecionada'));
+    selecionadas.clear();
+    atualizarTabelaLiraa();
+    salvarNoLocalStorage();
+  }
+
+  // ============================================================
+  // EDIÇÃO MANUAL
+  // ============================================================
+  document.querySelectorAll('.tabela-dados').forEach(tabela => {
+    tabela.addEventListener('input', e => {
+      const td = e.target.closest('td.editavel');
+      if (!td) return;
+      atualizarLinhaEEntorno(td);
+      salvarNoLocalStorage();
+    });
+
+    tabela.addEventListener('keydown', e => {
+      const td = e.target.closest('td.editavel');
+      if (!td) return;
+      if (e.key === 'Enter') { e.preventDefault(); td.blur(); }
+    });
+
+    tabela.addEventListener('paste', e => {
+      const td = e.target.closest('td.editavel');
+      if (!td) return;
+      const texto = (e.clipboardData || window.clipboardData).getData('text/plain');
+      if (/[\t\n\r]/.test(texto)) return;
+      e.preventDefault();
+      document.execCommand('insertText', false, texto);
+      salvarNoLocalStorage();
+    });
+  });
+
+  function atualizarLinhaEEntorno(td) {
+    const tr = td.parentElement;
+    if (!tr || tr.classList.contains('total')) return;
+    recalcularTotalLinha(tr);
+    const tabela = tr.closest('table');
+    if (tabela) recalcularTotalTabela(tabela.id);
+    if (selecionadas.has(chaveLinha(tr))) atualizarTabelaLiraa();
+  }
+
+  // ============================================================
+  // MOTOR DE ARMAZENAMENTO (LOCALSTORAGE + BACKUP JSON)
+  // ============================================================
+  let timeoutSalvar = null;
+
+  function salvarNoLocalStorage() {
+    clearTimeout(timeoutSalvar);
+    const statusEl = document.getElementById('status-storage');
+    statusEl.textContent = '⏳ Salvando...';
+    statusEl.style.color = '#d97706';
+
+    timeoutSalvar = setTimeout(() => {
+      const dados = coletarDadosCompletos();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
+      statusEl.textContent = '● Salvo no navegador';
+      statusEl.style.color = '#059669';
+    }, 250);
+  }
+
+  function coletarDadosCompletos() {
+    // 1. Cabeçalho
+    const cabecalho = {};
+    document.querySelectorAll('[data-sync]').forEach(campo => {
+      cabecalho[campo.dataset.sync] = campo.textContent;
+    });
+
+    // 2. Linhas das Tabelas
+    const linhas = [];
+    document.querySelectorAll('.tabela-dados tbody tr:not(.total)').forEach(tr => {
+      const pos = tr.dataset.posicao;
+      const celulas = [];
+      for (let c = 1; c <= 6; c++) {
+        celulas.push(tr.children[c].textContent);
+      }
+      const isSel = tr.classList.contains('selecionada');
+      linhas.push({ pos, celulas, isSel });
+    });
+
+    return { cabecalho, linhas, atualizadoEm: new Date().toISOString() };
+  }
+
+  function restaurarDadosCompletos(dados) {
+    if (!dados) return;
+
+    // 1. Restaurar Cabeçalho
+    if (dados.cabecalho) {
+      Object.keys(dados.cabecalho).forEach(chave => {
+        document.querySelectorAll(`[data-sync="${chave}"]`).forEach(campo => {
+          campo.textContent = dados.cabecalho[chave];
+        });
+      });
+    }
+
+    // 2. Restaurar Linhas das Tabelas
+    selecionadas.clear();
+    if (dados.linhas && Array.isArray(dados.linhas)) {
+      dados.linhas.forEach(item => {
+        const tr = document.querySelector(`.tabela-dados tbody tr[data-posicao="${item.pos}"]`);
+        if (!tr) return;
+
+        item.celulas.forEach((val, idx) => {
+          tr.children[idx + 1].textContent = val;
+        });
+
+        recalcularTotalLinha(tr);
+
+        if (item.isSel) {
+          tr.classList.add('selecionada');
+          selecionadas.set(chaveLinha(tr), tr);
+        } else {
+          tr.classList.remove('selecionada');
+        }
+      });
+    }
+
+    recalcularTodosOsTotais();
+    atualizarTabelaLiraa();
+  }
+
+  function exportarBackup() {
+    const dados = coletarDadosCompletos();
+    const nomeMuni = (dados.cabecalho && dados.cabecalho.municipio) ? dados.cabecalho.municipio.trim().replace(/\s+/g, '_') : 'LIRAa';
+    const dataHora = new Date().toISOString().slice(0, 10);
+    const nomeArquivo = `Backup_${nomeMuni}_${dataHora}.json`;
+
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeArquivo;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importarBackup(evento) {
+    const arquivo = evento.target.files[0];
+    if (!arquivo) return;
+
+    const leitor = new FileReader();
+    leitor.onload = function(e) {
+      try {
+        const dados = JSON.parse(e.target.result);
+        restaurarDadosCompletos(dados);
+        salvarNoLocalStorage();
+        alert('Backup importado com sucesso!');
+      } catch (err) {
+        alert('Erro ao ler o arquivo de backup. Verifique se é um arquivo .json válido.');
+      }
+    };
+    leitor.readAsText(arquivo);
+    evento.target.value = '';
+  }
+
+  function limparTudo() {
+    if (!confirm('Deseja realmente apagar todos os dados digitados e seleções feitas? Esta ação não pode ser desfeita.')) return;
+
+    document.querySelectorAll('[data-sync]').forEach(c => c.textContent = '');
+    document.querySelectorAll('.campo-total-quarteiroes').forEach(c => c.textContent = '0');
+
+    document.querySelectorAll('.tabela-dados tbody tr:not(.total)').forEach(tr => {
+      for (let c = 1; c <= 6; c++) tr.children[c].textContent = '';
+      tr.children[COL_TOTAL_LINHA].textContent = '';
+      tr.children[COL_LIRAA].textContent = '';
+      tr.classList.remove('selecionada');
+    });
+
+    selecionadas.clear();
+    recalcularTodosOsTotais();
+    atualizarTabelaLiraa();
+    localStorage.removeItem(STORAGE_KEY);
+    document.getElementById('status-storage').textContent = '● Dados limpos';
+  }
+
+  // ============================================================
+  // GERAÇÃO DE PDF
+  // ============================================================
+  async function gerarPDF() {
+    const btn = document.getElementById('btn-pdf-acao');
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '⏳ Processando...';
+    btn.disabled = true;
+
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+
+    try {
+      const { jsPDF } = window.jspdf || window;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const folhas = document.querySelectorAll('[data-pdf-folha]');
+      const A4_LARGURA = 210;
+      const MARGEM_LATERAL = 6;
+      const MARGEM_SUPERIOR = 6;
+      const LARGURA_UTIL = A4_LARGURA - (MARGEM_LATERAL * 2);
+
+      for (let i = 0; i < folhas.length; i++) {
+        const folha = folhas[i];
+
+        const canvas = await html2canvas(folha, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const imgH = (canvas.height * LARGURA_UTIL) / canvas.width;
+
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', MARGEM_LATERAL, MARGEM_SUPERIOR, LARGURA_UTIL, imgH);
+      }
+
+      pdf.save('Quarteiroes_LIRAa_Imoveis_Bases.pdf');
+    } catch (err) {
+      console.error('Erro na exportação:', err);
+      alert('Ocorreu um erro ao gerar o PDF. Você também pode usar "Imprimir" e salvar em PDF.');
+    } finally {
+      btn.innerHTML = textoOriginal;
+      btn.disabled = false;
+    }
+  }
+
+  // ============================================================
+  // CARREGAR DADOS SALVOS NA INICIALIZAÇÃO
+  // ============================================================
+  const dadosSalvos = localStorage.getItem(STORAGE_KEY);
+  if (dadosSalvos) {
+    try {
+      restaurarDadosCompletos(JSON.parse(dadosSalvos));
+    } catch(e) {
+      console.warn('Erro ao carregar dados salvos:', e);
+    }
+  } else {
+    atualizarTabelaLiraa();
+    recalcularTodosOsTotais();
+  }
+</script>
+
+</body>
+</html>

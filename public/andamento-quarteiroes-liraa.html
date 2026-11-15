@@ -1742,10 +1742,6 @@
   <button class="aba" data-aba="concluidos" onclick="trocarAba('concluidos')">✅ Concluídos</button>
   <button class="aba" data-aba="boletins" onclick="trocarAba('boletins')">📄 Boletins de Reconhecimento</button>
   <button class="aba" data-aba="resumo" onclick="trocarAba('resumo')">📑 Resumo de Reconhecimento</button>
-  <button class="aba" data-aba="bases" onclick="trocarAba('bases')">🏢 Bases</button>
-  <button class="aba" data-aba="basesliraa" onclick="trocarAba('basesliraa')">🏢 Bases+LIRAa</button>
-  <button class="aba" data-aba="coflagrados" onclick="trocarAba('coflagrados')">⚠️ Coflagrados</button>
-  <button class="aba" data-aba="resumogeral" onclick="trocarAba('resumogeral')">📊 Resumo Geral</button>
 </div>
 
 <div class="painel" id="painel-diario">
@@ -1861,87 +1857,6 @@
   <div id="tabelaResumo"></div>
 </div>
 
-<div class="painel oculto" id="painel-bases">
-  <div class="contador" id="contadorBases"></div>
-  <div class="info-regra-bases">
-    📌 Esta aba conta <b>somente imóveis SEM complemento</b>. Imóveis com o campo <b>Complemento</b> preenchido aparecem apenas em "Resumo de Reconhecimento".
-  </div>
-  <div class="barra-botoes-tabelas">
-    <button class="acao" onclick="adicionarPagina('bases')">➕ Nova Dupla de Tabelas</button>
-    <button class="acao sucesso" onclick="gerarPDF('bases')">📄 Gerar PDF</button>
-    <button class="acao" onclick="imprimir()">🖨️ Imprimir</button>
-  </div>
-  <div class="dica-scroll-tabela no-print">↔️ Deslize a tabela para o lado para visualizar todas as colunas</div>
-  <div id="tabelaBases"></div>
-</div>
-
-<div class="painel oculto" id="painel-basesliraa">
-  <div class="contador" id="contadorBasesLiraa"></div>
-  <div class="info-regra-bases">
-    📌 Esta aba possui o mesmo conteúdo de <b>Bases</b> (somente imóveis sem complemento) e adiciona a coluna <b>LIRAa</b> (imóveis visitados de 5 em 5: 1, 6, 11, etc.).<br>
-    <b>Seleção da Amostra:</b> Clique diretamente no número da coluna <b>Posição</b> para selecionar o quarteirão informado pela coordenação. Os quarteirões selecionados são reunidos automaticamente na tabela exclusiva abaixo.
-  </div>
-  <div class="barra-botoes-tabelas">
-    <button class="acao" onclick="adicionarPagina('basesliraa')">➕ Nova Dupla de Tabelas</button>
-    <button class="acao sucesso" onclick="gerarPDF('basesliraa')">📄 Gerar PDF (Geral)</button>
-    <button class="acao sucesso" onclick="gerarPDF('basesliraaselecionados')">📄 Gerar PDF (Selecionados LIRAa)</button>
-    <button class="acao" onclick="imprimir()">🖨️ Imprimir</button>
-    <button class="acao perigo" onclick="limparSelecaoLiraa()">🧹 Desmarcar Todos</button>
-  </div>
-
-  <div class="seletor-visualizacao-liraa no-print">
-    <span class="label-seletor-vis">Visualizar:</span>
-    <button type="button" class="btn-vis-liraa ativo" id="btnVisTodas" onclick="definirVisualizacaoLiraa('todas')">📑 Todas as Tabelas</button>
-    <button type="button" class="btn-vis-liraa" id="btnVisGeral" onclick="definirVisualizacaoLiraa('geral')">🏢 1. Tabela Geral (Seleção)</button>
-    <button type="button" class="btn-vis-liraa" id="btnVisSelecionados" onclick="definirVisualizacaoLiraa('selecionados')">🎯 2. Tabela Exclusiva LIRAa (<span id="badgeQtdLiraaSel">0</span>)</button>
-  </div>
-
-  <div id="cardResumoLiraa" class="card-resumo-liraa"></div>
-
-  <!-- 1. Tabela Geral de Bases + LIRAa -->
-  <div id="secaoBasesLiraaGeral">
-    <div class="titulo-secao-liraa">
-      <span>🏢 1. TABELA GERAL — BASES + LIRAa (Seleção por Quarteirão)</span>
-      <span style="font-size: 11px; font-weight: normal; opacity: 0.9;">Clique no número da Posição para selecionar</span>
-    </div>
-    <div class="dica-scroll-tabela no-print">↔️ Deslize a tabela para o lado para visualizar todas as colunas</div>
-    <div id="tabelaBasesLiraa"></div>
-  </div>
-
-  <!-- 2. Tabela Exclusiva para os Quarteirões Selecionados no LIRAa -->
-  <div id="secaoBasesLiraaSelecionados" style="margin-top: 25px;">
-    <div class="titulo-secao-liraa destaque-selecionados">
-      <span>🎯 2. TABELA EXCLUSIVA — QUARTEIRÕES SELECIONADOS PARA O LIRAa</span>
-      <span style="font-size: 11px; font-weight: normal; opacity: 0.9;">Amostra Oficial da Coordenação</span>
-    </div>
-    <div class="dica-scroll-tabela no-print">↔️ Deslize a tabela para o lado para visualizar todas as colunas</div>
-    <div id="tabelaLiraaSelecionados"></div>
-  </div>
-</div>
-
-<div class="painel oculto" id="painel-coflagrados">
-  <div class="contador" id="contadorCoflagrados"></div>
-  <div class="barra-botoes-tabelas">
-    <button class="acao info btn-toggle-selecao" id="btnModoSelecaoCoflagrados" onclick="alternarModoSelecao('coflagrados')">🔲 Selecionar Células</button>
-    <button class="acao" onclick="adicionarPagina('coflagrados')">➕ Nova Dupla de Tabelas</button>
-    <button class="acao sucesso" onclick="gerarPDF('coflagrados')">📄 Gerar PDF</button>
-    <button class="acao" onclick="imprimir()">🖨️ Imprimir</button>
-  </div>
-  <div class="dica-scroll-tabela no-print">↔️ Deslize a tabela para o lado para visualizar todas as colunas</div>
-  <div id="tabelaCoflagrados"></div>
-</div>
-
-<div class="painel oculto" id="painel-resumogeral">
-  <div class="contador" id="contadorResumoGeral"></div>
-  <div class="barra-botoes-tabelas">
-    <button class="acao" onclick="adicionarPagina('resumogeral')">➕ Nova Dupla de Tabelas</button>
-    <button class="acao sucesso" onclick="gerarPDF('resumogeral')">📄 Gerar PDF</button>
-    <button class="acao" onclick="imprimir()">🖨️ Imprimir</button>
-  </div>
-  <div class="dica-scroll-tabela no-print">↔️ Deslize a tabela para o lado para visualizar todas as colunas</div>
-  <div id="tabelaResumoGeral"></div>
-</div>
-
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDtsMZIl8JPmL0s0VdQR-v8m41HWP_lvDo",
@@ -1969,6 +1884,16 @@
   const STORAGE_PENDENTE_NUVEM = "diario_liraa_pendente_nuvem_v1";
   const STORAGE_ULTIMO_TS = "diario_liraa_ultimo_timestamp_v1";
   const STORAGE_BACKUP_COMPLETO = "diario_liraa_backup_completo_offline_v1";
+  const STORAGE_CICLO_BOLETINS_SYNC = "diario_liraa_ciclo_boletins_sync_v1";
+
+  // Chaves de leitura do módulo Ciclo para manter Boletins de Reconhecimento vinculados
+  const CICLO_STORAGE_FORMULARIOS = "diario_formularios_novos_v1";
+  const CICLO_STORAGE_CABECALHOS = "diario_cabecalhos_v1";
+  const CICLO_STORAGE_RODAPES = "diario_rodapes_v1";
+  const CICLO_STORAGE_PAGINAS = "diario_paginas_v1";
+  const CICLO_STORAGE_ULTIMO_TS = "diario_ultimo_timestamp_v1";
+  const CICLO_STORAGE_BACKUP_COMPLETO = "diario_backup_completo_offline_v1";
+  const CICLO_STORAGE_BACKUP_EMERGENCIA = "diario_backup_emergencia_v1";
 
   function normalizarArraySemanas(val) {
     if (!val) return [];
@@ -2107,11 +2032,7 @@
   const SUBTITULOS = {
     andamento: "Resumo de Reconhecimento",
     concluidos: "Resumo de Reconhecimento",
-    resumo: "Resumo de Reconhecimento",
-    bases: "Resumo de Reconhecimento - Bases",
-    basesliraa: "Resumo de Reconhecimento - Bases + LIRAa",
-    coflagrados: "Resumo de Reconhecimento - Coflagrados",
-    resumogeral: "Resumo de Reconhecimento - Geral"
+    resumo: "Resumo de Reconhecimento"
   };
 
   let dbRef = null;
@@ -2699,6 +2620,9 @@
       emHandshakeNuvem = navigator.onLine;
       atualizarBadgeNuvem(false);
       iniciarListenersNuvemAtiva();
+      if (typeof iniciarOuvinteBoletinsCicloNuvem === "function" && !usandoCicloReserva) {
+        iniciarOuvinteBoletinsCicloNuvem(true);
+      }
       return true;
     } catch (e) {
       console.error("Erro ao ativar nuvem reserva:", e);
@@ -2882,6 +2806,9 @@
       dadosFormularios = Object.assign({ boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, coflagrados: {} }, dados.dadosFormularios);
 
       garantirEstruturaBoletins();
+      if (typeof sincronizarBoletinsDoCicloLocal === "function") {
+        sincronizarBoletinsDoCicloLocal({ salvarNuvem: false });
+      }
 
       if (dados.liraaSelecionados && Array.isArray(dados.liraaSelecionados)) {
         quarteiroesLiraaSelecionados = new Set(dados.liraaSelecionados.map(String));
@@ -2908,10 +2835,6 @@
       recalcular(); atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
       atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
       renderizarResumoIntegrado();
-      renderizarBasesIntegrado();
-      renderizarBasesLiraaIntegrado();
-      renderizarCoflagrados();
-      renderizarResumoGeral();
 
       mostrarAviso("🔄 Sincronizado com a nuvem!");
     } catch (e) { console.error("Erro na sincronização remota:", e); }
@@ -2920,11 +2843,16 @@
   function trocarAba(nome) {
     if (typeof limparSelecaoCelulas === "function") limparSelecaoCelulas();
     if (typeof desativarModoSelecao === "function") desativarModoSelecao();
+    const abasPermitidas = ["diario", "semanal", "total", "informados", "andamento", "concluidos", "boletins", "resumo"];
+    if (!abasPermitidas.includes(nome)) nome = "diario";
     document.querySelectorAll(".aba").forEach(b => b.classList.toggle("ativa", b.dataset.aba === nome));
-    ["diario", "semanal", "total", "informados", "andamento", "concluidos", "boletins", "resumo", "bases", "basesliraa", "coflagrados", "resumogeral"].forEach(p => {
+    abasPermitidas.forEach(p => {
       const el = document.getElementById("painel-" + p);
       if (el) el.classList.toggle("oculto", p !== nome);
     });
+    if ((nome === "boletins" || nome === "resumo") && typeof sincronizarBoletinsDoCicloLocal === "function") {
+      sincronizarBoletinsDoCicloLocal({ salvarNuvem: true });
+    }
     if (nome === "semanal") atualizarResumoSemanal();
     if (nome === "total") atualizarTotalImoveis();
     if (nome === "informados") atualizarInformados();
@@ -2932,10 +2860,6 @@
     if (nome === "concluidos") atualizarConcluidos();
     if (nome === "boletins") renderizarFormularioBoletins();
     if (nome === "resumo") renderizarResumoIntegrado();
-    if (nome === "bases") renderizarBasesIntegrado();
-    if (nome === "basesliraa") renderizarBasesLiraaIntegrado();
-    if (nome === "coflagrados") renderizarCoflagrados();
-    if (nome === "resumogeral") renderizarResumoGeral();
   }
 
   function criarSemana(dadosSemana) {
@@ -3747,83 +3671,6 @@
     return resultado;
   }
 
-  function coletarBasesBoletins() {
-    const resultado = {};
-    const pQ = (dadosFormularios.boletins && dadosFormularios.boletins.porQuarteirao) || {};
-    Object.keys(pQ).forEach(q => {
-      const form = pQ[q];
-      if (!form) return;
-      const counts = { R: 0, C: 0, TB: 0, PE: 0, O: 0 };
-      const numPag = form.paginas || 1;
-      for (let p = 0; p < numPag; p++) {
-        for (let t = 1; t <= 2; t++) {
-          for (let i = 0; i < LINHAS_IMOVEIS_BOLETINS; i++) {
-            const k = `${p}_${t}_${i}`;
-            const l = form.imoveis && form.imoveis[k];
-            if (!l) continue;
-            const tipo = String(l.tipo || "").trim().toUpperCase();
-            if (!tipo || !Object.prototype.hasOwnProperty.call(counts, tipo)) continue;
-            const comp = String(l.comp || "").trim();
-            if (comp !== "") continue;
-            counts[tipo]++;
-          }
-        }
-      }
-      resultado[q] = {
-        R: counts.R, C: counts.C, TB: counts.TB, PE: counts.PE, O: counts.O,
-        total: counts.R + counts.C + counts.TB + counts.PE + counts.O
-      };
-    });
-    return resultado;
-  }
-
-  function coletarResumosGerais() {
-    const resultado = {};
-    const resumosB = coletarResumosBoletins();
-    Object.keys(resumosB).forEach(q => {
-      const d = resumosB[q];
-      resultado[q] = { R: d.R, C: d.C, TB: d.TB, PE: d.PE, O: d.O, total: d.total };
-    });
-
-    const reg = dadosFormularios.coflagrados || {};
-    Object.keys(reg).forEach(k => {
-      const l = reg[k] || {};
-      const q = String(l.q || "").trim();
-      if (!q) return;
-      if (!resultado[q]) resultado[q] = { R: 0, C: 0, TB: 0, PE: 0, O: 0, total: 0 };
-      resultado[q].R += parseInt(l.r, 10) || 0;
-      resultado[q].C += parseInt(l.c, 10) || 0;
-      resultado[q].TB += parseInt(l.tb, 10) || 0;
-      resultado[q].PE += parseInt(l.pe, 10) || 0;
-      resultado[q].O += parseInt(l.o, 10) || 0;
-    });
-
-    const setBoletins = new Set(Object.keys(resumosB));
-    const regLegacy = dadosFormularios.resumo || {};
-    const seenLegacy = new Set();
-    Object.keys(regLegacy).forEach(rowKey => {
-      const l = regLegacy[rowKey] || {};
-      const q = String(l.q || "").trim();
-      if (!q) return;
-      if (setBoletins.has(q)) return;
-      if (seenLegacy.has(q)) return;
-      seenLegacy.add(q);
-      if (!resultado[q]) resultado[q] = { R: 0, C: 0, TB: 0, PE: 0, O: 0, total: 0 };
-      resultado[q].R += parseInt(l.r, 10) || 0;
-      resultado[q].C += parseInt(l.c, 10) || 0;
-      resultado[q].TB += parseInt(l.tb, 10) || 0;
-      resultado[q].PE += parseInt(l.pe, 10) || 0;
-      resultado[q].O += parseInt(l.o, 10) || 0;
-    });
-
-    Object.keys(resultado).forEach(q => {
-      const d = resultado[q];
-      d.total = d.R + d.C + d.TB + d.PE + d.O;
-    });
-
-    return resultado;
-  }
-
   function criarTabelaResumoIntegrada(linhas, numInicial, badgeLabel, incluirLiraa = false) {
     const badge = badgeLabel !== undefined ? badgeLabel : "auto";
     const table = document.createElement("table");
@@ -4046,658 +3893,8 @@
     vincularEventosCabecalhoRodape();
   }
 
-  function renderizarBasesIntegrado() {
-    const container = document.getElementById("tabelaBases");
-    if (!container) return;
-    container.innerHTML = "";
-
-    const basesBoletins = coletarBasesBoletins();
-    const quarteiroesB = Object.keys(basesBoletins).sort((a, b) => {
-      if (a === "_legacy") return 1;
-      if (b === "_legacy") return -1;
-      return a.localeCompare(b, "pt-BR", { numeric: true });
-    });
-
-    const setQ = new Set(quarteiroesB);
-
-    const legacy = [];
-    const seen = new Set();
-    const reg = dadosFormularios.bases || {};
-    Object.keys(reg).forEach(rowKey => {
-      const l = reg[rowKey] || {};
-      const q = String(l.q || "").trim();
-      if (!q) return;
-      if (setQ.has(q)) return;
-      if (seen.has(q)) return;
-      seen.add(q);
-      legacy.push({
-        q,
-        R: parseInt(l.r, 10) || 0,
-        C: parseInt(l.c, 10) || 0,
-        TB: parseInt(l.tb, 10) || 0,
-        PE: parseInt(l.pe, 10) || 0,
-        O: parseInt(l.o, 10) || 0
-      });
-    });
-    legacy.sort((a, b) => a.q.localeCompare(b.q, "pt-BR", { numeric: true }));
-
-    const todasLinhas = [];
-    quarteiroesB.forEach(q => {
-      const d = basesBoletins[q];
-      todasLinhas.push({ q, tipo: "auto", R: d.R, C: d.C, TB: d.TB, PE: d.PE, O: d.O, total: d.total });
-    });
-    legacy.forEach(e => {
-      todasLinhas.push({ q: e.q, tipo: "legacy", R: e.R, C: e.C, TB: e.TB, PE: e.PE, O: e.O });
-    });
-
-    if (todasLinhas.length === 0) {
-      container.innerHTML = `<div class="info-vazia">Nenhum quarteirão informado ainda.<br>Preencha os <b>Boletins de Reconhecimento</b> para que a aba Bases seja alimentada automaticamente (somente imóveis <b>sem complemento</b>).</div>`;
-      const cont = document.getElementById("contadorBases");
-      if (cont) cont.textContent = "";
-      return;
-    }
-
-    const ROWS_PER_TABLE = LINHAS_DUPLA;
-    const ROWS_PER_PAGE = ROWS_PER_TABLE * 2;
-    const computedPaginas = Math.max(1, Math.ceil(todasLinhas.length / ROWS_PER_PAGE));
-    const numPaginas = Math.max(computedPaginas, paginas.bases || 1);
-
-    const cont = document.getElementById("contadorBases");
-    if (cont) {
-      cont.textContent = `${todasLinhas.length} quarteirão(ões) | ${numPaginas} página(s) | ${quarteiroesB.length} auto (sem comp.) + ${legacy.length} legado(s)`;
-    }
-
-    for (let p = 0; p < numPaginas; p++) {
-      const divPagina = document.createElement("div");
-      divPagina.className = "pagina-a4";
-
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS.bases || "Resumo de Reconhecimento - Bases";
-      divPagina.appendChild(hSub);
-
-      const cabecalho = criarCabecalho("bases", p);
-      divPagina.appendChild(cabecalho);
-
-      const divDupla = document.createElement("div");
-      divDupla.className = "dupla-tabelas";
-
-      const offset = p * ROWS_PER_PAGE;
-      const linhasT1 = todasLinhas.slice(offset, offset + ROWS_PER_TABLE);
-      const linhasT2 = todasLinhas.slice(offset + ROWS_PER_TABLE, offset + ROWS_PER_PAGE);
-
-      const divT1 = document.createElement("div");
-      divT1.className = "tabela-dupla";
-      const t1 = criarTabelaResumoIntegrada(linhasT1, offset + 1, "sem comp.");
-      divT1.appendChild(t1);
-
-      const divT2 = document.createElement("div");
-      divT2.className = "tabela-dupla";
-      const t2 = criarTabelaResumoIntegrada(linhasT2, offset + ROWS_PER_TABLE + 1, "sem comp.");
-      divT2.appendChild(t2);
-
-      divDupla.appendChild(divT1);
-      divDupla.appendChild(divT2);
-      divPagina.appendChild(divDupla);
-
-      const totalQ = (parseInt(t1.dataset.contagem) || 0) + (parseInt(t2.dataset.contagem) || 0);
-      const spanTotal = cabecalho.querySelector(`[data-total-quarteiroes="bases-${p}"]`);
-      if (spanTotal) spanTotal.textContent = totalQ;
-
-      const rodape = criarRodape("bases", p);
-      divPagina.appendChild(rodape);
-
-      container.appendChild(divPagina);
-    }
-
-    vincularEventosCabecalhoRodape();
-  }
-
-  function renderizarBasesLiraaIntegrado() {
-    const container = document.getElementById("tabelaBasesLiraa");
-    if (!container) return;
-    container.innerHTML = "";
-
-    const basesBoletins = coletarBasesBoletins();
-    const quarteiroesB = Object.keys(basesBoletins).sort((a, b) => {
-      if (a === "_legacy") return 1;
-      if (b === "_legacy") return -1;
-      return a.localeCompare(b, "pt-BR", { numeric: true });
-    });
-
-    const setQ = new Set(quarteiroesB);
-
-    const legacy = [];
-    const seen = new Set();
-    const reg = dadosFormularios.bases || {};
-    Object.keys(reg).forEach(rowKey => {
-      const l = reg[rowKey] || {};
-      const q = String(l.q || "").trim();
-      if (!q) return;
-      if (setQ.has(q)) return;
-      if (seen.has(q)) return;
-      seen.add(q);
-      legacy.push({
-        q,
-        R: parseInt(l.r, 10) || 0,
-        C: parseInt(l.c, 10) || 0,
-        TB: parseInt(l.tb, 10) || 0,
-        PE: parseInt(l.pe, 10) || 0,
-        O: parseInt(l.o, 10) || 0
-      });
-    });
-    legacy.sort((a, b) => a.q.localeCompare(b.q, "pt-BR", { numeric: true }));
-
-    const todasLinhas = [];
-    let somaTotalLiraaGeral = 0;
-    quarteiroesB.forEach(q => {
-      const d = basesBoletins[q];
-      const tot = d.total !== undefined ? d.total : (d.R + d.C + d.TB + d.PE + d.O);
-      const liraa = tot > 0 ? (Math.floor((tot - 1) / 5) + 1) : 0;
-      somaTotalLiraaGeral += liraa;
-      todasLinhas.push({ q, tipo: "auto", R: d.R, C: d.C, TB: d.TB, PE: d.PE, O: d.O, total: tot, liraa });
-    });
-    legacy.forEach(e => {
-      const tot = e.R + e.C + e.TB + e.PE + e.O;
-      const liraa = tot > 0 ? (Math.floor((tot - 1) / 5) + 1) : 0;
-      somaTotalLiraaGeral += liraa;
-      todasLinhas.push({ q: e.q, tipo: "legacy", R: e.R, C: e.C, TB: e.TB, PE: e.PE, O: e.O, total: tot, liraa });
-    });
-
-    todasLinhas.forEach((linha, idx) => {
-      linha.posicao = formatarInteiro2Digitos(idx + 1);
-      linha.posicaoNum = idx + 1;
-    });
-    todasLinhasCacheBasesLiraa = todasLinhas;
-
-    if (todasLinhas.length === 0) {
-      container.innerHTML = `<div class="info-vazia">Nenhum quarteirão informado ainda.<br>Preencha os <b>Boletins de Reconhecimento</b> para que a aba Bases+LIRAa seja alimentada automaticamente (somente imóveis <b>sem complemento</b>).</div>`;
-      const cont = document.getElementById("contadorBasesLiraa");
-      if (cont) cont.textContent = "";
-      renderizarTabelaLiraaSelecionados([]);
-      atualizarCardResumoLiraa([]);
-      return;
-    }
-
-    const ROWS_PER_TABLE = LINHAS_DUPLA;
-    const ROWS_PER_PAGE = ROWS_PER_TABLE * 2;
-    const computedPaginas = Math.max(1, Math.ceil(todasLinhas.length / ROWS_PER_PAGE));
-    const numPaginas = Math.max(computedPaginas, paginas.basesliraa || 1);
-
-    const cont = document.getElementById("contadorBasesLiraa");
-    if (cont) {
-      cont.textContent = `${todasLinhas.length} quarteirão(ões) | ${somaTotalLiraaGeral} imóvel(is) no LIRAa | ${numPaginas} página(s)`;
-    }
-
-    for (let p = 0; p < numPaginas; p++) {
-      if (!cabecalhos.basesliraa) cabecalhos.basesliraa = {};
-      if (!cabecalhos.basesliraa[p] && cabecalhos.bases && cabecalhos.bases[p]) {
-        cabecalhos.basesliraa[p] = { ...cabecalhos.bases[p] };
-      }
-      if (!rodapes.basesliraa) rodapes.basesliraa = {};
-      if (!rodapes.basesliraa[p] && rodapes.bases && rodapes.bases[p]) {
-        rodapes.basesliraa[p] = { ...rodapes.bases[p] };
-      }
-
-      const divPagina = document.createElement("div");
-      divPagina.className = "pagina-a4";
-
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS.basesliraa || "Resumo de Reconhecimento - Bases + LIRAa";
-      divPagina.appendChild(hSub);
-
-      const cabecalho = criarCabecalho("basesliraa", p);
-      divPagina.appendChild(cabecalho);
-
-      const divDupla = document.createElement("div");
-      divDupla.className = "dupla-tabelas";
-
-      const offset = p * ROWS_PER_PAGE;
-      const linhasT1 = todasLinhas.slice(offset, offset + ROWS_PER_TABLE);
-      const linhasT2 = todasLinhas.slice(offset + ROWS_PER_TABLE, offset + ROWS_PER_PAGE);
-
-      const divT1 = document.createElement("div");
-      divT1.className = "tabela-dupla com-liraa";
-      const t1 = criarTabelaResumoIntegrada(linhasT1, offset + 1, "sem comp.", true);
-      divT1.appendChild(t1);
-
-      const divT2 = document.createElement("div");
-      divT2.className = "tabela-dupla com-liraa";
-      const t2 = criarTabelaResumoIntegrada(linhasT2, offset + ROWS_PER_TABLE + 1, "sem comp.", true);
-      divT2.appendChild(t2);
-
-      divDupla.appendChild(divT1);
-      divDupla.appendChild(divT2);
-      divPagina.appendChild(divDupla);
-
-      const totalQ = (parseInt(t1.dataset.contagem) || 0) + (parseInt(t2.dataset.contagem) || 0);
-      const spanTotal = cabecalho.querySelector(`[data-total-quarteiroes="basesliraa-${p}"]`);
-      if (spanTotal) spanTotal.textContent = totalQ;
-
-      const rodape = criarRodape("basesliraa", p);
-      divPagina.appendChild(rodape);
-
-      container.appendChild(divPagina);
-    }
-
-    vincularEventosCabecalhoRodape();
-    renderizarTabelaLiraaSelecionados(todasLinhas);
-    atualizarCardResumoLiraa(todasLinhas);
-    aplicarVisualizacaoLiraa();
-  }
-
-  function alternarSelecaoLiraa(q, forcarEstado) {
-    const qStr = String(q);
-    const novoEstado = (typeof forcarEstado === "boolean") ? forcarEstado : !quarteiroesLiraaSelecionados.has(qStr);
-
-    if (novoEstado) {
-      quarteiroesLiraaSelecionados.add(qStr);
-    } else {
-      quarteiroesLiraaSelecionados.delete(qStr);
-    }
-    salvarSelecaoLiraa();
-    salvar();
-
-    renderizarBasesLiraaIntegrado();
-  }
-
-  function limparSelecaoLiraa() {
-    if (quarteiroesLiraaSelecionados.size === 0) {
-      mostrarAviso("Nenhum quarteirão selecionado no LIRAa.");
-      return;
-    }
-    if (!confirm(`Deseja desmarcar todos os ${quarteiroesLiraaSelecionados.size} quarteirões selecionados para o LIRAa?`)) return;
-    quarteiroesLiraaSelecionados.clear();
-    salvarSelecaoLiraa();
-    salvar();
-    renderizarBasesLiraaIntegrado();
-    mostrarAviso("🧹 Todos os quarteirões foram desmarcados do LIRAa.");
-  }
-
-  function definirVisualizacaoLiraa(modo) {
-    visualizacaoLiraaAtual = modo;
-    aplicarVisualizacaoLiraa();
-  }
-
-  function aplicarVisualizacaoLiraa() {
-    const modo = visualizacaoLiraaAtual || "todas";
-    const secGeral = document.getElementById("secaoBasesLiraaGeral");
-    const secSel = document.getElementById("secaoBasesLiraaSelecionados");
-    const btnTodas = document.getElementById("btnVisTodas");
-    const btnGeral = document.getElementById("btnVisGeral");
-    const btnSel = document.getElementById("btnVisSelecionados");
-
-    if (btnTodas) btnTodas.classList.toggle("ativo", modo === "todas");
-    if (btnGeral) btnGeral.classList.toggle("ativo", modo === "geral");
-    if (btnSel) btnSel.classList.toggle("ativo", modo === "selecionados");
-
-    if (secGeral) secGeral.style.display = (modo === "selecionados") ? "none" : "";
-    if (secSel) secSel.style.display = (modo === "geral") ? "none" : "";
-  }
-
-  function atualizarCardResumoLiraa(todasLinhas) {
-    const card = document.getElementById("cardResumoLiraa");
-    const badge = document.getElementById("badgeQtdLiraaSel");
-    if (!card) return;
-
-    const lista = todasLinhas || todasLinhasCacheBasesLiraa || [];
-    const selecionadas = lista.filter(l => quarteiroesLiraaSelecionados.has(String(l.q)));
-
-    if (badge) badge.textContent = selecionadas.length;
-
-    let somaTotaisSel = 0;
-    let somaLiraaSel = 0;
-    selecionadas.forEach(l => {
-      somaTotaisSel += (l.total || 0);
-      somaLiraaSel += (l.liraa || 0);
-    });
-
-    if (selecionadas.length === 0) {
-      card.innerHTML = `
-        <div style="flex: 1;">
-          🎯 <b>Amostra LIRAa:</b> Nenhum quarteirão selecionado ainda.
-          <span style="color: #555; font-size: 11px; margin-left: 6px;">(Clique no número da coluna <b>Posição</b> dos quarteirões definidos pela coordenação)</span>
-        </div>
-        <div style="font-size: 11px; color: #777;">0 quarteirões selecionados</div>
-      `;
-    } else {
-      const posicoesStr = selecionadas.map(s => s.posicao).join(", ");
-      card.innerHTML = `
-        <div>
-          🎯 <b>Amostra LIRAa Selecionada:</b>
-          <span><b>${selecionadas.length}</b> quarteirão(ões)</span> |
-          <span><b>${formatarInteiro2Digitos(somaTotaisSel)}</b> imóveis totais</span> |
-          <span><b>${formatarInteiro2Digitos(somaLiraaSel)}</b> imóveis a visitar no LIRAa</span>
-        </div>
-        <div style="font-size: 11px; color: #1b5e20;">
-          Posições selecionadas: <b>${escapeHtmlAttr(posicoesStr)}</b>
-        </div>
-      `;
-    }
-  }
-
-  function renderizarTabelaLiraaSelecionados(todasLinhas) {
-    const container = document.getElementById("tabelaLiraaSelecionados");
-    if (!container) return;
-    container.innerHTML = "";
-
-    const lista = todasLinhas || todasLinhasCacheBasesLiraa || [];
-    const selecionadas = lista.filter(l => quarteiroesLiraaSelecionados.has(String(l.q)));
-
-    if (selecionadas.length === 0) {
-      container.innerHTML = `
-        <div class="info-vazia" style="padding: 24px 15px; background: #fafafa; border: 1px dashed #4caf50; border-radius: 6px; margin: 10px 0;">
-          🎯 <b>Nenhum quarteirão selecionado para o LIRAa no momento.</b><br>
-          Clique diretamente no número da coluna <b>Posição</b> na tabela geral acima para incluir os quarteirões definidos pela coordenação.
-        </div>
-      `;
-      return;
-    }
-
-    const ROWS_PER_PAGE_SEL = 26;
-    const numPaginasSel = Math.ceil(selecionadas.length / ROWS_PER_PAGE_SEL) || 1;
-
-    let somaGeral = { R: 0, C: 0, TB: 0, PE: 0, O: 0, total: 0, liraa: 0 };
-    selecionadas.forEach(l => {
-      somaGeral.R += (l.R || 0);
-      somaGeral.C += (l.C || 0);
-      somaGeral.TB += (l.TB || 0);
-      somaGeral.PE += (l.PE || 0);
-      somaGeral.O += (l.O || 0);
-      somaGeral.total += (l.total || 0);
-      somaGeral.liraa += (l.liraa || 0);
-    });
-
-    for (let p = 0; p < numPaginasSel; p++) {
-      const divPagina = document.createElement("div");
-      divPagina.className = "pagina-a4";
-
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginasSel} — Quarteirões Selecionados para o LIRAa`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = "Quarteirões Selecionados para o LIRAa — Amostra Oficial da Coordenação";
-      divPagina.appendChild(hSub);
-
-      const cabecalho = criarCabecalho("basesliraa", p, null, { mostrarTotal: true });
-      divPagina.appendChild(cabecalho);
-
-      const spanTotal = cabecalho.querySelector(`[data-total-quarteiroes="basesliraa-${p}"]`);
-      if (spanTotal) spanTotal.textContent = `${selecionadas.length} (selecionados)`;
-
-      const wrapperTabela = document.createElement("div");
-      wrapperTabela.className = "tabela-liraa-exclusiva-wrapper";
-
-      const table = document.createElement("table");
-      table.className = "tabela-liraa-exclusiva";
-
-      const thead = document.createElement("thead");
-      thead.innerHTML = `
-        <tr>
-          <th class="col-pos">Posição</th>
-          <th class="col-q">Quarteirão</th>
-          <th class="col-n">R</th>
-          <th class="col-n">C</th>
-          <th class="col-n">TB</th>
-          <th class="col-n">PE</th>
-          <th class="col-n">O</th>
-          <th class="col-t">Total</th>
-          <th class="col-liraa">LIRAa</th>
-        </tr>
-      `;
-      table.appendChild(thead);
-
-      const tbody = document.createElement("tbody");
-      const fatiasLinhas = selecionadas.slice(p * ROWS_PER_PAGE_SEL, (p + 1) * ROWS_PER_PAGE_SEL);
-
-      fatiasLinhas.forEach(l => {
-        const tr = document.createElement("tr");
-        const quartExibido = formatarIdentificador2Digitos(l.q);
-        tr.innerHTML = `
-          <td class="col-pos col-posicao-clicavel" onclick="alternarSelecaoLiraa('${escapeAttr(l.q)}', false)" title="Clique para desmarcar e remover o Quarteirão ${escapeHtmlAttr(quartExibido)} do LIRAa">
-            <div class="col-posicao-btn ativo"><span class="pos-check">✓</span>${l.posicao || ""}</div>
-          </td>
-          <td class="col-q">${escapeHtmlAttr(quartExibido)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(l.R)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(l.C)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(l.TB)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(l.PE)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(l.O)}</td>
-          <td class="col-t">${formatarInteiro2Digitos(l.total)}</td>
-          <td class="col-liraa calculado">${formatarInteiro2Digitos(l.liraa)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      if (p === numPaginasSel - 1) {
-        const trTotal = document.createElement("tr");
-        trTotal.className = "linha-total";
-        trTotal.innerHTML = `
-          <td class="col-pos"></td>
-          <td class="col-q">TOTAL (${selecionadas.length} Q)</td>
-          <td class="col-n">${formatarInteiro2Digitos(somaGeral.R)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(somaGeral.C)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(somaGeral.TB)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(somaGeral.PE)}</td>
-          <td class="col-n">${formatarInteiro2Digitos(somaGeral.O)}</td>
-          <td class="col-t">${formatarInteiro2Digitos(somaGeral.total)}</td>
-          <td class="col-liraa">${formatarInteiro2Digitos(somaGeral.liraa)}</td>
-        `;
-        tbody.appendChild(trTotal);
-      }
-
-      table.appendChild(tbody);
-      wrapperTabela.appendChild(table);
-      divPagina.appendChild(wrapperTabela);
-
-      const rodape = criarRodape("basesliraa", p);
-      divPagina.appendChild(rodape);
-
-      container.appendChild(divPagina);
-    }
-  }
-
-  function renderizarResumoGeral() {
-    const container = document.getElementById("tabelaResumoGeral");
-    if (!container) return;
-    container.innerHTML = "";
-
-    const resumosGerais = coletarResumosGerais();
-    const chaves = Object.keys(resumosGerais).sort((a, b) => {
-      if (a === "_legacy") return 1;
-      if (b === "_legacy") return -1;
-      return a.localeCompare(b, "pt-BR", { numeric: true });
-    });
-
-    if (chaves.length === 0) {
-      container.innerHTML = `<div class="info-vazia">Nenhum quarteirão informado ainda.<br>Preencha os <b>Boletins de Reconhecimento</b> e/ou a aba <b>Coflagrados</b> para que o resumo geral seja alimentado automaticamente.</div>`;
-      const cont = document.getElementById("contadorResumoGeral");
-      if (cont) cont.textContent = "";
-      return;
-    }
-
-    const ROWS_PER_TABLE = LINHAS_DUPLA;
-    const ROWS_PER_PAGE = ROWS_PER_TABLE * 2;
-    const computedPaginas = Math.max(1, Math.ceil(chaves.length / ROWS_PER_PAGE));
-    const numPaginas = Math.max(computedPaginas, paginas.resumogeral || 1);
-
-    const cont = document.getElementById("contadorResumoGeral");
-    if (cont) {
-      cont.textContent = `${chaves.length} quarteirão(ões) | ${numPaginas} página(s)`;
-    }
-
-    const todasLinhas = chaves.map(q => {
-      const d = resumosGerais[q];
-      return { q, tipo: "auto", R: d.R, C: d.C, TB: d.TB, PE: d.PE, O: d.O, total: d.total };
-    });
-
-    for (let p = 0; p < numPaginas; p++) {
-      const divPagina = document.createElement("div");
-      divPagina.className = "pagina-a4";
-
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS.resumogeral || "Resumo de Reconhecimento - Geral";
-      divPagina.appendChild(hSub);
-
-      const cabecalho = criarCabecalho("resumogeral", p);
-      divPagina.appendChild(cabecalho);
-
-      const divDupla = document.createElement("div");
-      divDupla.className = "dupla-tabelas";
-
-      const offset = p * ROWS_PER_PAGE;
-      const linhasT1 = todasLinhas.slice(offset, offset + ROWS_PER_TABLE);
-      const linhasT2 = todasLinhas.slice(offset + ROWS_PER_TABLE, offset + ROWS_PER_PAGE);
-
-      const divT1 = document.createElement("div");
-      divT1.className = "tabela-dupla";
-      const t1 = criarTabelaResumoIntegrada(linhasT1, offset + 1, "geral");
-      divT1.appendChild(t1);
-
-      const divT2 = document.createElement("div");
-      divT2.className = "tabela-dupla";
-      const t2 = criarTabelaResumoIntegrada(linhasT2, offset + ROWS_PER_TABLE + 1, "geral");
-      divT2.appendChild(t2);
-
-      divDupla.appendChild(divT1);
-      divDupla.appendChild(divT2);
-      divPagina.appendChild(divDupla);
-
-      const totalQ = (parseInt(t1.dataset.contagem) || 0) + (parseInt(t2.dataset.contagem) || 0);
-      const spanTotal = cabecalho.querySelector(`[data-total-quarteiroes="resumogeral-${p}"]`);
-      if (spanTotal) spanTotal.textContent = totalQ;
-
-      const rodape = criarRodape("resumogeral", p);
-      divPagina.appendChild(rodape);
-
-      container.appendChild(divPagina);
-    }
-
-    vincularEventosCabecalhoRodape();
-  }
-
   function renderizarFormularioGenerico(tipo) {
     if (tipo === "resumo") return renderizarResumoIntegrado();
-    if (tipo === "bases") return renderizarBasesIntegrado();
-    if (tipo === "basesliraa") return renderizarBasesLiraaIntegrado();
-    if (tipo === "coflagrados") return renderizarCoflagrados();
-    if (tipo === "resumogeral") return renderizarResumoGeral();
-  }
-
-  function renderizarCoflagrados() {
-    const container = document.getElementById("tabelaCoflagrados");
-    if (!container) return;
-    container.innerHTML = "";
-
-    if (!dadosFormularios.coflagrados || typeof dadosFormularios.coflagrados !== "object") {
-      dadosFormularios.coflagrados = {};
-    }
-
-    const tipo = "coflagrados";
-    const numPaginas = paginas[tipo] || 1;
-    let totalQuarteiroesGlobais = 0;
-
-    for (let p = 0; p < numPaginas; p++) {
-      const divPagina = document.createElement("div");
-      divPagina.className = "pagina-a4";
-
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS[tipo] || "Resumo de Reconhecimento";
-      divPagina.appendChild(hSub);
-
-      const cabecalho = criarCabecalho(tipo, p);
-      divPagina.appendChild(cabecalho);
-
-      const divDupla = document.createElement("div");
-      divDupla.className = "dupla-tabelas";
-
-      const offsetGlobal = p * LINHAS_DUPLA * 2;
-      const numInicial1 = offsetGlobal + 1;
-      const numInicial2 = offsetGlobal + LINHAS_DUPLA + 1;
-
-      const divT1 = document.createElement("div");
-      divT1.className = "tabela-dupla";
-      const t1 = criarTabelaManual(tipo, p, 1, numInicial1);
-      divT1.appendChild(t1);
-
-      const divT2 = document.createElement("div");
-      divT2.className = "tabela-dupla";
-      const t2 = criarTabelaManual(tipo, p, 2, numInicial2);
-      divT2.appendChild(t2);
-
-      divDupla.appendChild(divT1);
-      divDupla.appendChild(divT2);
-      divPagina.appendChild(divDupla);
-
-      const q1 = parseInt(t1.dataset.contagem) || 0;
-      const q2 = parseInt(t2.dataset.contagem) || 0;
-      const totalPaginaQ = q1 + q2;
-      totalQuarteiroesGlobais += totalPaginaQ;
-
-      const spanTotal = cabecalho.querySelector(`[data-total-quarteiroes="${tipo}-${p}"]`);
-      if (spanTotal) spanTotal.textContent = totalPaginaQ;
-
-      const rodape = criarRodape(tipo, p);
-      divPagina.appendChild(rodape);
-
-      container.appendChild(divPagina);
-    }
-
-    const contadorEl = document.getElementById("contadorCoflagrados");
-    if (contadorEl) contadorEl.textContent = `${totalQuarteiroesGlobais} quarteirão(ões) preenchido(s)`;
-
-    vincularEventosCabecalhoRodape();
   }
 
   function garantirEstruturaBoletins() {
@@ -4768,6 +3965,360 @@
     }
   }
 
+  function normalizarFormBoletimQuarteirao(formQ) {
+    const f = (formQ && typeof formQ === "object") ? formQ : {};
+    const pag = Math.max(1, parseInt(f.paginas, 10) || 1);
+    const imoveisNorm = {};
+    if (f.imoveis && typeof f.imoveis === "object") {
+      Object.keys(f.imoveis).forEach(k => {
+        const l = f.imoveis[k];
+        if (!l || typeof l !== "object") return;
+        const rua = String(l.rua || "");
+        const numero = String(l.numero || "");
+        const comp = String(l.comp || "");
+        const seq = String(l.seq || "");
+        const tipo = String(l.tipo || "");
+        if (rua || numero || comp || seq || tipo) {
+          imoveisNorm[k] = { rua, numero, comp, seq, tipo };
+        }
+      });
+    }
+    const resumoNorm = {};
+    if (f.resumo) {
+      if (Array.isArray(f.resumo)) {
+        f.resumo.forEach((item, idx) => {
+          if (item && typeof item === "object") {
+            resumoNorm[String(idx)] = Object.assign({}, item);
+          }
+        });
+      } else if (typeof f.resumo === "object") {
+        Object.keys(f.resumo).forEach(pKey => {
+          if (f.resumo[pKey] && typeof f.resumo[pKey] === "object") {
+            resumoNorm[String(pKey)] = Object.assign({}, f.resumo[pKey]);
+          }
+        });
+      }
+    }
+    return { paginas: pag, imoveis: imoveisNorm, resumo: resumoNorm };
+  }
+
+  function normalizarObjTextoSimples(obj) {
+    const out = {};
+    if (!obj || typeof obj !== "object") return out;
+    Object.keys(obj).forEach(k => {
+      const v = obj[k];
+      if (v !== undefined && v !== null && String(v) !== "") {
+        out[k] = String(v);
+      }
+    });
+    return out;
+  }
+
+  function boletimQuarteiraoTemConteudo(formQ, cabQ, rodQ) {
+    if (formQ) {
+      if ((parseInt(formQ.paginas, 10) || 1) > 1) return true;
+      if (formQ.imoveis && Object.keys(formQ.imoveis).some(k => {
+        const l = formQ.imoveis[k];
+        return l && ((l.rua && String(l.rua).trim()) || (l.numero && String(l.numero).trim()) || (l.comp && String(l.comp).trim()) || (l.seq && String(l.seq).trim()) || (l.tipo && String(l.tipo).trim()));
+      })) return true;
+      if (formQ.resumo && Object.keys(formQ.resumo).some(p => {
+        const r = formQ.resumo[p];
+        return r && ((parseInt(r.total, 10) || 0) > 0 || (parseInt(r.residencia, 10) || 0) > 0 || (parseInt(r.comercio, 10) || 0) > 0 || (parseInt(r.terreno, 10) || 0) > 0 || (parseInt(r.ponto, 10) || 0) > 0 || (parseInt(r.outros, 10) || 0) > 0);
+      })) return true;
+    }
+    if (cabQ && Object.values(cabQ).some(v => v && String(v).trim() !== "")) return true;
+    if (rodQ && Object.values(rodQ).some(v => v && String(v).trim() !== "")) return true;
+    return false;
+  }
+
+  function hashBoletimQuarteirao(formQ, cabQ, rodQ) {
+    return JSON.stringify({
+      form: normalizarFormBoletimQuarteirao(formQ),
+      cab: normalizarObjTextoSimples(cabQ),
+      rod: normalizarObjTextoSimples(rodQ)
+    });
+  }
+
+  function normalizarPayloadBoletinsCiclo(rawForms, rawCabs, rawRods, rawPaginas) {
+    const porQuarteirao = {};
+    const cabsNorm = {};
+    const rodsNorm = {};
+
+    const b = rawForms && rawForms.boletins && typeof rawForms.boletins === "object" ? rawForms.boletins : {};
+    const pageToQuart = {};
+
+    if (rawCabs && rawCabs.boletins && typeof rawCabs.boletins === "object") {
+      if (rawCabs.boletins.porQuarteirao && typeof rawCabs.boletins.porQuarteirao === "object") {
+        Object.keys(rawCabs.boletins.porQuarteirao).forEach(q => {
+          cabsNorm[q] = normalizarObjTextoSimples(rawCabs.boletins.porQuarteirao[q]);
+        });
+      } else {
+        Object.keys(rawCabs.boletins).forEach(pKey => {
+          const pageH = rawCabs.boletins[pKey] || {};
+          const qKey = String(pageH.quarteirao || "").trim() || "_legacy";
+          pageToQuart[pKey] = qKey;
+          if (!cabsNorm[qKey]) {
+            const copy = Object.assign({}, pageH);
+            delete copy.quarteirao;
+            cabsNorm[qKey] = normalizarObjTextoSimples(copy);
+          }
+        });
+      }
+    }
+
+    if (rawRods && rawRods.boletins && typeof rawRods.boletins === "object") {
+      if (rawRods.boletins.porQuarteirao && typeof rawRods.boletins.porQuarteirao === "object") {
+        Object.keys(rawRods.boletins.porQuarteirao).forEach(q => {
+          rodsNorm[q] = normalizarObjTextoSimples(rawRods.boletins.porQuarteirao[q]);
+        });
+      } else {
+        Object.keys(rawRods.boletins).forEach(pKey => {
+          const qKey = pageToQuart[pKey] || "_legacy";
+          if (!rodsNorm[qKey]) {
+            rodsNorm[qKey] = normalizarObjTextoSimples(rawRods.boletins[pKey]);
+          }
+        });
+      }
+    }
+
+    if (b.porQuarteirao && typeof b.porQuarteirao === "object") {
+      Object.keys(b.porQuarteirao).forEach(q => {
+        if (b.porQuarteirao[q] && typeof b.porQuarteirao[q] === "object") {
+          porQuarteirao[q] = normalizarFormBoletimQuarteirao(b.porQuarteirao[q]);
+        }
+      });
+    } else if (b.imoveis && typeof b.imoveis === "object") {
+      const totalPaginasLegacy = (rawPaginas && parseInt(rawPaginas.boletins, 10)) || 1;
+      const temConteudo = Object.keys(b.imoveis).some(k => {
+        const l = b.imoveis[k];
+        return l && (l.rua || l.numero || l.comp || l.seq || l.tipo);
+      });
+      if (temConteudo) {
+        const leg = { paginas: 0, imoveis: {}, resumo: {} };
+        for (let p = 0; p < totalPaginasLegacy; p++) {
+          const novaPageIdx = leg.paginas++;
+          for (let t = 1; t <= 2; t++) {
+            for (let i = 0; i < LINHAS_IMOVEIS_BOLETINS; i++) {
+              const oldKey = `${p}_${t}_${i}`;
+              if (b.imoveis[oldKey]) {
+                leg.imoveis[`${novaPageIdx}_${t}_${i}`] = b.imoveis[oldKey];
+              }
+            }
+          }
+          if (b.resumo && b.resumo[p]) leg.resumo[String(novaPageIdx)] = b.resumo[p];
+        }
+        porQuarteirao["_legacy"] = normalizarFormBoletimQuarteirao(leg);
+      }
+    }
+
+    return { porQuarteirao, cabecalhos: cabsNorm, rodapes: rodsNorm };
+  }
+
+  function lerBoletinsDoCicloLocal() {
+    try {
+      const rawFormsStr = localStorage.getItem(CICLO_STORAGE_FORMULARIOS);
+      const rawCabsStr = localStorage.getItem(CICLO_STORAGE_CABECALHOS);
+      const rawRodsStr = localStorage.getItem(CICLO_STORAGE_RODAPES);
+      const rawPagStr = localStorage.getItem(CICLO_STORAGE_PAGINAS);
+      const tsLocalCiclo = parseInt(localStorage.getItem(CICLO_STORAGE_ULTIMO_TS) || "0", 10) || 0;
+
+      let norm = normalizarPayloadBoletinsCiclo(
+        rawFormsStr ? JSON.parse(rawFormsStr) : null,
+        rawCabsStr ? JSON.parse(rawCabsStr) : null,
+        rawRodsStr ? JSON.parse(rawRodsStr) : null,
+        rawPagStr ? JSON.parse(rawPagStr) : null
+      );
+
+      if (Object.keys(norm.porQuarteirao).length === 0) {
+        const bStr = localStorage.getItem(CICLO_STORAGE_BACKUP_COMPLETO) || localStorage.getItem(CICLO_STORAGE_BACKUP_EMERGENCIA);
+        if (bStr) {
+          const bObj = JSON.parse(bStr);
+          if (bObj && typeof bObj === "object") {
+            norm = normalizarPayloadBoletinsCiclo(bObj.dadosFormularios, bObj.cabecalhos, bObj.rodapes, bObj.paginas);
+          }
+        }
+      }
+
+      return { ts: tsLocalCiclo, ...norm };
+    } catch (e) {
+      return { ts: 0, porQuarteirao: {}, cabecalhos: {}, rodapes: {} };
+    }
+  }
+
+  function mesclarBoletinsDoCiclo(cicloData, opcoes = {}) {
+    if (!cicloData || !cicloData.porQuarteirao) return false;
+    garantirEstruturaBoletins();
+
+    let prevHashes = {};
+    try {
+      const rawH = localStorage.getItem(STORAGE_CICLO_BOLETINS_SYNC);
+      if (rawH) prevHashes = JSON.parse(rawH) || {};
+    } catch (e) { prevHashes = {}; }
+
+    if (!dadosFormularios.boletins) dadosFormularios.boletins = { porQuarteirao: {} };
+    if (!dadosFormularios.boletins.porQuarteirao) dadosFormularios.boletins.porQuarteirao = {};
+    if (!cabecalhos.boletins || !cabecalhos.boletins.porQuarteirao) cabecalhos.boletins = { porQuarteirao: {} };
+    if (!rodapes.boletins || !rodapes.boletins.porQuarteirao) rodapes.boletins = { porQuarteirao: {} };
+
+    const porQuartCiclo = cicloData.porQuarteirao || {};
+    const cabsCiclo = cicloData.cabecalhos || {};
+    const rodsCiclo = cicloData.rodapes || {};
+    const todasChaves = new Set([...Object.keys(porQuartCiclo), ...Object.keys(cabsCiclo), ...Object.keys(rodsCiclo)]);
+
+    let alterou = false;
+    const nextHashes = Object.assign({}, prevHashes);
+
+    todasChaves.forEach(qKey => {
+      const cForm = normalizarFormBoletimQuarteirao(porQuartCiclo[qKey]);
+      const cCab = normalizarObjTextoSimples(cabsCiclo[qKey]);
+      const cRod = normalizarObjTextoSimples(rodsCiclo[qKey]);
+      const cTem = boletimQuarteiraoTemConteudo(cForm, cCab, cRod);
+
+      if (qKey === "_legacy" && !cTem) return;
+
+      const cHash = hashBoletimQuarteirao(cForm, cCab, cRod);
+      const prevHash = prevHashes[qKey];
+      const lFormRaw = dadosFormularios.boletins.porQuarteirao[qKey];
+      const lCabRaw = cabecalhos.boletins.porQuarteirao[qKey];
+      const lRodRaw = rodapes.boletins.porQuarteirao[qKey];
+      const existeNoLiraa = Boolean(lFormRaw);
+      const lTem = existeNoLiraa && boletimQuarteiraoTemConteudo(lFormRaw, lCabRaw, lRodRaw);
+
+      let deveAplicar = false;
+
+      if (!existeNoLiraa) {
+        deveAplicar = true;
+      } else if (prevHash !== undefined) {
+        if (cHash !== prevHash) {
+          deveAplicar = true;
+        }
+      } else if (cTem) {
+        if (!lTem) {
+          deveAplicar = true;
+        } else {
+          // Primeira vinculação onde ambos já tinham conteúdo: garante presença de tudo do Ciclo sem perder linhas extras exclusivas do LIRAa
+          const lFormNorm = normalizarFormBoletimQuarteirao(lFormRaw);
+          const mergedImoveis = Object.assign({}, lFormNorm.imoveis, cForm.imoveis);
+          const mergedResumo = Object.assign({}, lFormNorm.resumo, cForm.resumo);
+          const mergedPag = Math.max(lFormNorm.paginas, cForm.paginas);
+          const mergedCab = Object.assign({}, normalizarObjTextoSimples(lCabRaw), cCab);
+          const mergedRod = Object.assign({}, normalizarObjTextoSimples(lRodRaw), cRod);
+          const mergedHash = hashBoletimQuarteirao({ paginas: mergedPag, imoveis: mergedImoveis, resumo: mergedResumo }, mergedCab, mergedRod);
+          const currentLiraaHash = hashBoletimQuarteirao(lFormNorm, lCabRaw, lRodRaw);
+
+          if (mergedHash !== currentLiraaHash) {
+            dadosFormularios.boletins.porQuarteirao[qKey] = {
+              paginas: mergedPag,
+              imoveis: mergedImoveis,
+              resumo: mergedResumo
+            };
+            cabecalhos.boletins.porQuarteirao[qKey] = mergedCab;
+            rodapes.boletins.porQuarteirao[qKey] = mergedRod;
+            alterou = true;
+          }
+          nextHashes[qKey] = cHash;
+          return;
+        }
+      }
+
+      if (deveAplicar) {
+        const lFormNorm = normalizarFormBoletimQuarteirao(lFormRaw);
+        const lHashAtual = existeNoLiraa ? hashBoletimQuarteirao(lFormNorm, lCabRaw, lRodRaw) : "";
+        if (!existeNoLiraa || cHash !== lHashAtual) {
+          dadosFormularios.boletins.porQuarteirao[qKey] = cForm;
+          cabecalhos.boletins.porQuarteirao[qKey] = cCab;
+          rodapes.boletins.porQuarteirao[qKey] = cRod;
+          alterou = true;
+        }
+      }
+
+      nextHashes[qKey] = cHash;
+    });
+
+    try {
+      localStorage.setItem(STORAGE_CICLO_BOLETINS_SYNC, JSON.stringify(nextHashes));
+    } catch (e) {}
+
+    if (alterou) {
+      salvarFormularios();
+      salvarCabecalhos();
+      salvarRodapes();
+      if (opcoes.salvarNuvem && navigator.onLine && nuvemAtiva && dbRef && !erroPermissaoNuvem) {
+        salvarComAtraso();
+      }
+    }
+
+    return alterou;
+  }
+
+  function sincronizarBoletinsDoCicloLocal(opcoes = {}) {
+    const cicloLocal = lerBoletinsDoCicloLocal();
+    return mesclarBoletinsDoCiclo(cicloLocal, opcoes);
+  }
+
+  let dbRefCicloBoletins = null;
+  let dbCicloCallback = null;
+  let usandoCicloReserva = false;
+
+  function processarSnapshotBoletinsCicloRemoto(dadosCiclo) {
+    if (!dadosCiclo || typeof dadosCiclo !== "object") return false;
+    const cicloLocal = lerBoletinsDoCicloLocal();
+    const localTem = Object.keys(cicloLocal.porQuarteirao).some(q =>
+      boletimQuarteiraoTemConteudo(cicloLocal.porQuarteirao[q], cicloLocal.cabecalhos[q], cicloLocal.rodapes[q])
+    );
+    const tsRemoto = Number(dadosCiclo.timestamp) || 0;
+    const tsLocal = Number(cicloLocal.ts) || 0;
+
+    if (localTem && tsLocal > tsRemoto) {
+      return mesclarBoletinsDoCiclo(cicloLocal, { salvarNuvem: true });
+    }
+
+    const normRemoto = normalizarPayloadBoletinsCiclo(
+      dadosCiclo.dadosFormularios,
+      dadosCiclo.cabecalhos,
+      dadosCiclo.rodapes,
+      dadosCiclo.paginas
+    );
+    const mudou = mesclarBoletinsDoCiclo(normRemoto, { salvarNuvem: true });
+    if (mudou) {
+      renderizarFormularioBoletins();
+      renderizarResumoIntegrado();
+      mostrarAviso("🔄 Boletins atualizados a partir do Ciclo!");
+    }
+    return mudou;
+  }
+
+  function iniciarOuvinteBoletinsCicloNuvem(forcarReserva = false) {
+    try {
+      if (dbRefCicloBoletins && dbCicloCallback) {
+        dbRefCicloBoletins.off("value", dbCicloCallback);
+      }
+    } catch (e) {}
+
+    const alvoReserva = forcarReserva || usandoNuvemReserva || !appNuvemPrincipal;
+    let refAlvo = null;
+    try {
+      if (!alvoReserva && appNuvemPrincipal) {
+        refAlvo = appNuvemPrincipal.database().ref("diario_producao_pmcd");
+      } else if (pmcdApp) {
+        usandoCicloReserva = true;
+        refAlvo = pmcdApp.database().ref("andamento_quarteiroes/diario_producao_pmcd");
+      }
+    } catch (e) {}
+
+    if (!refAlvo) return;
+    dbRefCicloBoletins = refAlvo;
+    dbCicloCallback = (snapshot) => {
+      processarSnapshotBoletinsCicloRemoto(snapshot.val());
+    };
+    refAlvo.on("value", dbCicloCallback, (err) => {
+      if (!usandoCicloReserva && pmcdApp && isErroPermissaoFirebase(err)) {
+        usandoCicloReserva = true;
+        iniciarOuvinteBoletinsCicloNuvem(true);
+      }
+    });
+  }
+
   function sincronizarQuarteiroesInformados() {
     garantirEstruturaBoletins();
     const mapa = coletarQuarteiroesAgrupados();
@@ -4804,6 +4355,7 @@
   }
 
   function sincronizarAgora() {
+    const mudouCicloLocal = sincronizarBoletinsDoCicloLocal({ salvarNuvem: true });
     const antes = JSON.stringify(dadosFormularios.boletins.porQuarteirao || {});
     sincronizarQuarteiroesInformados();
     const depois = JSON.stringify(dadosFormularios.boletins.porQuarteirao || {});
@@ -4811,16 +4363,17 @@
     if (!document.getElementById("painel-resumo").classList.contains("oculto")) {
       renderizarResumoIntegrado();
     }
-    if (!document.getElementById("painel-bases").classList.contains("oculto")) {
-      renderizarBasesIntegrado();
+    if (navigator.onLine && dbRefCicloBoletins) {
+      try {
+        dbRefCicloBoletins.once("value").then(snap => {
+          processarSnapshotBoletinsCicloRemoto(snap.val());
+        }).catch(() => {});
+      } catch (e) {}
     }
-    if (!document.getElementById("painel-resumogeral").classList.contains("oculto")) {
-      renderizarResumoGeral();
-    }
-    if (antes === depois) {
-      mostrarAviso("✅ Todos os quarteirões já possuem formulário");
+    if (!mudouCicloLocal && antes === depois) {
+      mostrarAviso("✅ Todos os quarteirões já estão sincronizados com o Ciclo e Informados");
     } else {
-      mostrarAviso("🔄 Formulários sincronizados com a aba Informados");
+      mostrarAviso("🔄 Boletins sincronizados com o Ciclo e aba Informados");
     }
   }
 
@@ -6063,128 +5616,6 @@
     executarColagemBoletins(target, texto);
   }
 
-  function executarColagemCoflagrados(target, texto) {
-    if (!target || !(target instanceof HTMLInputElement)) return;
-    if (target.dataset.tipo !== 'coflagrados') return;
-    if (!texto) return;
-
-    const campoInicial = target.dataset.campo;
-    const colunasOrdem = ['q', 'r', 'c', 'tb', 'pe', 'o'];
-    const colInicial = colunasOrdem.indexOf(campoInicial);
-    if (colInicial === -1) return;
-
-    let textoNorm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    if (textoNorm.endsWith('\n')) textoNorm = textoNorm.slice(0, -1);
-    const linhasTexto = textoNorm.split('\n');
-    if (linhasTexto.length === 0) return;
-    const separador = textoNorm.indexOf('\t') !== -1 ? '\t' : (textoNorm.indexOf(';') !== -1 ? ';' : '\t');
-    const matriz = linhasTexto.map(l => l.split(separador));
-    if (matriz.length === 0) return;
-
-    const keyParts = (target.dataset.key || '').split('_');
-    if (keyParts.length !== 3) return;
-    const paginaInicial = parseInt(keyParts[0], 10);
-    const tabelaInicial = parseInt(keyParts[1], 10);
-    const linhaInicial = parseInt(keyParts[2], 10);
-
-    const REGISTROS_POR_PAGINA = LINHAS_DUPLA * 2;
-    const linearInicial = paginaInicial * REGISTROS_POR_PAGINA + (tabelaInicial - 1) * LINHAS_DUPLA + linhaInicial;
-    const linearFinal = linearInicial + matriz.length - 1;
-    const paginaFinal = Math.floor(linearFinal / REGISTROS_POR_PAGINA);
-    const paginasNecessarias = paginaFinal + 1;
-    const paginasAtuais = paginas.coflagrados || 1;
-    const paginasACriar = Math.max(0, paginasNecessarias - paginasAtuais);
-
-    if (paginasACriar > 100) {
-      alert(`A colagem criaria ${paginasACriar} página(s) nova(s) (limite: 100 de uma vez). Reduza a seleção.`);
-      return;
-    }
-
-    if (!dadosFormularios.coflagrados || typeof dadosFormularios.coflagrados !== "object") {
-      dadosFormularios.coflagrados = {};
-    }
-
-    let linhasPreenchidas = 0;
-    let celulasPreenchidas = 0;
-
-    for (let r = 0; r < matriz.length; r++) {
-      const linhaDados = matriz[r];
-      const linearLinha = linearInicial + r;
-      const pagina = Math.floor(linearLinha / REGISTROS_POR_PAGINA);
-      const indexNaPagina = linearLinha % REGISTROS_POR_PAGINA;
-      const tabelaNum = Math.floor(indexNaPagina / LINHAS_DUPLA) + 1;
-      const linhaNaTabela = indexNaPagina % LINHAS_DUPLA;
-
-      const rowKey = `${pagina}_${tabelaNum}_${linhaNaTabela}`;
-      if (!dadosFormularios.coflagrados[rowKey]) dadosFormularios.coflagrados[rowKey] = {};
-
-      let linhaTemDados = false;
-      for (let c = 0; c < linhaDados.length; c++) {
-        const colFinal = colInicial + c;
-        if (colFinal >= colunasOrdem.length) continue;
-
-        const campo = colunasOrdem[colFinal];
-        let valor = linhaDados[c];
-        if (valor === undefined || valor === null) valor = '';
-        valor = String(valor);
-
-        if (valor.trim() === '') continue;
-
-        if (campo !== 'q') {
-          valor = valor.replace(/[^\d]/g, '');
-          if (valor === '') continue;
-        }
-
-        dadosFormularios.coflagrados[rowKey][campo] = valor;
-        celulasPreenchidas++;
-        linhaTemDados = true;
-      }
-
-      if (linhaTemDados) linhasPreenchidas++;
-    }
-
-    if (celulasPreenchidas === 0) {
-      mostrarAviso("⚠️ Nada foi colado (células vazias ou fora do alcance)");
-      return;
-    }
-
-    if (paginasACriar > 0) {
-      paginas.coflagrados = paginasNecessarias;
-      salvarPaginas();
-    }
-
-    salvarFormularios();
-    salvarComAtraso();
-
-    const scrollY = window.scrollY;
-    renderizarCoflagrados();
-    window.scrollTo(0, scrollY);
-
-    let msg = `✅ Colado em Conflagrados: ${linhasPreenchidas} linha(s), ${celulasPreenchidas} célula(s)`;
-    if (paginasACriar > 0) msg += ` · ${paginasACriar} nova(s) página(s)`;
-    mostrarAviso(msg);
-  }
-
-  function tratarColagemCoflagrados(e, inputForcado) {
-    const target = inputForcado || e.target;
-    if (!(target instanceof HTMLInputElement)) return;
-    if (target.dataset.tipo !== 'coflagrados') return;
-
-    const clipboardData = e.clipboardData || window.clipboardData;
-    if (!clipboardData) return;
-
-    const texto = clipboardData.getData('text/plain');
-    if (!texto) return;
-
-    const temTab = texto.indexOf('\t') !== -1;
-    const temNovaLinha = texto.indexOf('\n') !== -1 || texto.indexOf('\r') !== -1;
-    const temPontoEVirgula = texto.indexOf(';') !== -1;
-    if (!temTab && !temNovaLinha && !temPontoEVirgula) return;
-
-    e.preventDefault();
-    executarColagemCoflagrados(target, texto);
-  }
-
   const COLUNAS_DIARIO_ORDEM = ["ag", "q", "r", "c", "tb", "pe", "o"];
 
   function executarColagemDiario(target, texto) {
@@ -6521,10 +5952,6 @@
     if (tipo === "andamento") atualizarAndamento();
     else if (tipo === "concluidos") atualizarConcluidos();
     else if (tipo === "resumo") renderizarResumoIntegrado();
-    else if (tipo === "bases") renderizarBasesIntegrado();
-    else if (tipo === "basesliraa") renderizarBasesLiraaIntegrado();
-    else if (tipo === "coflagrados") renderizarCoflagrados();
-    else if (tipo === "resumogeral") renderizarResumoGeral();
     else renderizarFormularioGenerico(tipo);
   }
 
@@ -6675,9 +6102,6 @@
       if (!document.getElementById("painel-andamento").classList.contains("oculto")) atualizarAndamento();
       if (!document.getElementById("painel-concluidos").classList.contains("oculto")) atualizarConcluidos();
       if (!document.getElementById("painel-resumo").classList.contains("oculto")) renderizarResumoIntegrado();
-      if (!document.getElementById("painel-bases").classList.contains("oculto")) renderizarBasesIntegrado();
-      if (!document.getElementById("painel-basesliraa").classList.contains("oculto")) renderizarBasesLiraaIntegrado();
-      if (!document.getElementById("painel-resumogeral").classList.contains("oculto")) renderizarResumoGeral();
       if (!document.getElementById("painel-boletins").classList.contains("oculto") || document.getElementById("selectQuarteiraoBoletins")) {
         if (typeof popularSelectQuarteiroes === "function") popularSelectQuarteiroes();
       }
@@ -6839,20 +6263,10 @@
       concluidos: "tabelaConcluidos",
       boletins: "tabelaBoletins",
       resumo: "tabelaResumo",
-      bases: "tabelaBases",
-      basesliraa: "tabelaBasesLiraa",
-      basesliraaselecionados: "tabelaLiraaSelecionados",
-      coflagrados: "tabelaCoflagrados",
-      resumogeral: "tabelaResumoGeral",
       semanal: "semanasResumo",
       total: "tabelaTotalImoveis",
       informados: "tabelaInformados"
     };
-
-    if (tipo === "basesliraaselecionados" && quarteiroesLiraaSelecionados.size === 0) {
-      alert("Nenhum quarteirão selecionado para o LIRAa para gerar o PDF.");
-      return;
-    }
 
     const id = idMapa[tipo];
     const el = document.getElementById(id);
@@ -6921,10 +6335,6 @@
         recalcular(); atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
         atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
         renderizarResumoIntegrado();
-        renderizarBasesIntegrado();
-        renderizarBasesLiraaIntegrado();
-        renderizarCoflagrados();
-        renderizarResumoGeral();
 
         salvar();
         mostrarAviso("✅ Backup restaurado e sincronizado!");
@@ -6937,7 +6347,7 @@
   }
 
   // =========================================================================
-  // SISTEMA DE SELEÇÃO MÚLTIPLA DE CÉLULAS (DIÁRIO, BOLETINS E CONFLAGRADOS)
+  // SISTEMA DE SELEÇÃO MÚLTIPLA DE CÉLULAS (DIÁRIO E BOLETINS)
   // =========================================================================
   let celulasSelecionadas = new Set();
   let celulaAncora = null;
@@ -6958,11 +6368,10 @@
     const table = tbody.closest("table");
     if (!table) return null;
 
-    // Restrito EXCLUSIVAMENTE às abas: Diário, Boletins e Conflagrados
+    // Restrito EXCLUSIVAMENTE às abas: Diário e Boletins
     let aba = null;
     if (td.closest("#painel-diario")) aba = "diario";
     else if (td.closest("#painel-boletins")) aba = "boletins";
-    else if (td.closest("#painel-coflagrados")) aba = "coflagrados";
     else return null;
 
     // Células não editáveis ignoradas (linhas de totais, números sequenciais, totais calculados)
@@ -7113,8 +6522,8 @@
         }
       }
 
-      // 3. Se for Boletins ou Conflagrados na Tabela 1: passar para a Tabela 2
-      if (aba === "boletins" || aba === "coflagrados") {
+      // 3. Se for Boletins na Tabela 1: passar para a Tabela 2
+      if (aba === "boletins") {
         const metade = td.closest(".tabela-dupla-metade");
         const containerDuplo = metade ? metade.parentElement : null;
         if (containerDuplo) {
@@ -7180,8 +6589,8 @@
         }
       }
 
-      // 3. Se for Boletins ou Conflagrados na Tabela 2: passar para o final da Tabela 1
-      if (aba === "boletins" || aba === "coflagrados") {
+      // 3. Se for Boletins na Tabela 2: passar para o final da Tabela 1
+      if (aba === "boletins") {
         const metade = td.closest(".tabela-dupla-metade");
         const containerDuplo = metade ? metade.parentElement : null;
         if (containerDuplo) {
@@ -7211,7 +6620,7 @@
       }
 
       // 2. Se for tabela dupla na metade esquerda: passar para a metade direita na mesma linha
-      if (aba === "boletins" || aba === "coflagrados") {
+      if (aba === "boletins") {
         const metade = td.closest(".tabela-dupla-metade");
         const containerDuplo = metade ? metade.parentElement : null;
         if (containerDuplo) {
@@ -7255,7 +6664,7 @@
       }
 
       // 2. Se for tabela dupla na metade direita: passar para a metade esquerda na mesma linha
-      if (aba === "boletins" || aba === "coflagrados") {
+      if (aba === "boletins") {
         const metade = td.closest(".tabela-dupla-metade");
         const containerDuplo = metade ? metade.parentElement : null;
         if (containerDuplo) {
@@ -7402,7 +6811,6 @@
 
     const quarteiroesAfetadosBoletins = new Set();
     let alterouDiario = false;
-    let alterouCoflagrados = false;
 
     celulasSelecionadas.forEach(td => {
       const inp = td.querySelector("input");
@@ -7433,15 +6841,6 @@
           }
         }
       }
-
-      if (inp.dataset.tipo === "coflagrados") {
-        const k = inp.dataset.key;
-        const campo = inp.dataset.campo;
-        if (dadosFormularios.coflagrados && dadosFormularios.coflagrados[k]) {
-          dadosFormularios.coflagrados[k][campo] = inp.classList.contains("num") ? "0" : "";
-          alterouCoflagrados = true;
-        }
-      }
     });
 
     if (alterouDiario) {
@@ -7465,12 +6864,6 @@
       salvarComAtraso();
     }
 
-    if (alterouCoflagrados) {
-      salvarFormularios();
-      renderizarCoflagrados();
-      salvarComAtraso();
-    }
-
     if (!silencioso) {
       mostrarAviso(count === 1 ? "🗑️ Célula apagada!" : `🗑️ ${count} células apagadas!`);
     }
@@ -7491,7 +6884,6 @@
     const valTrim = digitado.trim();
     const quarteiroesAfetadosBoletins = new Set();
     let alterouDiario = false;
-    let alterouCoflagrados = false;
 
     celulasSelecionadas.forEach(td => {
       const inp = td.querySelector("input");
@@ -7546,15 +6938,6 @@
           }
         }
       }
-
-      if (inp.dataset.tipo === "coflagrados") {
-        const k = inp.dataset.key;
-        const campo = inp.dataset.campo;
-        if (dadosFormularios.coflagrados && dadosFormularios.coflagrados[k]) {
-          dadosFormularios.coflagrados[k][campo] = inp.value;
-          alterouCoflagrados = true;
-        }
-      }
     });
 
     if (alterouDiario) {
@@ -7572,12 +6955,6 @@
         atualizarTotaisQuarteirao(q);
       });
       salvarFormularios();
-      salvarComAtraso();
-    }
-
-    if (alterouCoflagrados) {
-      salvarFormularios();
-      renderizarCoflagrados();
       salvarComAtraso();
     }
 
@@ -7713,8 +7090,6 @@
       executarColagemDiario(targetInp, texto);
     } else if (targetInp.dataset.boletinsImovel === "1") {
       executarColagemBoletins(targetInp, texto);
-    } else if (targetInp.dataset.tipo === "coflagrados") {
-      executarColagemCoflagrados(targetInp, texto);
     } else {
       mostrarAviso("⚠️ Célula inicial inválida para colagem.");
     }
@@ -8198,6 +7573,7 @@
     localStorage.removeItem(STORAGE_FORMULARIOS);
     localStorage.removeItem(STORAGE_SELECAO_BOLETINS);
     localStorage.removeItem(STORAGE_LIRAA_SELECIONADOS);
+    localStorage.removeItem(STORAGE_CICLO_BOLETINS_SYNC);
     statusQuarteiroes = {};
     quarteiroesLiraaSelecionados = new Set();
     cabecalhos = { andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} };
@@ -8212,10 +7588,6 @@
     atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
     atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
     renderizarResumoIntegrado();
-    renderizarBasesIntegrado();
-    renderizarBasesLiraaIntegrado();
-    renderizarCoflagrados();
-    renderizarResumoGeral();
   }
 
   function exportarCSV() {
@@ -8351,99 +7723,6 @@
       csv += `"TOTAL",${g.R},${g.C},${g.TB},${g.PE},${g.O},${g.Total}\n`;
     }
 
-    csv += "\n\n=== BASES (auto dos Boletins - somente sem complemento) ===\n\n";
-    {
-      const bases = coletarBasesBoletins();
-      const chaves = Object.keys(bases).sort((a, b) => {
-        if (a === "_legacy") return 1;
-        if (b === "_legacy") return -1;
-        return a.localeCompare(b, "pt-BR", { numeric: true });
-      });
-      csv += "Quarteirão,R,C,TB,PE,O,Total\n";
-      const g = { R:0,C:0,TB:0,PE:0,O:0,Total:0 };
-      chaves.forEach(q => {
-        const d = bases[q];
-        g.R+=d.R; g.C+=d.C; g.TB+=d.TB; g.PE+=d.PE; g.O+=d.O; g.Total+=d.total;
-        csv += `"${q === "_legacy" ? "(legado)" : q}",${d.R},${d.C},${d.TB},${d.PE},${d.O},${d.total}\n`;
-      });
-      csv += `"TOTAL",${g.R},${g.C},${g.TB},${g.PE},${g.O},${g.Total}\n`;
-    }
-
-    csv += "\n\n=== BASES + LIRAa (auto dos Boletins - de 5 em 5 imóveis: 1, 6, 11...) ===\n\n";
-    {
-      const bases = coletarBasesBoletins();
-      const chaves = Object.keys(bases).sort((a, b) => {
-        if (a === "_legacy") return 1;
-        if (b === "_legacy") return -1;
-        return a.localeCompare(b, "pt-BR", { numeric: true });
-      });
-      csv += "Posição,Quarteirão,R,C,TB,PE,O,Total,LIRAa,Selecionado LIRAa\n";
-      const g = { R: 0, C: 0, TB: 0, PE: 0, O: 0, Total: 0, LIRAa: 0 };
-      chaves.forEach((q, idx) => {
-        const d = bases[q];
-        const tot = d.total !== undefined ? d.total : (d.R + d.C + d.TB + d.PE + d.O);
-        const liraa = tot > 0 ? (Math.floor((tot - 1) / 5) + 1) : 0;
-        const sel = quarteiroesLiraaSelecionados.has(String(q)) ? "SIM" : "NÃO";
-        g.R += d.R; g.C += d.C; g.TB += d.TB; g.PE += d.PE; g.O += d.O; g.Total += tot; g.LIRAa += liraa;
-        csv += `${String(idx + 1).padStart(2, "0")},"${q === "_legacy" ? "(legado)" : q}",${d.R},${d.C},${d.TB},${d.PE},${d.O},${tot},${liraa},${sel}\n`;
-      });
-      csv += `"","TOTAL",${g.R},${g.C},${g.TB},${g.PE},${g.O},${g.Total},${g.LIRAa},""\n`;
-    }
-
-    csv += "\n\n=== QUARTEIRÕES SELECIONADOS PARA O LIRAA (Amostra Oficial da Coordenação) ===\n\n";
-    {
-      const bases = coletarBasesBoletins();
-      const chaves = Object.keys(bases).sort((a, b) => {
-        if (a === "_legacy") return 1;
-        if (b === "_legacy") return -1;
-        return a.localeCompare(b, "pt-BR", { numeric: true });
-      });
-      csv += "Posição,Quarteirão,R,C,TB,PE,O,Total,LIRAa\n";
-      const gSel = { R: 0, C: 0, TB: 0, PE: 0, O: 0, Total: 0, LIRAa: 0, count: 0 };
-      chaves.forEach((q, idx) => {
-        if (quarteiroesLiraaSelecionados.has(String(q))) {
-          const d = bases[q];
-          const tot = d.total !== undefined ? d.total : (d.R + d.C + d.TB + d.PE + d.O);
-          const liraa = tot > 0 ? (Math.floor((tot - 1) / 5) + 1) : 0;
-          gSel.count++;
-          gSel.R += d.R; gSel.C += d.C; gSel.TB += d.TB; gSel.PE += d.PE; gSel.O += d.O; gSel.Total += tot; gSel.LIRAa += liraa;
-          csv += `${String(idx + 1).padStart(2, "0")},"${q === "_legacy" ? "(legado)" : q}",${d.R},${d.C},${d.TB},${d.PE},${d.O},${tot},${liraa}\n`;
-        }
-      });
-      csv += `"","TOTAL (${gSel.count} Q)",${gSel.R},${gSel.C},${gSel.TB},${gSel.PE},${gSel.O},${gSel.Total},${gSel.LIRAa}\n`;
-    }
-
-    csv += "\n\n=== RESUMO GERAL (Boletins + Coflagrados) ===\n\n";
-    {
-      const gerais = coletarResumosGerais();
-      const chaves = Object.keys(gerais).sort((a, b) => {
-        if (a === "_legacy") return 1;
-        if (b === "_legacy") return -1;
-        return a.localeCompare(b, "pt-BR", { numeric: true });
-      });
-      csv += "Quarteirão,R,C,TB,PE,O,Total\n";
-      const g = { R:0,C:0,TB:0,PE:0,O:0,Total:0 };
-      chaves.forEach(q => {
-        const d = gerais[q];
-        g.R+=d.R; g.C+=d.C; g.TB+=d.TB; g.PE+=d.PE; g.O+=d.O; g.Total+=d.total;
-        csv += `"${q === "_legacy" ? "(legado)" : q}",${d.R},${d.C},${d.TB},${d.PE},${d.O},${d.total}\n`;
-      });
-      csv += `"TOTAL",${g.R},${g.C},${g.TB},${g.PE},${g.O},${g.Total}\n`;
-    }
-
-    csv += `\n\n=== COFLAGRADOS ===\n\n`;
-    {
-      const reg = dadosFormularios.coflagrados || {};
-      const chaves = Object.keys(reg).sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
-      csv += "Chave,Quarteirão,R,C,TB,PE,O\n";
-      chaves.forEach(k => {
-        const l = reg[k] || {};
-        if (l.q || l.r || l.c || l.tb || l.pe || l.o) {
-          csv += `"${k}","${l.q || ""}","${l.r || ""}","${l.c || ""}","${l.tb || ""}","${l.pe || ""}","${l.o || ""}"\n`;
-        }
-      });
-    }
-
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -8463,6 +7742,7 @@
   if (!carregar()) criarSemana();
 
   garantirEstruturaBoletins();
+  sincronizarBoletinsDoCicloLocal({ salvarNuvem: false });
   aplicarFormatacaoInicialNosInputsNumericos(document);
 
   recalcular();
@@ -8473,10 +7753,16 @@
   atualizarConcluidos();
   renderizarFormularioBoletins();
   renderizarResumoIntegrado();
-  renderizarBasesIntegrado();
-  renderizarBasesLiraaIntegrado();
-  renderizarCoflagrados();
-  renderizarResumoGeral();
+
+  window.addEventListener("storage", (e) => {
+    if (!e || !e.key) return;
+    if ([CICLO_STORAGE_FORMULARIOS, CICLO_STORAGE_CABECALHOS, CICLO_STORAGE_RODAPES, CICLO_STORAGE_ULTIMO_TS].includes(e.key)) {
+      if (sincronizarBoletinsDoCicloLocal({ salvarNuvem: true })) {
+        renderizarFormularioBoletins();
+        renderizarResumoIntegrado();
+      }
+    }
+  });
 
   document.addEventListener('paste', function(event) {
     let target = event.target;
@@ -8508,13 +7794,10 @@
       tratarColagemBoletins(event, target);
       return;
     }
-    if (target.dataset.tipo === 'coflagrados') {
-      tratarColagemCoflagrados(event, target);
-      return;
-    }
   });
 
   monitorarConexaoNuvem();
+  iniciarOuvinteBoletinsCicloNuvem();
   iniciarOuvintePMCDResumo();
 </script>
 

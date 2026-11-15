@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMCD - Lançamentos Diários (Standalone)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    /* ============================================ */
+    /* RESET E BASE                                 */
+    /* ============================================ */
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f3f4f6;
+        color: #1f2937;
+    }
+
+    /* ============================================ */
+    /* SISTEMA DE TOAST                             */
+    /* ============================================ */
+    .pmcd-toast-container {
+        position: fixed; top: 20px; right: 20px; z-index: 9999999;
+        display: flex; flex-direction: column; gap: 10px; max-width: 400px; width: 100%;
+        pointer-events: none;
+    }
+    .pmcd-toast {
+        pointer-events: auto; padding: 14px 20px; border-radius: 12px; color: #ffffff;
+        font-size: 14px; font-weight: 500; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        transform: translateX(120%); opacity: 0; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        display: flex; align-items: center; gap: 12px; backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1); cursor: pointer; position: relative; overflow: hidden;
+    }
+    .pmcd-toast.show { transform: translateX(0); opacity: 1; }
+    .pmcd-toast.hiding { transform: translateX(120%); opacity: 0; }
+    .pmcd-toast .icon { font-size: 22px; flex-shrink: 0; }
+    .pmcd-toast .message { flex: 1; line-height: 1.4; }
+    .pmcd-toast .close-btn {
+        background: none; border: none; color: rgba(255,255,255,0.6);
+        font-size: 18px; cursor: pointer; padding: 0 4px; transition: all 0.2s;
+    }
+    .pmcd-toast .close-btn:hover { color: #ffffff; transform: scale(1.2); }
+    .pmcd-toast.success { background: linear-gradient(135deg, #16a34a, #15803d); }
+    .pmcd-toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .pmcd-toast.error   { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+    .pmcd-toast.info    { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+
+    /* ============================================ */
+    /* ESTRUTURA GERAL                              */
+    /* ============================================ */
+    .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+    /* ============================================ */
+    /* FORMULÁRIO DO RELATÓRIO                      */
+    /* ============================================ */
+    .relatorio-container {
+        max-width: 100%;
+        width: 100%;
+        background: #ffffff;
+        padding: 8mm 10mm 6mm 10mm;
+        border: 2px solid #1e5a3a;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .relatorio-container .titulo-principal {
+        font-size: 18px;
+        font-weight: bold;
+        color: #ffffff;
+        text-align: center;
+        letter-spacing: 0.5px;
+        padding: 6px 0;
+        background-color: #1e5a3a;
+        border-radius: 4px 4px 0 0;
+        margin-bottom: 2px;
+    }
+    .relatorio-container .subtitulo-producao {
+        font-size: 15px;
+        font-weight: bold;
+        color: #ffffff;
+        text-align: center;
+        background-color: #d97706;
+        padding: 4px 0;
+        border: 1px solid #1e5a3a;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+        margin-top: 4px;
+    }
+
+    /* ============================================ */
+    /* CABEÇALHO DE IDENTIFICAÇÃO                   */
+    /* ============================================ */
+    .relatorio-container .cabecalho-identificacao {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px 12px;
+        border: 1px solid #1e5a3a;
+        background-color: #fef3c7;
+        padding: 8px 12px;
+        margin-top: 6px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: bold;
+        color: #1e5a3a;
+        font-size: 10.5px;
+        min-width: 0;
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab .label-cab {
+        white-space: nowrap;
+        font-size: 10px;
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab input,
+    .relatorio-container .cabecalho-identificacao .campo-cab select {
+        background-color: #ffffff;
+        border: 1px solid #1e5a3a;
+        padding: 2px 6px;
+        font-weight: normal;
+        font-size: 10.5px;
+        border-radius: 3px;
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab input:focus,
+    .relatorio-container .cabecalho-identificacao .campo-cab select:focus {
+        background-color: #e8f0fe;
+        border-color: #1e40af;
+        box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab.campo-full {
+        grid-column: 1 / -1;
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab.campo-duplo {
+        grid-column: span 2;
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab select {
+        cursor: pointer;
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab.concluido-sim {
+        background-color: rgba(22, 163, 74, 0.08);
+    }
+    .relatorio-container .cabecalho-identificacao .campo-cab.concluido-nao {
+        background-color: rgba(220, 38, 38, 0.06);
+    }
+
+    /* ============================================ */
+    /* QUARTEIRÕES                                  */
+    /* ============================================ */
+    .relatorio-container .quarteiroes-container {
+        border: 1px solid #1e5a3a;
+        background-color: #fef3c7;
+        padding: 6px 10px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+    }
+    .relatorio-container .quarteirao-linha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 0;
+        border-bottom: 1px solid #e5e7eb;
+        flex-wrap: wrap;
+    }
+    .relatorio-container .quarteirao-linha select {
+        background-color: #ffffff;
+        border: 1px solid #1e5a3a;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        flex: 0 1 auto;
+        min-width: 80px;
+        max-width: 140px;
+    }
+    .relatorio-container .quarteirao-linha select:focus {
+        outline: none;
+        border-color: #1e40af;
+        box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
+    }
+    .relatorio-container .quarteirao-linha .btn-remover {
+        background-color: #dc2626;
+        color: #ffffff;
+        border: none;
+        padding: 1px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        cursor: pointer;
+        height: 26px;
+        transition: all 0.2s;
+    }
+    .relatorio-container .quarteirao-linha .btn-remover:hover { background-color: #b91c1c; transform: scale(1.05); }
+    .relatorio-container .quarteirao-linha .btn-remover:active { transform: scale(0.9); }
+    .relatorio-container .quarteirao-linha .label-pequeno {
+        font-weight: bold;
+        font-size: 11px;
+        color: #1e5a3a;
+        white-space: nowrap;
+    }
+    .relatorio-container .btn-adicionar {
+        background-color: #2d7d4a;
+        color: #ffffff;
+        border: none;
+        padding: 3px 12px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 4px;
+        transition: all 0.2s;
+    }
+    .relatorio-container .btn-adicionar:hover { background-color: #1e5a3a; transform: scale(1.04); }
+    .relatorio-container .btn-adicionar:active { transform: scale(0.94); }
+    .relatorio-container .quarteiroes-concluidos-painel {
+        margin-top: 8px;
+        padding: 6px 10px;
+        background-color: #f0fdf4;
+        border: 1px solid #86efac;
+        border-radius: 4px;
+    }
+    .relatorio-container .quarteiroes-concluidos-painel .titulo {
+        font-weight: bold;
+        color: #166534;
+        font-size: 12px;
+        margin-bottom: 3px;
+    }
+    .relatorio-container .quarteiroes-concluidos-painel .itens {
+        min-height: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+    .relatorio-container .quarteiroes-concluidos-painel .itens .badge {
+        display: inline-block;
+        background: #dcfce7;
+        color: #166534;
+        padding: 1px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        margin: 1px;
+    }
+    .relatorio-container .quarteiroes-concluidos-painel .total {
+        margin-top: 4px;
+        font-weight: bold;
+        color: #166534;
+        font-size: 12px;
+    }
+
+    /* ============================================ */
+    /* SUPERVISÃO                                   */
+    /* ============================================ */
+    .relatorio-container .supervisao-container {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        border: 1px solid #1e5a3a;
+        background-color: #fef3c7;
+        padding: 8px 16px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+    }
+    .relatorio-container .supervisao-container .label-supervisao {
+        font-weight: bold;
+        color: #1e5a3a;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+    .relatorio-container .supervisao-container select {
+        background-color: #ffffff;
+        border: 1px solid #1e5a3a;
+        padding: 3px 12px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .relatorio-container .supervisao-container .campos-supervisao {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        transition: all 0.3s ease;
+    }
+    .relatorio-container .supervisao-container .campo-supervisao-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: bold;
+        color: #1e5a3a;
+        font-size: 11px;
+        background-color: rgba(255,255,255,0.7);
+        padding: 2px 10px;
+        border-radius: 4px;
+        border: 1px solid #d9e1ec;
+    }
+    .relatorio-container .supervisao-container .campo-supervisao-item input {
+        background-color: #ffffff;
+        border: 1px solid #1e5a3a;
+        padding: 1px 6px;
+        width: 50px;
+        font-weight: bold;
+        font-size: 11px;
+        border-radius: 3px;
+        text-align: center;
+    }
+    .relatorio-container .supervisao-container .campo-supervisao-item .valor-total {
+        background-color: #d9e1ec;
+        border: 2px solid #1e5a3a;
+        padding: 1px 6px;
+        width: 50px;
+        font-weight: bold;
+        font-size: 11px;
+        border-radius: 3px;
+        text-align: center;
+        color: #1e5a3a;
+    }
+    .relatorio-container .supervisao-container .campo-supervisao-item .label { white-space: nowrap; font-size: 10px; }
+
+    /* ============================================ */
+    /* TABELA IMÓVEIS                               */
+    /* ============================================ */
+    .relatorio-container .tabela-imoveis {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .relatorio-container .tabela-imoveis th,
+    .relatorio-container .tabela-imoveis td {
+        border: 1px solid #1e5a3a;
+        padding: 2px 3px;
+        vertical-align: middle;
+        text-align: center;
+    }
+    .relatorio-container .tabela-imoveis th {
+        background-color: #d9e1ec;
+        font-weight: bold;
+        color: #1e5a3a;
+        font-size: 8.5px;
+        padding: 3px 2px;
+    }
+    .relatorio-container .tabela-imoveis .titulo-imoveis {
+        background-color: #2d7d4a;
+        font-weight: bold;
+        color: #ffffff;
+        text-align: center;
+        font-size: 10px;
+        padding: 3px 0;
+    }
+    .relatorio-container .tabela-imoveis .sub-titulo {
+        background-color: #2d7d4a;
+        font-weight: bold;
+        color: #ffffff;
+        font-size: 8.5px;
+        padding: 2px 2px;
+        text-align: center;
+    }
+    .relatorio-container .tabela-imoveis .input-numero {
+        width: 100%;
+        max-width: 32px;
+        border: none;
+        background: transparent;
+        text-align: center;
+        font-weight: bold;
+        font-size: 9px;
+        padding: 1px 0;
+        outline: none;
+        border-radius: 2px;
+    }
+    .relatorio-container .tabela-imoveis .input-numero:focus { background: #e8f0fe; }
+    .relatorio-container .tabela-imoveis .input-numero.total {
+        background-color: #d9e1ec;
+        font-weight: bold;
+        color: #1e5a3a;
+    }
+    .relatorio-container .tabela-imoveis .label-linha {
+        font-weight: bold;
+        font-size: 8px;
+        color: #1e5a3a;
+        background-color: #fef3c7;
+    }
+    .relatorio-container .tabela-imoveis .total-row {
+        background-color: #d9e1ec;
+        font-weight: bold;
+    }
+
+    /* ============================================ */
+    /* TABELA DEPÓSITOS                             */
+    /* ============================================ */
+    .relatorio-container .tabela-depositos {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9px;
+        margin-bottom: 4px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .relatorio-container .tabela-depositos th,
+    .relatorio-container .tabela-depositos td {
+        border: 1px solid #1e5a3a;
+        padding: 2px 3px;
+        vertical-align: middle;
+        text-align: center;
+    }
+    .relatorio-container .tabela-depositos th {
+        background-color: #d9e1ec;
+        font-weight: bold;
+        color: #1e5a3a;
+        font-size: 8.5px;
+        padding: 3px 2px;
+    }
+    .relatorio-container .tabela-depositos .titulo-depositos {
+        background-color: #2d7d4a;
+        font-weight: bold;
+        color: #ffffff;
+        text-align: center;
+        font-size: 10px;
+        padding: 3px 0;
+    }
+    .relatorio-container .tabela-depositos .input-numero-dep {
+        width: 100%;
+        max-width: 42px;
+        border: none;
+        background: transparent;
+        text-align: center;
+        font-weight: bold;
+        font-size: 9px;
+        padding: 1px 0;
+        outline: none;
+        border-radius: 2px;
+    }
+    .relatorio-container .tabela-depositos .input-numero-dep:focus { background: #e8f0fe; }
+    .relatorio-container .tabela-depositos .input-numero-dep-nao-inspec {
+        width: 100%;
+        max-width: 42px;
+        border: none;
+        background: transparent;
+        text-align: center;
+        font-weight: bold;
+        font-size: 9px;
+        padding: 1px 0;
+        outline: none;
+        border-radius: 2px;
+    }
+    .relatorio-container .tabela-depositos .input-numero-dep-nao-inspec:focus { background: #e8f0fe; }
+    .relatorio-container .tabela-depositos .input-numero-dep-inspec {
+        width: 100%;
+        max-width: 42px;
+        border: none;
+        background: #f3f4f6;
+        text-align: center;
+        font-weight: bold;
+        font-size: 9px;
+        padding: 1px 0;
+        border-radius: 2px;
+        color: #374151;
+        cursor: not-allowed;
+    }
+    .relatorio-container .tabela-depositos .label-negrito { font-weight: bold; font-size: 8.5px; }
+    .relatorio-container .tabela-depositos .total-row { background-color: #d9e1ec; font-weight: bold; }
+    .relatorio-container .tabela-depositos .linha-par { background-color: #fffbeb; }
+    .relatorio-container .tabela-depositos .linha-impar { background-color: #ffffff; }
+
+    /* ============================================ */
+    /* LINHA RESUMO DEPÓSITOS (4 ITENS)             */
+    /* ============================================ */
+    .relatorio-container .linha-resumo-depositos {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 6px;
+        border: 1px solid #1e5a3a;
+        background-color: #fef3c7;
+        padding: 4px 8px;
+        margin-bottom: 8px;
+        text-align: center;
+        border-radius: 4px;
+    }
+    .relatorio-container .linha-resumo-depositos .item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-weight: bold;
+        color: #1e5a3a;
+        font-size: 8.5px;
+        background-color: rgba(255,255,255,0.8);
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid #1e5a3a;
+    }
+    .relatorio-container .linha-resumo-depositos .item .label { white-space: nowrap; font-size: 7.5px; }
+    .relatorio-container .linha-resumo-depositos .item .input-pequeno {
+        width: 45px;
+        border: 1px solid #1e5a3a;
+        background: #ffffff;
+        padding: 1px 4px;
+        font-weight: bold;
+        font-size: 9px;
+        border-radius: 3px;
+        text-align: center;
+        outline: none;
+    }
+    .relatorio-container .linha-resumo-depositos .item .input-pequeno:focus { background: #e8f0fe; }
+    .relatorio-container .linha-resumo-depositos .item .input-pequeno.larvicida {
+        background-color: #dbeafe !important;
+        font-weight: bold;
+        color: #1e40af;
+    }
+    .relatorio-container .linha-resumo-depositos .item .input-pequeno:disabled {
+        background: #f3f4f6;
+        cursor: not-allowed;
+    }
+
+    /* ============================================ */
+    /* ITEM DO ÍNDICE DE INFESTAÇÃO (dentro da linha) */
+    /* ============================================ */
+    .relatorio-container .linha-resumo-depositos .item.item-indice {
+        background-color: #e8f0fe;
+    }
+    .relatorio-container .linha-resumo-depositos .item.item-indice .valor-indice {
+        background-color: #ffffff;
+        border: 2px solid #1e5a3a;
+        padding: 1px 10px;
+        min-width: 55px;
+        font-weight: bold;
+        font-size: 10px;
+        border-radius: 3px;
+        text-align: center;
+        color: #1e40af;
+    }
+
+    /* ============================================ */
+    /* RESUMO - 3 CARDS (INSPECIONADOS / TRATADOS / FOCADOS) */
+    /* ============================================ */
+    .relatorio-container .resumo-tabela-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        border: 1px solid #1e5a3a;
+        background-color: #fef3c7;
+        padding: 4px 8px;
+        margin-bottom: 8px;
+        text-align: center;
+        border-radius: 4px;
+    }
+    .relatorio-container .resumo-tabela-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: bold;
+        color: #1e5a3a;
+        font-size: 8.5px;
+        background-color: rgba(255,255,255,0.8);
+        padding: 4px 10px;
+        border-radius: 4px;
+        border: 1px solid #1e5a3a;
+    }
+    .relatorio-container .resumo-tabela-item .valor {
+        background-color: #ffffff;
+        border: 1px solid #1e5a3a;
+        padding: 1px 8px;
+        min-width: 30px;
+        font-weight: bold;
+        font-size: 9px;
+        border-radius: 3px;
+    }
+    .relatorio-container .resumo-tabela-item .label { white-space: nowrap; font-size: 7.5px; }
+    .relatorio-container .resumo-tabela-item .label-positivo { color: #16a34a; }
+    .relatorio-container .resumo-tabela-item .label-azul { color: #1e40af; }
+    .relatorio-container .resumo-tabela-item .label-laranja { color: #d97706; }
+
+    /* ============================================ */
+    /* TÍTULOS SECUNDÁRIOS                          */
+    /* ============================================ */
+    .relatorio-container .titulo-secundario {
+        font-weight: bold;
+        color: #ffffff;
+        font-size: 13px;
+        margin: 10px 0 4px 0;
+        padding: 4px 8px;
+        background-color: #d97706;
+        border-radius: 4px;
+        display: inline-block;
+    }
+
+    /* ============================================ */
+    /* OCORRÊNCIAS E DETALHAMENTO                   */
+    /* ============================================ */
+    .relatorio-container .ocorrencias {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2px 8px;
+        border: 1px solid #1e5a3a;
+        padding: 8px 12px;
+        background-color: #fef3c7;
+        margin-bottom: 8px;
+        font-size: 10px;
+        border-radius: 4px;
+    }
+    .relatorio-container .ocorrencias-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    .relatorio-container .ocorrencias-item input[type="checkbox"] {
+        width: 12px;
+        height: 12px;
+        accent-color: #2d7d4a;
+        cursor: pointer;
+    }
+    .relatorio-container .detalhamento {
+        border: 1px solid #1e5a3a;
+        min-height: 40px;
+        padding: 6px 8px;
+        background-color: #fef3c7;
+        margin-bottom: 6px;
+        font-size: 10px;
+        color: #555;
+        border-radius: 4px;
+    }
+
+    /* ============================================ */
+    /* RODAPÉ DO FORMULÁRIO (RESPONSÁVEL / DATA)    */
+    /* ============================================ */
+    .relatorio-container .rodape-formulario {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+        border: 1px solid #1e5a3a;
+        background-color: #e8f0fe;
+        padding: 8px 12px;
+        margin-top: 4px;
+        border-radius: 4px;
+    }
+    .relatorio-container .rodape-formulario .campo-rodape {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: bold;
+        color: #1e5a3a;
+        font-size: 11px;
+        min-width: 0;
+    }
+    .relatorio-container .rodape-formulario .campo-rodape .label-rodape {
+        white-space: nowrap;
+        font-size: 10.5px;
+    }
+    .relatorio-container .rodape-formulario .campo-rodape input {
+        background-color: #ffffff;
+        border: 1px solid #1e5a3a;
+        padding: 3px 8px;
+        font-weight: normal;
+        font-size: 11px;
+        border-radius: 3px;
+        flex: 1;
+        min-width: 0;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .relatorio-container .rodape-formulario .campo-rodape input:focus {
+        background-color: #ffffff;
+        border-color: #1e40af;
+        box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.15);
+    }
+
+    /* ============================================ */
+    /* RESPONSIVIDADE                               */
+    /* ============================================ */
+    @media (max-width: 768px) {
+        .relatorio-container .cabecalho-identificacao { grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+        .relatorio-container .ocorrencias { grid-template-columns: 1fr 1fr; }
+        .relatorio-container .resumo-tabela-container { grid-template-columns: 1fr 1fr; }
+        .relatorio-container .linha-resumo-depositos { grid-template-columns: 1fr 1fr; }
+        .relatorio-container .tabela-imoveis { font-size: 7px; }
+        .relatorio-container .tabela-imoveis th { font-size: 6.5px; padding: 2px 1px; }
+        .relatorio-container .tabela-imoveis td { font-size: 7px; padding: 2px 1px; }
+        .relatorio-container .tabela-imoveis .input-numero { max-width: 24px; font-size: 7px; }
+        .relatorio-container .tabela-depositos { font-size: 7px; }
+        .relatorio-container .tabela-depositos th { font-size: 6.5px; padding: 2px 1px; }
+        .relatorio-container .tabela-depositos td { font-size: 7px; padding: 2px 1px; }
+        .relatorio-container .tabela-depositos .input-numero-dep { max-width: 28px; font-size: 7px; }
+        .relatorio-container .tabela-depositos .input-numero-dep-nao-inspec { max-width: 28px; font-size: 7px; }
+        .relatorio-container .tabela-depositos .input-numero-dep-inspec { max-width: 28px; font-size: 7px; }
+        .relatorio-container .linha-resumo-depositos .item .input-pequeno { width: 35px; font-size: 7px; }
+        .relatorio-container .linha-resumo-depositos .item .label { font-size: 6.5px; }
+        .main-content { padding: 12px; }
+    }
+    @media (max-width: 480px) {
+        .relatorio-container { padding: 4mm; }
+        .relatorio-container .cabecalho-identificacao { grid-template-columns: 1fr; gap: 4px; }
+        .relatorio-container .ocorrencias { grid-template-columns: 1fr 1fr; }
+        .relatorio-container .resumo-tabela-container { grid-template-columns: 1fr; }
+        .relatorio-container .linha-resumo-depositos { grid-template-columns: 1fr; }
+        .relatorio-container .supervisao-container { flex-direction: column; align-items: stretch; }
+        .relatorio-container .quarteirao-linha { flex-direction: column; align-items: stretch; }
+        .relatorio-container .quarteirao-linha select { min-width: unset; max-width: 100%; }
+        .relatorio-container .rodape-formulario { grid-template-columns: 1fr; gap: 6px; }
+        .relatorio-container .tabela-imoveis { font-size: 6px; }
+        .relatorio-container .tabela-imoveis th { font-size: 5.5px; padding: 1px 1px; }
+        .relatorio-container .tabela-imoveis td { font-size: 6px; padding: 1px 1px; }
+        .relatorio-container .tabela-imoveis .input-numero { max-width: 18px; font-size: 6px; padding: 0; }
+        .relatorio-container .tabela-imoveis .label-linha { font-size: 6px; }
+        .relatorio-container .tabela-depositos { font-size: 6px; }
+        .relatorio-container .tabela-depositos th { font-size: 5.5px; padding: 1px 1px; }
+        .relatorio-container .tabela-depositos td { font-size: 6px; padding: 1px 1px; }
+        .relatorio-container .tabela-depositos .input-numero-dep { max-width: 22px; font-size: 6px; padding: 0; }
+        .relatorio-container .tabela-depositos .input-numero-dep-nao-inspec { max-width: 22px; font-size: 6px; padding: 0; }
+        .relatorio-container .tabela-depositos .input-numero-dep-inspec { max-width: 22px; font-size: 6px; padding: 0; }
+        .relatorio-container .linha-resumo-depositos .item .input-pequeno { width: 30px; font-size: 6px; }
+        .relatorio-container .linha-resumo-depositos .item .label { font-size: 6px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="pmcdToastContainer" class="pmcd-toast-container"></div>
+
+<!-- CONTEÚDO -->
+<div class="main-content">
+    <div id="aba-lancamento" class="aba ativa">
+        <div class="max-w-7xl mx-auto px-3 py-3">
+
+            <!-- FORMULÁRIO DIÁRIO -->
+            <div class="relatorio-container" id="formularioDiario">
+                <div class="titulo-principal">RESUMO SEMANAL DO SERVIÇO ANTIVETORIAL</div>
+                <div class="subtitulo-producao">Resumo da semana do LIRAa</div>
+
+                <!-- ============================================ -->
+                <!-- CABEÇALHO DE IDENTIFICAÇÃO (todos editáveis) -->
+                <!-- ============================================ -->
+                <div class="cabecalho-identificacao" id="cabecalhoIdentificacao">
+                    <div class="campo-cab">
+                        <span class="label-cab">MUNICÍPIO:</span>
+                        <input type="text" id="cabMunicipio" placeholder="Município">
+                    </div>
+                    <div class="campo-cab">
+                        <span class="label-cab">BAIRRO:</span>
+                        <input type="text" id="cabBairro" placeholder="Bairro">
+                    </div>
+                    <div class="campo-cab">
+                        <span class="label-cab">ESTRATO:</span>
+                        <input type="text" id="cabEstrato" placeholder="Estrato">
+                    </div>
+                    <div class="campo-cab">
+                        <span class="label-cab">EQUIPE:</span>
+                        <input type="text" id="cabEquipe" placeholder="Equipe">
+                    </div>
+
+                    <div class="campo-cab campo-duplo">
+                        <span class="label-cab">AGENTES:</span>
+                        <input type="text" id="cabAgentes" placeholder="Nome(s) do(s) agente(s)">
+                    </div>
+                    <div class="campo-cab campo-duplo">
+                        <span class="label-cab">SUPERVISOR:</span>
+                        <input type="text" id="cabSupervisor" placeholder="Supervisor(a)">
+                    </div>
+
+                    <div class="campo-cab">
+                        <span class="label-cab">ATIVIDADE:</span>
+                        <input type="text" id="cabAtividade" placeholder="Atividade">
+                    </div>
+                    <div class="campo-cab">
+                        <span class="label-cab">CICLO:</span>
+                        <input type="text" id="cabCiclo" placeholder="Ciclo">
+                    </div>
+                    <div class="campo-cab">
+                        <span class="label-cab">MÊS:</span>
+                        <input type="text" id="cabMes" placeholder="Mês">
+                    </div>
+                    <div class="campo-cab">
+                        <span class="label-cab">SEMANA EPIDEMIOLÓGICA:</span>
+                        <input type="text" id="cabSemanaEpi" placeholder="SE">
+                    </div>
+
+                    <div class="campo-cab">
+                        <span class="label-cab">INÍCIO:</span>
+                        <input type="date" id="cabInicio">
+                    </div>
+                    <div class="campo-cab">
+                        <span class="label-cab">TÉRMINO:</span>
+                        <input type="date" id="cabTermino">
+                    </div>
+                    <div class="campo-cab campo-duplo" id="cabConcluidoWrap">
+                        <span class="label-cab">CONCLUÍDO?</span>
+                        <select id="cabConcluido" onchange="atualizarConcluido()">
+                            <option value="NAO" selected>Não</option>
+                            <option value="SIM">Sim</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- QUARTEIRÕES -->
+                <div class="quarteiroes-container" id="quarteiroesContainerDiario">
+                    <div style="font-weight:bold; color:#1e5a3a; font-size:12px; margin-bottom:4px;">QUARTEIRÕES</div>
+                    <div id="quarteiroesTabelaContainer">
+                        <div class="quarteirao-linha">
+                            <span class="label-pequeno">Quarteirão</span>
+                            <select class="input-field">
+                                <option value="">Selecione</option>
+                                <option value="256">256</option>
+                                <option value="258">258</option>
+                                <option value="259">259</option>
+                                <option value="260">260</option>
+                            </select>
+                            <span class="label-pequeno">Concluído</span>
+                            <select style="width:70px; padding:2px 6px; font-size:11px; border:1px solid #1e5a3a; border-radius:4px;">
+                                <option value="SIM">Sim</option>
+                                <option value="NAO" selected>Não</option>
+                            </select>
+                            <button class="btn-remover" onclick="removerQuarteirao(this)">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn-adicionar" onclick="adicionarQuarteiraoTabela()">➕ ADICIONAR QUARTEIRÃO</button>
+                    <div class="quarteiroes-concluidos-painel">
+                        <div class="titulo">📋 Quarteirões Concluídos</div>
+                        <div id="quarteiroesConcluidosPainel" class="itens">
+                            <span style="color: #6b7280; font-size: 12px;">Nenhum quarteirão concluído</span>
+                        </div>
+                        <div class="total">Total: <span id="totalQuarteiroesConcluidos">0</span></div>
+                    </div>
+                </div>
+
+                <!-- SUPERVISÃO -->
+                <div class="supervisao-container">
+                    <span class="label-supervisao">SUPERVISÃO?</span>
+                    <select id="campoSupervisaoSimNao" onchange="toggleSupervisaoDiario()">
+                        <option value="NAO">NÃO</option>
+                        <option value="SIM">SIM</option>
+                    </select>
+                    <div class="campos-supervisao" id="camposSupervisaoDiario" style="display:none;">
+                        <div class="campo-supervisao-item">
+                            <span class="label">DIRETA:</span>
+                            <input type="number" id="campoSupervisaoDireta" value="0" min="0" oninput="calcularTotalSupervisaoDiario()">
+                        </div>
+                        <div class="campo-supervisao-item">
+                            <span class="label">INDIRETA:</span>
+                            <input type="number" id="campoSupervisaoIndireta" value="0" min="0" oninput="calcularTotalSupervisaoDiario()">
+                        </div>
+                        <div class="campo-supervisao-item">
+                            <span class="label">TOTAL:</span>
+                            <span class="valor-total" id="campoSupervisaoTotal">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IMÓVEIS (apenas INSPECIONADOS) -->
+                <table class="tabela-imoveis">
+                    <tr><th class="titulo-imoveis" colspan="7" style="width:100%;">IMÓVEIS</th></tr>
+                    <tr>
+                        <th class="sub-titulo" colspan="7" style="background-color:#1e5a3a;">INSPECIONADOS</th>
+                    </tr>
+                    <tr>
+                        <th class="coluna-tipo">TIPO</th>
+                        <th class="coluna-r">R</th><th class="coluna-c">C</th><th class="coluna-tb">TB</th>
+                        <th class="coluna-pe">PE</th><th class="coluna-o">O</th>
+                        <th class="coluna-total">TOTAL</th>
+                    </tr>
+                    <tr>
+                        <td class="label-linha">QUANTIDADE</td>
+                        <td><input type="number" class="input-numero" id="campoR" value="05" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoC" value="02" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoTB" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoPE" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoO" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero total" id="campoTotalImoveis" value="07" readonly></td>
+                    </tr>
+                    <tr>
+                        <td class="label-linha">TRATADOS</td>
+                        <td><input type="number" class="input-numero" id="campoR_Trat" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoC_Trat" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoTB_Trat" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoPE_Trat" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoO_Trat" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero total" id="campoTotalTrat" value="00" readonly></td>
+                    </tr>
+                    <tr>
+                        <td class="label-linha">FOCADOS</td>
+                        <td><input type="number" class="input-numero" id="campoR_Foc" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoC_Foc" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoTB_Foc" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoPE_Foc" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero" id="campoO_Foc" value="00" min="0" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()"></td>
+                        <td><input type="number" class="input-numero total" id="campoTotalFoc" value="00" readonly></td>
+                    </tr>
+                </table>
+
+                <!-- RESUMO: INSPECIONADOS / TRATADOS / FOCADOS -->
+                <div class="resumo-tabela-container">
+                    <div class="resumo-tabela-item">
+                        <span class="label label-positivo">IMÓVEIS INSPECIONADOS</span>
+                        <span class="valor" id="campoInspecionados">7</span>
+                    </div>
+                    <div class="resumo-tabela-item">
+                        <span class="label label-azul">IMÓVEIS TRATADOS</span>
+                        <span class="valor" id="campoTratadosResumo">0</span>
+                    </div>
+                    <div class="resumo-tabela-item">
+                        <span class="label label-laranja">IMÓVEIS FOCADOS</span>
+                        <span class="valor" id="campoFocadosResumo">0</span>
+                    </div>
+                </div>
+
+                <!-- DEPÓSITOS -->
+                <table class="tabela-depositos">
+                    <tr><th class="titulo-depositos" colspan="6" style="width:100%;">DEPÓSITOS</th></tr>
+                    <tr>
+                        <th style="width:18%;">TIPO</th>
+                        <th style="width:16%;">ENCONTRADOS</th>
+                        <th style="width:18%;">NÃO INSPECIONADOS</th>
+                        <th style="width:18%;">INSPECIONADOS</th>
+                        <th style="width:15%;">TRATADOS</th>
+                        <th style="width:15%;">FOCADOS</th>
+                    </tr>
+                    <tr class="linha-par">
+                        <td class="label-negrito">A1</td>
+                        <td><input type="number" class="input-numero-dep" id="campoA1_Encontrados" value="03" min="0" max="999" onchange="calcularInspecionadosDiario('A1')" oninput="calcularInspecionadosDiario('A1')"></td>
+                        <td><input type="number" class="input-numero-dep-nao-inspec" id="campoA1_NaoInspecionados" value="01" min="0" max="999" onchange="calcularInspecionadosDiario('A1')" oninput="calcularInspecionadosDiario('A1')"></td>
+                        <td><input type="number" class="input-numero-dep-inspec" id="campoA1_Inspecionados" value="02" readonly></td>
+                        <td><input type="number" class="input-numero-dep" id="campoA1_Tratados" value="00" min="0" max="999" onchange="validarDepositosDiario(this, 'A1', 'Tratados')" oninput="validarDepositosDiario(this, 'A1', 'Tratados')"></td>
+                        <td><input type="number" class="input-numero-dep" id="campoA1_Foco" value="00" min="0" max="999" onchange="calcularTotaisDiario()"></td>
+                    </tr>
+                    <tr class="linha-impar">
+                        <td class="label-negrito">A2</td>
+                        <td><input type="number" class="input-numero-dep" id="campoA2_Encontrados" value="01" min="0" max="999" onchange="calcularInspecionadosDiario('A2')" oninput="calcularInspecionadosDiario('A2')"></td>
+                        <td><input type="number" class="input-numero-dep-nao-inspec" id="campoA2_NaoInspecionados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('A2')" oninput="calcularInspecionadosDiario('A2')"></td>
+                        <td><input type="number" class="input-numero-dep-inspec" id="campoA2_Inspecionados" value="01" readonly></td>
+                        <td><input type="number" class="input-numero-dep" id="campoA2_Tratados" value="00" min="0" max="999" onchange="validarDepositosDiario(this, 'A2', 'Tratados')" oninput="validarDepositosDiario(this, 'A2', 'Tratados')"></td>
+                        <td><input type="number" class="input-numero-dep" id="campoA2_Foco" value="00" min="0" max="999" onchange="calcularTotaisDiario()"></td>
+                    </tr>
+                    <tr class="linha-par">
+                        <td class="label-negrito">B</td>
+                        <td><input type="number" class="input-numero-dep" id="campoB_Encontrados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('B')" oninput="calcularInspecionadosDiario('B')"></td>
+                        <td><input type="number" class="input-numero-dep-nao-inspec" id="campoB_NaoInspecionados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('B')" oninput="calcularInspecionadosDiario('B')"></td>
+                        <td><input type="number" class="input-numero-dep-inspec" id="campoB_Inspecionados" value="00" readonly></td>
+                        <td><input type="number" class="input-numero-dep" id="campoB_Tratados" value="00" min="0" max="999" onchange="validarDepositosDiario(this, 'B', 'Tratados')" oninput="validarDepositosDiario(this, 'B', 'Tratados')"></td>
+                        <td><input type="number" class="input-numero-dep" id="campoB_Foco" value="00" min="0" max="999" onchange="calcularTotaisDiario()"></td>
+                    </tr>
+                    <tr class="linha-impar">
+                        <td class="label-negrito">C</td>
+                        <td><input type="number" class="input-numero-dep" id="campoC_Encontrados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('C')" oninput="calcularInspecionadosDiario('C')"></td>
+                        <td><input type="number" class="input-numero-dep-nao-inspec" id="campoC_NaoInspecionados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('C')" oninput="calcularInspecionadosDiario('C')"></td>
+                        <td><input type="number" class="input-numero-dep-inspec" id="campoC_Inspecionados" value="00" readonly></td>
+                        <td><input type="number" class="input-numero-dep" id="campoC_Tratados" value="00" min="0" max="999" onchange="validarDepositosDiario(this, 'C', 'Tratados')" oninput="validarDepositosDiario(this, 'C', 'Tratados')"></td>
+                        <td><input type="number" class="input-numero-dep" id="campoC_Foco" value="00" min="0" max="999" onchange="calcularTotaisDiario()"></td>
+                    </tr>
+                    <tr class="linha-par">
+                        <td class="label-negrito">D1</td>
+                        <td><input type="number" class="input-numero-dep" id="campoD1_Encontrados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('D1')" oninput="calcularInspecionadosDiario('D1')"></td>
+                        <td><input type="number" class="input-numero-dep-nao-inspec" id="campoD1_NaoInspecionados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('D1')" oninput="calcularInspecionadosDiario('D1')"></td>
+                        <td><input type="number" class="input-numero-dep-inspec" id="campoD1_Inspecionados" value="00" readonly></td>
+                        <td><input type="number" class="input-numero-dep" id="campoD1_Tratados" value="00" min="0" max="999" onchange="validarDepositosDiario(this, 'D1', 'Tratados')" oninput="validarDepositosDiario(this, 'D1', 'Tratados')"></td>
+                        <td><input type="number" class="input-numero-dep" id="campoD1_Foco" value="00" min="0" max="999" onchange="calcularTotaisDiario()"></td>
+                    </tr>
+                    <tr class="linha-impar">
+                        <td class="label-negrito">D2</td>
+                        <td><input type="number" class="input-numero-dep" id="campoD2_Encontrados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('D2')" oninput="calcularInspecionadosDiario('D2')"></td>
+                        <td><input type="number" class="input-numero-dep-nao-inspec" id="campoD2_NaoInspecionados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('D2')" oninput="calcularInspecionadosDiario('D2')"></td>
+                        <td><input type="number" class="input-numero-dep-inspec" id="campoD2_Inspecionados" value="00" readonly></td>
+                        <td><input type="number" class="input-numero-dep" id="campoD2_Tratados" value="00" min="0" max="999" onchange="validarDepositosDiario(this, 'D2', 'Tratados')" oninput="validarDepositosDiario(this, 'D2', 'Tratados')"></td>
+                        <td><input type="number" class="input-numero-dep" id="campoD2_Foco" value="00" min="0" max="999" onchange="calcularTotaisDiario()"></td>
+                    </tr>
+                    <tr class="linha-par">
+                        <td class="label-negrito">E</td>
+                        <td><input type="number" class="input-numero-dep" id="campoE_Encontrados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('E')" oninput="calcularInspecionadosDiario('E')"></td>
+                        <td><input type="number" class="input-numero-dep-nao-inspec" id="campoE_NaoInspecionados" value="00" min="0" max="999" onchange="calcularInspecionadosDiario('E')" oninput="calcularInspecionadosDiario('E')"></td>
+                        <td><input type="number" class="input-numero-dep-inspec" id="campoE_Inspecionados" value="00" readonly></td>
+                        <td><input type="number" class="input-numero-dep" id="campoE_Tratados" value="00" min="0" max="999" onchange="validarDepositosDiario(this, 'E', 'Tratados')" oninput="validarDepositosDiario(this, 'E', 'Tratados')"></td>
+                        <td><input type="number" class="input-numero-dep" id="campoE_Foco" value="00" min="0" max="999" onchange="calcularTotaisDiario()"></td>
+                    </tr>
+                    <tr class="linha-impar total-row">
+                        <td class="label-negrito total-row">TOTAL</td>
+                        <td class="total-row"><span id="campoTotalEncontradosDepositos">4</span></td>
+                        <td class="total-row"><span id="campoTotalNaoInspecionadosDepositos">1</span></td>
+                        <td class="total-row"><span id="campoTotalInspecionadosDepositos">3</span></td>
+                        <td class="total-row"><span id="campoTotalTratadosDepositos">0</span></td>
+                        <td class="total-row"><span id="campoTotalFocoDepositos">0</span></td>
+                    </tr>
+                </table>
+
+                <!-- LINHA RESUMO COM 4 ITENS -->
+                <div class="linha-resumo-depositos">
+                    <div class="item">
+                        <span class="label">DEPÓSITOS ELIMINADOS</span>
+                        <input type="number" class="input-pequeno" id="campoDepositosEliminados" value="00" min="0" max="999" onchange="calcularTotaisDiario()" oninput="calcularTotaisDiario()">
+                    </div>
+                    <div class="item">
+                        <span class="label">LITROS TRATADOS</span>
+                        <input type="number" class="input-pequeno" id="campoLitrosTratados" value="00" min="0" max="9999" onchange="calcularLarvicidaDiario(); calcularTotaisDiario();" oninput="calcularLarvicidaDiario(); calcularTotaisDiario();" disabled>
+                    </div>
+                    <div class="item">
+                        <span class="label">LARVICIDA VectoBac® WG (GRAMAS)</span>
+                        <input type="number" class="input-pequeno larvicida" id="campoGramasLarvicida" value="0.0" min="0" style="background-color:#dbeafe; font-weight:bold;" readonly>
+                    </div>
+                    <div class="item item-indice">
+                        <span class="label">ÍNDICE DE INFESTAÇÃO PREDIAL</span>
+                        <span class="valor-indice" id="campoIndiceInfestacao">0.0%</span>
+                    </div>
+                </div>
+
+                <div class="titulo-secundario">OCORRÊNCIAS DA SEMANA</div>
+                <div class="ocorrencias" id="campoOcorrencias">
+                    <div class="ocorrencias-item"><input type="checkbox" value="Chuva"> Chuva</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Feriado"> Feriado</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Ponto Facultativo"> Ponto Facultativo</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Assembleia da Categoria"> Assembleia da Categoria</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Mutirão"> Mutirão</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Ação Educativa"> Ação Educativa</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Bloqueio de Transmissão"> Bloqueio de Transmissão</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Capacitação da Equipe"> Capacitação da Equipe</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Reunião Administrativa"> Reunião Administrativa</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Paralisação"> Paralisação</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Greve de Ônibus"> Greve de Ônibus</div>
+                    <div class="ocorrencias-item"><input type="checkbox" value="Equipamento Indisponível"> Equipamento Indisponível</div>
+                </div>
+
+                <div class="titulo-secundario">DETALHAMENTO (OPCIONAL)</div>
+                <div class="detalhamento" id="campoDetalhamento" contenteditable="true" style="min-height:60px; outline:none;">&nbsp;</div>
+
+                <!-- RODAPÉ DO FORMULÁRIO -->
+                <div class="rodape-formulario" id="rodapeFormulario">
+                    <div class="campo-rodape">
+                        <span class="label-rodape">RESPONSÁVEL:</span>
+                        <input type="text" id="rodapeResponsavel" placeholder="Nome do responsável">
+                    </div>
+                    <div class="campo-rodape">
+                        <span class="label-rodape">DATA:</span>
+                        <input type="date" id="rodapeData">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+/* ============================================ */
+/* TOAST                                        */
+/* ============================================ */
+const PMCD = {
+    toast: {
+        container: null,
+        init() {
+            this.container = document.getElementById('pmcdToastContainer');
+            if (!this.container) {
+                this.container = document.createElement('div');
+                this.container.id = 'pmcdToastContainer';
+                this.container.className = 'pmcd-toast-container';
+                document.body.appendChild(this.container);
+            }
+        },
+        show(message, type = 'info', duration = 3500) {
+            this.init();
+            const icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
+            const toast = document.createElement('div');
+            toast.className = `pmcd-toast ${type}`;
+            toast.innerHTML = `
+                <span class="icon">${icons[type] || 'ℹ️'}</span>
+                <span class="message">${message}</span>
+                <button class="close-btn" onclick="PMCD.toast.close(this.parentElement)">✕</button>
+            `;
+            this.container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => this.close(toast), duration);
+            toast.addEventListener('click', (e) => {
+                if (!e.target.closest('.close-btn')) this.close(toast);
+            });
+            return toast;
+        },
+        close(toast) {
+            if (!toast || toast.classList.contains('hiding')) return;
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 400);
+        },
+        success(msg) { return this.show(msg, 'success'); },
+        warning(msg) { return this.show(msg, 'warning'); },
+        error(msg)   { return this.show(msg, 'error'); },
+        info(msg)    { return this.show(msg, 'info'); }
+    }
+};
+
+/* ============================================ */
+/* CABEÇALHO - CONCLUÍDO                        */
+/* ============================================ */
+function atualizarConcluido() {
+    const wrap = document.getElementById('cabConcluidoWrap');
+    const valor = document.getElementById('cabConcluido').value;
+    wrap.classList.remove('concluido-sim', 'concluido-nao');
+    if (valor === 'SIM') {
+        wrap.classList.add('concluido-sim');
+        PMCD.toast.success('✅ Marcado como CONCLUÍDO');
+    } else {
+        wrap.classList.add('concluido-nao');
+        PMCD.toast.info('⏳ Marcado como NÃO CONCLUÍDO');
+    }
+}
+
+/* ============================================ */
+/* SUPERVISÃO                                   */
+/* ============================================ */
+function toggleSupervisaoDiario() {
+    const select = document.getElementById('campoSupervisaoSimNao');
+    const campos = document.getElementById('camposSupervisaoDiario');
+    if (select.value === 'SIM') {
+        campos.style.display = 'flex';
+    } else {
+        campos.style.display = 'none';
+        document.getElementById('campoSupervisaoDireta').value = 0;
+        document.getElementById('campoSupervisaoIndireta').value = 0;
+        document.getElementById('campoSupervisaoTotal').textContent = 0;
+    }
+}
+
+function calcularTotalSupervisaoDiario() {
+    const direta = parseInt(document.getElementById('campoSupervisaoDireta').value) || 0;
+    const indireta = parseInt(document.getElementById('campoSupervisaoIndireta').value) || 0;
+    document.getElementById('campoSupervisaoTotal').textContent = direta + indireta;
+}
+
+/* ============================================ */
+/* DEPÓSITOS - INSPECIONADOS POR TIPO           */
+/* ============================================ */
+function calcularInspecionadosDiario(tipo) {
+    const elEnc = document.getElementById(`campo${tipo}_Encontrados`);
+    const elNao = document.getElementById(`campo${tipo}_NaoInspecionados`);
+    const elIns = document.getElementById(`campo${tipo}_Inspecionados`);
+    if (!elEnc || !elNao || !elIns) return;
+
+    let encontrados = parseInt(elEnc.value) || 0;
+    let naoInspecionados = parseInt(elNao.value) || 0;
+
+    if (naoInspecionados > encontrados) {
+        PMCD.toast.error(`Não Inspecionados (${naoInspecionados}) não pode ser maior que Encontrados (${encontrados}) — tipo ${tipo}.`);
+        elNao.value = String(encontrados);
+        naoInspecionados = encontrados;
+    }
+
+    let inspecionados = encontrados - naoInspecionados;
+    if (inspecionados < 0) inspecionados = 0;
+    elIns.value = inspecionados < 10 ? String(inspecionados).padStart(2, '0') : String(inspecionados);
+
+    calcularTotaisDiario();
+}
+
+/* ============================================ */
+/* TOTAIS GERAIS                                */
+/* ============================================ */
+function calcularTotaisDiario() {
+    const campoR = parseInt(document.getElementById('campoR').value) || 0;
+    const campoC = parseInt(document.getElementById('campoC').value) || 0;
+    const campoTB = parseInt(document.getElementById('campoTB').value) || 0;
+    const campoPE = parseInt(document.getElementById('campoPE').value) || 0;
+    const campoO = parseInt(document.getElementById('campoO').value) || 0;
+
+    const totalImoveis = campoR + campoC + campoTB + campoPE + campoO;
+    document.getElementById('campoTotalImoveis').value = totalImoveis;
+
+    const rTrat = parseInt(document.getElementById('campoR_Trat').value) || 0;
+    const cTrat = parseInt(document.getElementById('campoC_Trat').value) || 0;
+    const tbTrat = parseInt(document.getElementById('campoTB_Trat').value) || 0;
+    const peTrat = parseInt(document.getElementById('campoPE_Trat').value) || 0;
+    const oTrat = parseInt(document.getElementById('campoO_Trat').value) || 0;
+    const totalTrat = rTrat + cTrat + tbTrat + peTrat + oTrat;
+    document.getElementById('campoTotalTrat').value = totalTrat;
+
+    const rFoc = parseInt(document.getElementById('campoR_Foc').value) || 0;
+    const cFoc = parseInt(document.getElementById('campoC_Foc').value) || 0;
+    const tbFoc = parseInt(document.getElementById('campoTB_Foc').value) || 0;
+    const peFoc = parseInt(document.getElementById('campoPE_Foc').value) || 0;
+    const oFoc = parseInt(document.getElementById('campoO_Foc').value) || 0;
+    const totalFoc = rFoc + cFoc + tbFoc + peFoc + oFoc;
+    document.getElementById('campoTotalFoc').value = totalFoc;
+
+    let totalInspecionados = totalImoveis;
+    if (totalInspecionados > 19) {
+        PMCD.toast.error('O total de IMÓVEIS INSPECIONADOS não pode ultrapassar 19!');
+        totalInspecionados = 19;
+    }
+    if (totalTrat > totalInspecionados) {
+        PMCD.toast.error(`TOTAL TRATADOS (${totalTrat}) não pode ser maior que IMÓVEIS INSPECIONADOS (${totalInspecionados})!`);
+    }
+    if (totalFoc > totalInspecionados) {
+        PMCD.toast.error(`TOTAL FOCADOS (${totalFoc}) não pode ser maior que IMÓVEIS INSPECIONADOS (${totalInspecionados})!`);
+    }
+
+    // Cards do resumo
+    document.getElementById('campoInspecionados').textContent = totalInspecionados;
+    document.getElementById('campoTratadosResumo').textContent = totalTrat;
+    document.getElementById('campoFocadosResumo').textContent = totalFoc;
+
+    // TOTAIS DEPÓSITOS
+    const tipos = ['A1', 'A2', 'B', 'C', 'D1', 'D2', 'E'];
+    const categorias = ['Encontrados', 'Inspecionados', 'NaoInspecionados', 'Tratados', 'Foco'];
+    const totais = { Encontrados: 0, Inspecionados: 0, NaoInspecionados: 0, Tratados: 0, Foco: 0 };
+    tipos.forEach(tipo => {
+        categorias.forEach(cat => {
+            const el = document.getElementById(`campo${tipo}_${cat}`);
+            if (el) totais[cat] += parseInt(el.value) || 0;
+        });
+    });
+    document.getElementById('campoTotalEncontradosDepositos').textContent = totais.Encontrados;
+    document.getElementById('campoTotalInspecionadosDepositos').textContent = totais.Inspecionados;
+    document.getElementById('campoTotalNaoInspecionadosDepositos').textContent = totais.NaoInspecionados;
+    document.getElementById('campoTotalTratadosDepositos').textContent = totais.Tratados;
+    document.getElementById('campoTotalFocoDepositos').textContent = totais.Foco;
+
+    // ÍNDICE DE INFESTAÇÃO PREDIAL = (Imóveis Focados / Imóveis Inspecionados) × 100
+    let indiceInfestacao = 0;
+    if (totalInspecionados > 0) {
+        indiceInfestacao = (totalFoc / totalInspecionados) * 100;
+    }
+    document.getElementById('campoIndiceInfestacao').textContent = indiceInfestacao.toFixed(1) + '%';
+
+    atualizarHabilitacaoLitrosTratados();
+}
+
+/* ============================================ */
+/* VALIDAÇÃO DEPÓSITOS TRATADOS                 */
+/* ============================================ */
+function validarDepositosDiario(input, tipo, campo) {
+    const elTratados = document.getElementById(`campo${tipo}_Tratados`);
+    if (campo === 'Tratados' && elTratados.disabled) {
+        PMCD.toast.warning('Para informar Depósitos Tratados, primeiro registre a quantidade de Imóveis Tratados.');
+        elTratados.value = '00';
+        calcularTotaisDiario();
+        return;
+    }
+    atualizarHabilitacaoLitrosTratados();
+    calcularTotaisDiario();
+}
+
+/* ============================================ */
+/* HABILITAÇÃO LITROS TRATADOS                  */
+/* ============================================ */
+function atualizarHabilitacaoLitrosTratados() {
+    const tiposDep = ['A1', 'A2', 'B', 'C', 'D1', 'D2', 'E'];
+    let algumTratado = false;
+    tiposDep.forEach(tipo => {
+        const el = document.getElementById(`campo${tipo}_Tratados`);
+        if (el && parseInt(el.value) > 0) algumTratado = true;
+    });
+
+    const campoLitros = document.getElementById('campoLitrosTratados');
+    if (!campoLitros) return;
+
+    if (!algumTratado) {
+        campoLitros.value = '00';
+        campoLitros.disabled = true;
+        document.getElementById('campoGramasLarvicida').value = '0.0';
+    } else {
+        campoLitros.disabled = false;
+    }
+}
+
+/* ============================================ */
+/* LARVICIDA                                    */
+/* ============================================ */
+const tabelaLarvicidaDiario = [
+    { litros: 1, gramas: 0.5 }, { litros: 51, gramas: 1 }, { litros: 101, gramas: 1.5 },
+    { litros: 151, gramas: 1.5 }, { litros: 201, gramas: 2 }, { litros: 251, gramas: 2.5 },
+    { litros: 301, gramas: 3 }, { litros: 351, gramas: 3.5 }, { litros: 401, gramas: 3.5 },
+    { litros: 451, gramas: 4 }, { litros: 501, gramas: 4.5 }, { litros: 551, gramas: 5 },
+    { litros: 601, gramas: 5.5 }, { litros: 651, gramas: 6 }, { litros: 701, gramas: 6 },
+    { litros: 751, gramas: 6.5 }, { litros: 801, gramas: 7 }, { litros: 851, gramas: 7.5 },
+    { litros: 901, gramas: 7.5 }, { litros: 951, gramas: 8 }, { litros: 1001, gramas: 8.5 },
+    { litros: 1051, gramas: 9 }, { litros: 1101, gramas: 9.5 }, { litros: 1151, gramas: 9.5 },
+    { litros: 1201, gramas: 10 }, { litros: 1251, gramas: 10.5 }, { litros: 1301, gramas: 11 },
+    { litros: 1351, gramas: 11.5 }, { litros: 1401, gramas: 11.5 }, { litros: 1451, gramas: 12 },
+    { litros: 1501, gramas: 12.5 }, { litros: 1551, gramas: 13 }, { litros: 1601, gramas: 13.5 },
+    { litros: 1651, gramas: 14 }, { litros: 1701, gramas: 14 }, { litros: 1751, gramas: 14.5 },
+    { litros: 1801, gramas: 15 }, { litros: 1851, gramas: 15.5 }, { litros: 1901, gramas: 15.5 },
+    { litros: 1951, gramas: 16 }, { litros: 2001, gramas: 16.5 }, { litros: 2051, gramas: 17 },
+    { litros: 2101, gramas: 17.5 }, { litros: 2151, gramas: 17.5 }, { litros: 2201, gramas: 18 },
+    { litros: 2251, gramas: 18.5 }, { litros: 2301, gramas: 19 }, { litros: 2351, gramas: 19.5 },
+    { litros: 2401, gramas: 19.5 }, { litros: 2451, gramas: 20 }, { litros: 2501, gramas: 20.5 }
+];
+
+function calcularLarvicidaDiario() {
+    const inputLitros = document.getElementById('campoLitrosTratados');
+    const inputGramas = document.getElementById('campoGramasLarvicida');
+    if (!inputLitros || !inputGramas) return;
+
+    let litros = parseInt(inputLitros.value) || 0;
+    let gramas = 0;
+    if (litros > 0) {
+        for (let i = tabelaLarvicidaDiario.length - 1; i >= 0; i--) {
+            if (litros >= tabelaLarvicidaDiario[i].litros) {
+                gramas = tabelaLarvicidaDiario[i].gramas;
+                break;
+            }
+        }
+        if (gramas === 0 && litros > 0) gramas = tabelaLarvicidaDiario[0].gramas;
+    }
+    inputGramas.value = gramas.toFixed(1);
+}
+
+/* ============================================ */
+/* QUARTEIRÕES                                  */
+/* ============================================ */
+function adicionarQuarteiraoTabela() {
+    const container = document.getElementById('quarteiroesTabelaContainer');
+    if (!container) return;
+
+    const novaLinha = document.createElement('div');
+    novaLinha.className = 'quarteirao-linha';
+    novaLinha.innerHTML = `
+        <span class="label-pequeno">Quarteirão</span>
+        <select class="input-field">
+            <option value="">Selecione</option>
+            <option value="256">256</option>
+            <option value="258">258</option>
+            <option value="259">259</option>
+            <option value="260">260</option>
+        </select>
+        <span class="label-pequeno">Concluído</span>
+        <select style="width:70px; padding:2px 6px; font-size:11px; border:1px solid #1e5a3a; border-radius:4px;">
+            <option value="SIM">Sim</option>
+            <option value="NAO" selected>Não</option>
+        </select>
+        <button class="btn-remover" onclick="removerQuarteirao(this)">✕</button>
+    `;
+    container.appendChild(novaLinha);
+
+    novaLinha.querySelectorAll('select').forEach(sel => {
+        sel.addEventListener('change', atualizarPainelConcluidos);
+    });
+
+    PMCD.toast.info('📋 Novo quarteirão adicionado');
+}
+
+function removerQuarteirao(btn) {
+    btn.closest('.quarteirao-linha').remove();
+    atualizarPainelConcluidos();
+    PMCD.toast.info('Quarteirão removido');
+}
+
+function atualizarPainelConcluidos() {
+    const painel = document.getElementById('quarteiroesConcluidosPainel');
+    const total = document.getElementById('totalQuarteiroesConcluidos');
+    const container = document.getElementById('quarteiroesTabelaContainer');
+    if (!painel || !total || !container) return;
+
+    const linhas = container.querySelectorAll('.quarteirao-linha');
+    const concluidos = [];
+    linhas.forEach(linha => {
+        const selects = linha.querySelectorAll('select');
+        if (selects.length >= 2) {
+            const quarteirao = selects[0].value;
+            const concluido = selects[1].value;
+            if (quarteirao && concluido === 'SIM') concluidos.push(quarteirao);
+        }
+    });
+
+    painel.innerHTML = concluidos.length === 0
+        ? '<span style="color: #6b7280; font-size: 12px;">Nenhum quarteirão concluído</span>'
+        : concluidos.map(q => `<span class="badge">${q}</span>`).join('');
+
+    total.textContent = concluidos.length;
+}
+
+/* ============================================ */
+/* INICIALIZAÇÃO                                */
+/* ============================================ */
+document.addEventListener('DOMContentLoaded', function () {
+    // Listeners imóveis
+    const camposImoveis = [
+        'campoR', 'campoC', 'campoTB', 'campoPE', 'campoO',
+        'campoR_Trat', 'campoC_Trat', 'campoTB_Trat', 'campoPE_Trat', 'campoO_Trat',
+        'campoR_Foc', 'campoC_Foc', 'campoTB_Foc', 'campoPE_Foc', 'campoO_Foc'
+    ];
+    camposImoveis.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', calcularTotaisDiario);
+            el.addEventListener('change', calcularTotaisDiario);
+        }
+    });
+
+    // Listeners depósitos
+    const tiposDep = ['A1', 'A2', 'B', 'C', 'D1', 'D2', 'E'];
+    tiposDep.forEach(tipo => {
+        ['Encontrados', 'NaoInspecionados'].forEach(cat => {
+            const el = document.getElementById(`campo${tipo}_${cat}`);
+            if (el) {
+                el.addEventListener('input', () => { calcularInspecionadosDiario(tipo); calcularTotaisDiario(); });
+                el.addEventListener('change', () => { calcularInspecionadosDiario(tipo); calcularTotaisDiario(); });
+            }
+        });
+        const elTrat = document.getElementById(`campo${tipo}_Tratados`);
+        if (elTrat) {
+            elTrat.addEventListener('input', function () { validarDepositosDiario(this, tipo, 'Tratados'); calcularTotaisDiario(); });
+            elTrat.addEventListener('change', function () { validarDepositosDiario(this, tipo, 'Tratados'); calcularTotaisDiario(); });
+        }
+        const elFoc = document.getElementById(`campo${tipo}_Foco`);
+        if (elFoc) {
+            elFoc.addEventListener('input', calcularTotaisDiario);
+            elFoc.addEventListener('change', calcularTotaisDiario);
+        }
+    });
+
+    // Quarteirões iniciais
+    const containerQ = document.getElementById('quarteiroesTabelaContainer');
+    if (containerQ) {
+        containerQ.querySelectorAll('select').forEach(sel => {
+            sel.addEventListener('change', atualizarPainelConcluidos);
+        });
+    }
+    atualizarPainelConcluidos();
+
+    // Concluído inicial
+    atualizarConcluido();
+
+    // Data do rodapé com hoje por padrão
+    const rodapeData = document.getElementById('rodapeData');
+    if (rodapeData && !rodapeData.value) {
+        rodapeData.value = new Date().toISOString().split('T')[0];
+    }
+
+    // Cálculo inicial
+    calcularTotaisDiario();
+
+    PMCD.toast.success('🚀 Resumo Semanal do Serviço Antivetorial pronto!');
+});
+</script>
+</body>
+</html>
