@@ -1,7 +1,8 @@
-const CACHE_NAME = 'pmcd-sugarbo-v34';
+const CACHE_NAME = 'pmcd-sugarbo-v35';
 const ARQUIVOS = [
   './',
   './index.html',
+  './andamento-quarteiroes.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',

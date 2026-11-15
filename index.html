@@ -535,7 +535,7 @@
       @media print {
         @page { size: A4 landscape; margin: 4mm; }
         body { background: #fff; }
-        header, nav.barra-navegacao-abas, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao, #telaAberturaAnimada, #telaLoginSistema, #telaEscolhaAtividade { display: none !important; }
+        header, nav.barra-navegacao-abas, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao, #telaAberturaAnimada, #telaLoginSistema, #telaEscolhaAtividade, #telaAndamentoQuarteiroes { display: none !important; }
         body.autenticacao-pendente *, body.atividade-pendente * { display: none !important; }
         main { padding: 0 !important; }
         .conteudo-aba { display: none !important; }
@@ -811,15 +811,25 @@
       body.autenticacao-pendente main,
       body.autenticacao-pendente #bannerModoLeitura,
       body.autenticacao-pendente #telaEscolhaAtividade,
+      body.autenticacao-pendente #telaAndamentoQuarteiroes,
       body.atividade-pendente header,
       body.atividade-pendente nav.barra-abas-horizontal,
       body.atividade-pendente main,
-      body.atividade-pendente #bannerModoLeitura {
+      body.atividade-pendente #bannerModoLeitura,
+      body.atividade-pendente #telaAndamentoQuarteiroes,
+      body.modo-andamento-quarteiroes header,
+      body.modo-andamento-quarteiroes nav.barra-abas-horizontal,
+      body.modo-andamento-quarteiroes main,
+      body.modo-andamento-quarteiroes #bannerModoLeitura {
         display: none !important;
       }
       body.autenticacao-pendente,
-      body.atividade-pendente {
+      body.atividade-pendente,
+      body.modo-andamento-quarteiroes {
         overflow: hidden;
+      }
+      body.modo-andamento-quarteiroes:not(.autenticacao-pendente):not(.atividade-pendente) #telaAndamentoQuarteiroes {
+        display: flex !important;
       }
       body.autenticacao-pendente {
         background: #071e12;
@@ -829,7 +839,8 @@
       }
       #telaAberturaAnimada, #telaAberturaAnimada *,
       #telaLoginSistema, #telaLoginSistema *,
-      #telaEscolhaAtividade, #telaEscolhaAtividade * {
+      #telaEscolhaAtividade, #telaEscolhaAtividade *,
+      #telaAndamentoQuarteiroes .andamento-topbar, #telaAndamentoQuarteiroes .andamento-topbar * {
         font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif !important;
       }
       #telaAberturaAnimada .abertura-titulo,
@@ -1297,7 +1308,7 @@
       }
       .escolha-container {
         width: 100%;
-        max-width: 1020px;
+        max-width: 1240px;
         display: flex;
         flex-direction: column;
         gap: 28px;
@@ -1331,7 +1342,7 @@
       }
       .escolha-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
         gap: 22px;
         align-items: stretch;
       }
@@ -1354,6 +1365,7 @@
         box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
       }
       .escolha-card.ciclo:hover { border-color: #16a34a; }
+      .escolha-card.andamento:hover { border-color: #0d9488; }
       .escolha-card.liraa:hover { border-color: #2563eb; }
       .escolha-card-topo {
         display: flex;
@@ -1371,6 +1383,7 @@
         flex-shrink: 0;
       }
       .escolha-card.ciclo .escolha-icone { background: #dcfce7; border: 1px solid #86efac; }
+      .escolha-card.andamento .escolha-icone { background: #ccfbf1; border: 1px solid #5eead4; }
       .escolha-card.liraa .escolha-icone { background: #dbeafe; border: 1px solid #93c5fd; }
       .escolha-card-titulo {
         font-size: 1.24rem;
@@ -1416,12 +1429,43 @@
       }
       .escolha-card.ciclo .escolha-cta { background: #166534; }
       .escolha-card.ciclo:hover .escolha-cta { background: #15803d; }
+      .escolha-card.andamento .escolha-cta { background: #0f766e; }
+      .escolha-card.andamento:hover .escolha-cta { background: #115e59; }
       .escolha-card.liraa .escolha-cta { background: #1d4ed8; }
       .escolha-card.liraa:hover .escolha-cta { background: #1e40af; }
       .escolha-nota-rodape {
         text-align: center;
         font-size: 0.8rem;
         color: #64748b;
+      }
+      /* Container integrado para Andamento dos quarteirões do ciclo */
+      .tela-andamento-quarteiroes {
+        position: fixed;
+        inset: 0;
+        z-index: 22500;
+        display: none;
+        flex-direction: column;
+        background: #f4f4f4;
+      }
+      .andamento-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 10px 22px;
+        background: #0f291e;
+        color: #ffffff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+        flex-shrink: 0;
+      }
+      .andamento-iframe {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+        background: #f4f4f4;
       }
       /* Painéis LIRAa */
       .liraa-faixa-risco {
@@ -1472,6 +1516,8 @@
         <p class="abertura-subtitulo">Programa Municipal de Controle da Dengue — Controle semanal, ciclos de visita e acompanhamento operacional em tempo real.</p>
         <div class="abertura-pilares">
           <span>Ciclo de Visita</span>
+          <span class="abertura-sep" aria-hidden="true">·</span>
+          <span>Andamento dos Quarteirões</span>
           <span class="abertura-sep" aria-hidden="true">·</span>
           <span>LIRAa</span>
           <span class="abertura-sep" aria-hidden="true">·</span>
@@ -1568,6 +1614,24 @@
               <span class="escolha-cta">Acessar Ciclo de Visita →</span>
             </button>
 
+            <button type="button" id="btnEscolherAndamento" class="escolha-card andamento" data-escolher-atividade="andamento">
+              <div style="display:flex; flex-direction:column; gap:14px;">
+                <div class="escolha-card-topo">
+                  <div class="escolha-icone" aria-hidden="true">🏘️</div>
+                  <div>
+                    <h3 class="escolha-card-titulo">Andamento dos quarteirões do ciclo</h3>
+                    <div class="escolha-card-meta">Controle de Campo · Boletins, Bases e Reconhecimento</div>
+                  </div>
+                </div>
+                <p class="escolha-card-desc">Acompanhamento completo do andamento dos quarteirões por semana e dia, com controle de imóveis pendentes, boletins de reconhecimento, bases + LIRAa, coflagrados e resumo geral.</p>
+                <div class="escolha-card-abas">
+                  <strong>Abas incluídas:</strong> Diário, Semanal, Total de Imóveis, Informados, Em Andamento, Concluídos, Boletins de Reconhecimento, Resumo de Reconhecimento, Bases, Bases+LIRAa, Coflagrados e Resumo Geral.
+                </div>
+                <div id="estatisticasEscolhaAndamento" class="escolha-card-stats">Carregando dados...</div>
+              </div>
+              <span class="escolha-cta">Acessar Andamento dos Quarteirões →</span>
+            </button>
+
             <button type="button" id="btnEscolherLiraa" class="escolha-card liraa" data-escolher-atividade="liraa">
               <div style="display:flex; flex-direction:column; gap:14px;">
                 <div class="escolha-card-topo">
@@ -1587,10 +1651,27 @@
             </button>
           </div>
           <div class="escolha-nota-rodape">
-            Você poderá alternar entre <strong>Ciclo de Visita</strong> e <strong>LIRAa</strong> a qualquer momento pelo botão <strong>🔀 Trocar Atividade</strong> no topo do sistema.
+            Você poderá alternar entre <strong>Ciclo de Visita</strong>, <strong>Andamento dos quarteirões do ciclo</strong> e <strong>LIRAa</strong> a qualquer momento pelo botão <strong>🔀 Trocar Atividade</strong> no topo do sistema.
           </div>
         </div>
       </div>
+    </div>
+    <!-- Container Integrado: Andamento dos quarteirões do ciclo -->
+    <div id="telaAndamentoQuarteiroes" class="tela-andamento-quarteiroes" role="region" aria-label="Andamento dos quarteirões do ciclo">
+      <div class="andamento-topbar">
+        <div class="escolha-marca">
+          <span>🏘️</span>
+          <span>PMCD · Andamento dos quarteirões do ciclo</span>
+        </div>
+        <div class="escolha-acoes-topo">
+          <span id="andamentoUsuarioBadge" class="escolha-usuario-txt">👑 Ricardo</span>
+          <button type="button" id="btnAndamentoImprimir" class="escolha-btn-topo" title="Imprimir aba atual do Andamento dos Quarteirões">🖨️ Imprimir</button>
+          <button type="button" id="btnAndamentoAcessos" class="escolha-btn-topo" style="display:none;">👥 Acessos</button>
+          <button type="button" id="btnAndamentoTrocarAtividade" class="escolha-btn-topo" style="background:#0369a1; border-color:#7dd3fc;">🔀 Trocar Atividade</button>
+          <button type="button" id="btnAndamentoSair" class="escolha-btn-topo sair">🚪 Sair</button>
+        </div>
+      </div>
+      <iframe id="iframeAndamentoQuarteiroes" class="andamento-iframe" title="Andamento dos quarteirões do ciclo" src="about:blank"></iframe>
     </div>
     <header>
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -1617,7 +1698,7 @@
         </div>
         <div class="acoes-backup">
           <span id="badgeUsuarioLogado" style="font-size:0.78rem; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.28); color:#fff; font-weight:700; padding:4px 10px; border-radius:6px; display:none;">👤 Usuário</span>
-          <button class="btn-backup" id="btnTrocarAtividade" style="background:#0369a1; border-color:#7dd3fc;" title="Voltar à página de seleção entre Ciclo de Visita e LIRAa">🔀 Trocar Atividade</button>
+          <button class="btn-backup" id="btnTrocarAtividade" style="background:#0369a1; border-color:#7dd3fc;" title="Voltar à página de seleção de atividades">🔀 Trocar Atividade</button>
           <button class="btn-backup" id="btnGerenciarUsuarios" style="display:none; background:#0f766e; border-color:#5eead4;" title="Permitir, bloquear ou remover usuários com acesso ao aplicativo">👥 Acessos</button>
           <button class="btn-backup btn-baixar-html" id="btnBaixarCodigo">💻 Baixar index.html</button>
           <button class="btn-backup" id="btnExportarJSON">💾 Exportar JSON</button>
@@ -2961,6 +3042,7 @@
       function atualizarEstatisticasEscolhaAtividade() {
         const ano = new Date().getFullYear();
         const elC = document.getElementById("estatisticasEscolhaCiclo");
+        const elA = document.getElementById("estatisticasEscolhaAndamento");
         const elL = document.getElementById("estatisticasEscolhaLiraa");
         if (elC) {
           const progsC = typeof obterSemanasProgramadas === "function" ? obterSemanasProgramadas("ciclo", ano) : [];
@@ -2968,6 +3050,23 @@
           elC.textContent = progsC.length > 0
             ? `📅 ${progsC.length} SE programada(s) em ${ano} · ${semC} semana(s) salva(s)`
             : `📝 ${semC} semana(s) salva(s) · Configure a programação anual na SUGARBO`;
+        }
+        if (elA) {
+          try {
+            const rawProd = localStorage.getItem("diario_producao_v1");
+            const rawStatus = localStorage.getItem("diario_status_quarteiroes_v1");
+            const arrProd = rawProd ? JSON.parse(rawProd) : [];
+            const objStatus = rawStatus ? JSON.parse(rawStatus) : {};
+            const qtdSemanasAnd = Array.isArray(arrProd) ? arrProd.length : 0;
+            const qtdConcluidos = objStatus && typeof objStatus === "object"
+              ? Object.values(objStatus).filter(v => v && (v.concluido === true || v === "concluido")).length
+              : 0;
+            elA.textContent = qtdSemanasAnd > 0
+              ? `🏘️ ${qtdSemanasAnd} semana(s) lançada(s) no diário · ${qtdConcluidos} quarteirão(ões) concluído(s)`
+              : `🏘️ 12 painéis operacionais · Pronto para lançamentos e sincronização na nuvem`;
+          } catch (e) {
+            elA.textContent = "🏘️ 12 painéis operacionais · Controle completo de quarteirões";
+          }
         }
         if (elL) {
           const progsL = typeof obterSemanasProgramadas === "function" ? obterSemanasProgramadas("liraa", ano) : [];
@@ -3036,6 +3135,7 @@
         ["dashCiclo", "progCiclo", "cicloLancamentoCiclo", "filtroCicloConsolidado"].forEach(id => atualizarSelectCicloLabels(id, ehLiraa));
       }
       function abrirTelaEscolhaAtividade() {
+        document.body.classList.remove("modo-andamento-quarteiroes");
         document.body.classList.add("atividade-pendente");
         try { fecharModalGerenciarSemanasCiclo(); } catch(e) {}
         try { fecharModalCorrecao(); } catch(e) {}
@@ -3049,7 +3149,29 @@
         const tela = document.getElementById("telaEscolhaAtividade");
         if (tela) tela.classList.add("ativo");
       }
+      function abrirAndamentoQuarteiroes() {
+        document.body.classList.remove("atividade-pendente");
+        document.body.classList.add("modo-andamento-quarteiroes");
+        const tela = document.getElementById("telaEscolhaAtividade");
+        if (tela) tela.classList.remove("ativo");
+        const bdg = document.getElementById("andamentoUsuarioBadge");
+        const btnAc = document.getElementById("btnAndamentoAcessos");
+        if (_sessaoUsuarioAtual) {
+          if (bdg) bdg.textContent = `${_sessaoUsuarioAtual.papel === "admin" ? "👑" : "👤"} ${_sessaoUsuarioAtual.nome || _sessaoUsuarioAtual.usuario}`;
+          if (btnAc) btnAc.style.display = _sessaoUsuarioAtual.papel === "admin" ? "inline-flex" : "none";
+        }
+        const iframe = document.getElementById("iframeAndamentoQuarteiroes");
+        if (iframe && (!iframe.dataset.carregado || iframe.getAttribute("src") === "about:blank")) {
+          iframe.dataset.carregado = "1";
+          iframe.src = "/andamento-quarteiroes.html";
+        }
+      }
       function selecionarAtividadeSistema(at, irParaAba = "dashboard") {
+        if (at === "andamento") {
+          abrirAndamentoQuarteiroes();
+          return;
+        }
+        document.body.classList.remove("modo-andamento-quarteiroes");
         const alvo = at === "liraa" ? "liraa" : "ciclo";
         estado.atividadeAtiva = alvo;
         estado.atividadeSelecionadaPeloUsuario = alvo;
@@ -3098,10 +3220,16 @@
       function bloquearSistemaParaLogin(msgErro = "") {
         _sessaoUsuarioAtual = null;
         limparSessaoArmazenada();
+        document.body.classList.remove("modo-andamento-quarteiroes");
         document.body.classList.add("autenticacao-pendente");
         document.body.classList.add("atividade-pendente");
         const telaEsc = document.getElementById("telaEscolhaAtividade");
         if (telaEsc) telaEsc.classList.remove("ativo");
+        const iframeAnd = document.getElementById("iframeAndamentoQuarteiroes");
+        if (iframeAnd) {
+          delete iframeAnd.dataset.carregado;
+          iframeAnd.src = "about:blank";
+        }
         atualizarHeaderSessao();
         fecharModalGerenciarUsuarios();
         const loginEl = document.getElementById("telaLoginSistema");
@@ -8179,10 +8307,27 @@
           // Listeners da Tela de Escolha da Atividade (Pós-Login) e Troca de Atividade
           const btnEscolherCiclo = document.getElementById("btnEscolherCiclo");
           if (btnEscolherCiclo) btnEscolherCiclo.addEventListener("click", () => selecionarAtividadeSistema("ciclo", "dashboard"));
+          const btnEscolherAndamento = document.getElementById("btnEscolherAndamento");
+          if (btnEscolherAndamento) btnEscolherAndamento.addEventListener("click", () => abrirAndamentoQuarteiroes());
           const btnEscolherLiraa = document.getElementById("btnEscolherLiraa");
           if (btnEscolherLiraa) btnEscolherLiraa.addEventListener("click", () => selecionarAtividadeSistema("liraa", "dashboard"));
           const btnTrocarAt = document.getElementById("btnTrocarAtividade");
           if (btnTrocarAt) btnTrocarAt.addEventListener("click", () => abrirTelaEscolhaAtividade());
+          const btnAndTrocar = document.getElementById("btnAndamentoTrocarAtividade");
+          if (btnAndTrocar) btnAndTrocar.addEventListener("click", () => abrirTelaEscolhaAtividade());
+          const btnAndAcessos = document.getElementById("btnAndamentoAcessos");
+          if (btnAndAcessos) btnAndAcessos.addEventListener("click", abrirModalGerenciarUsuarios);
+          const btnAndSair = document.getElementById("btnAndamentoSair");
+          if (btnAndSair) btnAndSair.addEventListener("click", () => bloquearSistemaParaLogin());
+          const btnAndImprimir = document.getElementById("btnAndamentoImprimir");
+          if (btnAndImprimir) {
+            btnAndImprimir.addEventListener("click", () => {
+              const ifr = document.getElementById("iframeAndamentoQuarteiroes");
+              if (ifr && ifr.contentWindow) {
+                try { ifr.contentWindow.focus(); ifr.contentWindow.print(); } catch(e) { console.error(e); }
+              }
+            });
+          }
           const btnEscAcessos = document.getElementById("btnEscolhaAcessos");
           if (btnEscAcessos) btnEscAcessos.addEventListener("click", abrirModalGerenciarUsuarios);
           const btnEscSair = document.getElementById("btnEscolhaSair");
@@ -8210,6 +8355,7 @@
             window.bloquearSistemaParaLogin = bloquearSistemaParaLogin;
             window.selecionarAtividadeSistema = selecionarAtividadeSistema;
             window.abrirTelaEscolhaAtividade = abrirTelaEscolhaAtividade;
+            window.abrirAndamentoQuarteiroes = abrirAndamentoQuarteiroes;
             window.renderizarIndicesLiraa = renderizarIndicesLiraa;
           }
         } catch (eg) { console.error("[PMCD Erro]:", eg); }
