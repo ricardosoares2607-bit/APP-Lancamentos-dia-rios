@@ -1884,7 +1884,8 @@
   const STORAGE_PENDENTE_NUVEM = "diario_liraa_pendente_nuvem_v1";
   const STORAGE_ULTIMO_TS = "diario_liraa_ultimo_timestamp_v1";
   const STORAGE_BACKUP_COMPLETO = "diario_liraa_backup_completo_offline_v1";
-  const STORAGE_CICLO_BOLETINS_SYNC = "diario_liraa_ciclo_boletins_sync_v1";
+  const STORAGE_CICLO_BOLETINS_SYNC = "diario_liraa_ciclo_boletins_sync_v2";
+  const STORAGE_CICLO_BOLETINS_SYNC_V1 = "diario_liraa_ciclo_boletins_sync_v1";
 
   // Chaves de leitura do módulo Ciclo para manter Boletins de Reconhecimento vinculados
   const CICLO_STORAGE_FORMULARIOS = "diario_formularios_novos_v1";
@@ -2806,6 +2807,9 @@
       dadosFormularios = Object.assign({ boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, coflagrados: {} }, dados.dadosFormularios);
 
       garantirEstruturaBoletins();
+      if (typeof sanitizarBoletinsLiraaSemComplemento === "function") {
+        sanitizarBoletinsLiraaSemComplemento();
+      }
       if (typeof sincronizarBoletinsDoCicloLocal === "function") {
         sincronizarBoletinsDoCicloLocal({ salvarNuvem: false });
       }
@@ -3658,6 +3662,7 @@
             const k = `${p}_${t}_${i}`;
             const l = form.imoveis && form.imoveis[k];
             if (!l) continue;
+            if (typeof imovelTemComplementoBoletim === "function" && imovelTemComplementoBoletim(l)) continue;
             const tipo = String(l.tipo || "").trim().toUpperCase();
             if (tipo && Object.prototype.hasOwnProperty.call(counts, tipo)) counts[tipo]++;
           }
@@ -3965,6 +3970,109 @@
     }
   }
 
+  function imovelTemComplementoBoletim(l) {
+    if (!l || typeof l !== "object") return false;
+    if (String(l.comp || "").trim() !== "") return true;
+    const numStr = String(l.numero || "").trim();
+    const seqStr = String(l.seq || "").trim();
+    if (/complemento|\bcomp\.?\s*[a-z0-9]/i.test(numStr) || /complemento|\bcomp\.?\s*[a-z0-9]/i.test(seqStr)) {
+      return true;
+    }
+    return false;
+  }
+
+  function filtrarFormBoletimSemComplemento(formQ) {
+    const f = normalizarFormBoletimQuarteirao(formQ);
+    const imoveisOrig = f.imoveis || {};
+    const linhasMantidas = [];
+    const chavesVistas = new Set();
+
+    let maxPagImoveis = Math.max(0, (parseInt(f.paginas, 10) || 1) - 1);
+    Object.keys(imoveisOrig).forEach(k => {
+      const m = /^(\d+)_/.exec(k);
+      if (m) maxPagImoveis = Math.max(maxPagImoveis, parseInt(m[1], 10) || 0);
+    });
+
+    const tentarAdicionar = (k) => {
+      if (chavesVistas.has(k)) return;
+      chavesVistas.add(k);
+      const l = imoveisOrig[k];
+      if (!l || typeof l !== "object") return;
+      const rua = String(l.rua || "");
+      const numero = String(l.numero || "");
+      const comp = String(l.comp || "");
+      const seq = String(l.seq || "");
+      const tipo = String(l.tipo || "");
+      if (!(rua.trim() || numero.trim() || comp.trim() || seq.trim() || tipo.trim())) return;
+      if (imovelTemComplementoBoletim(l)) return;
+      linhasMantidas.push({ rua, numero, comp: "", seq, tipo });
+    };
+
+    for (let p = 0; p <= maxPagImoveis; p++) {
+      for (let t = 1; t <= 2; t++) {
+        for (let i = 0; i < LINHAS_IMOVEIS_BOLETINS; i++) {
+          tentarAdicionar(`${p}_${t}_${i}`);
+        }
+      }
+    }
+    Object.keys(imoveisOrig)
+      .sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }))
+      .forEach(tentarAdicionar);
+
+    const porPagina = LINHAS_IMOVEIS_BOLETINS * 2;
+    const totalPaginas = Math.max(1, Math.ceil(linhasMantidas.length / porPagina));
+    const imoveisFiltrados = {};
+    const resumoFiltrado = {};
+
+    for (let p = 0; p < totalPaginas; p++) {
+      const counts = { R: 0, C: 0, TB: 0, PE: 0, O: 0 };
+      const inicio = p * porPagina;
+      const fim = Math.min(linhasMantidas.length, inicio + porPagina);
+      for (let idx = inicio; idx < fim; idx++) {
+        const localIdx = idx - inicio;
+        const t = localIdx < LINHAS_IMOVEIS_BOLETINS ? 1 : 2;
+        const i = localIdx < LINHAS_IMOVEIS_BOLETINS ? localIdx : (localIdx - LINHAS_IMOVEIS_BOLETINS);
+        const row = linhasMantidas[idx];
+        imoveisFiltrados[`${p}_${t}_${i}`] = row;
+        const tipo = String(row.tipo || "").trim().toUpperCase();
+        if (tipo && Object.prototype.hasOwnProperty.call(counts, tipo)) counts[tipo]++;
+      }
+      const totalPag = counts.R + counts.C + counts.TB + counts.PE + counts.O;
+      resumoFiltrado[String(p)] = {
+        residencia: String(counts.R).padStart(2, "0"),
+        comercio:   String(counts.C).padStart(2, "0"),
+        terreno:    String(counts.TB).padStart(2, "0"),
+        ponto:      String(counts.PE).padStart(2, "0"),
+        outros:     String(counts.O).padStart(2, "0"),
+        total:      String(totalPag).padStart(2, "0")
+      };
+    }
+
+    return {
+      paginas: totalPaginas,
+      imoveis: imoveisFiltrados,
+      resumo: resumoFiltrado
+    };
+  }
+
+  function sanitizarBoletinsLiraaSemComplemento() {
+    if (!dadosFormularios || !dadosFormularios.boletins || !dadosFormularios.boletins.porQuarteirao) return false;
+    const pQ = dadosFormularios.boletins.porQuarteirao;
+    let alterou = false;
+    Object.keys(pQ).forEach(qKey => {
+      const orig = normalizarFormBoletimQuarteirao(pQ[qKey]);
+      const temComplemento = Object.keys(orig.imoveis || {}).some(k => imovelTemComplementoBoletim(orig.imoveis[k]));
+      if (temComplemento) {
+        pQ[qKey] = filtrarFormBoletimSemComplemento(orig);
+        alterou = true;
+      }
+    });
+    if (alterou) {
+      salvarFormularios();
+    }
+    return alterou;
+  }
+
   function normalizarFormBoletimQuarteirao(formQ) {
     const f = (formQ && typeof formQ === "object") ? formQ : {};
     const pag = Math.max(1, parseInt(f.paginas, 10) || 1);
@@ -4150,10 +4258,15 @@
     garantirEstruturaBoletins();
 
     let prevHashes = {};
+    let legacyV1Hashes = {};
     try {
       const rawH = localStorage.getItem(STORAGE_CICLO_BOLETINS_SYNC);
       if (rawH) prevHashes = JSON.parse(rawH) || {};
-    } catch (e) { prevHashes = {}; }
+      const rawV1 = localStorage.getItem(STORAGE_CICLO_BOLETINS_SYNC_V1);
+      if (rawV1) legacyV1Hashes = JSON.parse(rawV1) || {};
+    } catch (e) { prevHashes = {}; legacyV1Hashes = {}; }
+
+    let alterou = sanitizarBoletinsLiraaSemComplemento();
 
     if (!dadosFormularios.boletins) dadosFormularios.boletins = { porQuarteirao: {} };
     if (!dadosFormularios.boletins.porQuarteirao) dadosFormularios.boletins.porQuarteirao = {};
@@ -4165,19 +4278,21 @@
     const rodsCiclo = cicloData.rodapes || {};
     const todasChaves = new Set([...Object.keys(porQuartCiclo), ...Object.keys(cabsCiclo), ...Object.keys(rodsCiclo)]);
 
-    let alterou = false;
     const nextHashes = Object.assign({}, prevHashes);
 
     todasChaves.forEach(qKey => {
-      const cForm = normalizarFormBoletimQuarteirao(porQuartCiclo[qKey]);
+      const cFormBruto = normalizarFormBoletimQuarteirao(porQuartCiclo[qKey]);
+      const cFormFiltrado = filtrarFormBoletimSemComplemento(cFormBruto);
       const cCab = normalizarObjTextoSimples(cabsCiclo[qKey]);
       const cRod = normalizarObjTextoSimples(rodsCiclo[qKey]);
-      const cTem = boletimQuarteiraoTemConteudo(cForm, cCab, cRod);
+      const cBrutoTem = boletimQuarteiraoTemConteudo(cFormBruto, cCab, cRod);
+      const cFiltradoTem = boletimQuarteiraoTemConteudo(cFormFiltrado, cCab, cRod);
 
-      if (qKey === "_legacy" && !cTem) return;
+      if (qKey === "_legacy" && !cFiltradoTem) return;
 
-      const cHash = hashBoletimQuarteirao(cForm, cCab, cRod);
+      const cHash = hashBoletimQuarteirao(cFormBruto, cCab, cRod);
       const prevHash = prevHashes[qKey];
+      const veioDoCicloV1 = prevHash === undefined && Object.prototype.hasOwnProperty.call(legacyV1Hashes, qKey);
       const lFormRaw = dadosFormularios.boletins.porQuarteirao[qKey];
       const lCabRaw = cabecalhos.boletins.porQuarteirao[qKey];
       const lRodRaw = rodapes.boletins.porQuarteirao[qKey];
@@ -4186,32 +4301,32 @@
 
       let deveAplicar = false;
 
-      if (!existeNoLiraa) {
+      if (!existeNoLiraa || veioDoCicloV1) {
         deveAplicar = true;
       } else if (prevHash !== undefined) {
         if (cHash !== prevHash) {
           deveAplicar = true;
         }
-      } else if (cTem) {
+      } else if (cBrutoTem) {
         if (!lTem) {
           deveAplicar = true;
         } else {
-          // Primeira vinculação onde ambos já tinham conteúdo: garante presença de tudo do Ciclo sem perder linhas extras exclusivas do LIRAa
-          const lFormNorm = normalizarFormBoletimQuarteirao(lFormRaw);
-          const mergedImoveis = Object.assign({}, lFormNorm.imoveis, cForm.imoveis);
-          const mergedResumo = Object.assign({}, lFormNorm.resumo, cForm.resumo);
-          const mergedPag = Math.max(lFormNorm.paginas, cForm.paginas);
+          // Primeira vinculação onde ambos já tinham conteúdo: aproveita somente imóveis sem complemento do Ciclo
+          const lFormNorm = filtrarFormBoletimSemComplemento(lFormRaw);
+          const mergedImoveis = Object.assign({}, lFormNorm.imoveis, cFormFiltrado.imoveis);
+          const mergedPag = Math.max(lFormNorm.paginas, cFormFiltrado.paginas);
+          const mergedForm = filtrarFormBoletimSemComplemento({
+            paginas: mergedPag,
+            imoveis: mergedImoveis,
+            resumo: {}
+          });
           const mergedCab = Object.assign({}, normalizarObjTextoSimples(lCabRaw), cCab);
           const mergedRod = Object.assign({}, normalizarObjTextoSimples(lRodRaw), cRod);
-          const mergedHash = hashBoletimQuarteirao({ paginas: mergedPag, imoveis: mergedImoveis, resumo: mergedResumo }, mergedCab, mergedRod);
+          const mergedHash = hashBoletimQuarteirao(mergedForm, mergedCab, mergedRod);
           const currentLiraaHash = hashBoletimQuarteirao(lFormNorm, lCabRaw, lRodRaw);
 
           if (mergedHash !== currentLiraaHash) {
-            dadosFormularios.boletins.porQuarteirao[qKey] = {
-              paginas: mergedPag,
-              imoveis: mergedImoveis,
-              resumo: mergedResumo
-            };
+            dadosFormularios.boletins.porQuarteirao[qKey] = mergedForm;
             cabecalhos.boletins.porQuarteirao[qKey] = mergedCab;
             rodapes.boletins.porQuarteirao[qKey] = mergedRod;
             alterou = true;
@@ -4222,10 +4337,11 @@
       }
 
       if (deveAplicar) {
-        const lFormNorm = normalizarFormBoletimQuarteirao(lFormRaw);
+        const lFormNorm = filtrarFormBoletimSemComplemento(lFormRaw);
         const lHashAtual = existeNoLiraa ? hashBoletimQuarteirao(lFormNorm, lCabRaw, lRodRaw) : "";
-        if (!existeNoLiraa || cHash !== lHashAtual) {
-          dadosFormularios.boletins.porQuarteirao[qKey] = cForm;
+        const cFiltradoHash = hashBoletimQuarteirao(cFormFiltrado, cCab, cRod);
+        if (!existeNoLiraa || cFiltradoHash !== lHashAtual) {
+          dadosFormularios.boletins.porQuarteirao[qKey] = cFormFiltrado;
           cabecalhos.boletins.porQuarteirao[qKey] = cCab;
           rodapes.boletins.porQuarteirao[qKey] = cRod;
           alterou = true;
@@ -4237,6 +4353,7 @@
 
     try {
       localStorage.setItem(STORAGE_CICLO_BOLETINS_SYNC, JSON.stringify(nextHashes));
+      localStorage.removeItem(STORAGE_CICLO_BOLETINS_SYNC_V1);
     } catch (e) {}
 
     if (alterou) {
@@ -4388,6 +4505,7 @@
     Object.keys(imoveis).forEach(k => {
       const l = imoveis[k];
       if (!l) return;
+      if (typeof imovelTemComplementoBoletim === "function" && imovelTemComplementoBoletim(l)) return;
       const temDados = Boolean((l.rua && l.rua.trim()) || (l.numero && l.numero.trim()) || (l.comp && l.comp.trim()) || (l.seq && l.seq.trim()) || (l.tipo && l.tipo.trim()));
       if (temDados) {
         preenchidos++;
@@ -4400,19 +4518,21 @@
     const totalImoveisCounts = countsImoveis.R + countsImoveis.C + countsImoveis.TB + countsImoveis.PE + countsImoveis.O;
 
     const countsResumo = { R: 0, C: 0, TB: 0, PE: 0, O: 0, total: 0 };
-    for (let p = 0; p < (form.paginas || 1); p++) {
-      const r = (form.resumo && form.resumo[p]) || {};
-      countsResumo.R += parseInt(r.residencia || "0", 10) || 0;
-      countsResumo.C += parseInt(r.comercio || "0", 10) || 0;
-      countsResumo.TB += parseInt(r.terreno || "0", 10) || 0;
-      countsResumo.PE += parseInt(r.ponto || "0", 10) || 0;
-      countsResumo.O += parseInt(r.outros || "0", 10) || 0;
-      countsResumo.total += parseInt(r.total || "0", 10) || 0;
+    if (totalImoveisCounts === 0 && preenchidos === 0) {
+      for (let p = 0; p < (form.paginas || 1); p++) {
+        const r = (form.resumo && form.resumo[p]) || {};
+        countsResumo.R += parseInt(r.residencia || "0", 10) || 0;
+        countsResumo.C += parseInt(r.comercio || "0", 10) || 0;
+        countsResumo.TB += parseInt(r.terreno || "0", 10) || 0;
+        countsResumo.PE += parseInt(r.ponto || "0", 10) || 0;
+        countsResumo.O += parseInt(r.outros || "0", 10) || 0;
+        countsResumo.total += parseInt(r.total || "0", 10) || 0;
+      }
     }
     const totalResumoSoma = countsResumo.R + countsResumo.C + countsResumo.TB + countsResumo.PE + countsResumo.O;
     if (countsResumo.total < totalResumoSoma) countsResumo.total = totalResumoSoma;
 
-    const counts = (totalImoveisCounts >= totalResumoSoma && totalImoveisCounts > 0)
+    const counts = (preenchidos > 0 || totalImoveisCounts >= totalResumoSoma)
       ? countsImoveis
       : countsResumo;
 
@@ -5002,6 +5122,19 @@
 
     const counts = { R: 0, C: 0, TB: 0, PE: 0, O: 0 };
     paginaEl.querySelectorAll('input[data-boletins-imovel="1"][data-campo="tipo"]').forEach(inp => {
+      const tr = inp.closest("tr");
+      if (tr) {
+        const compInp = tr.querySelector('input[data-campo="comp"]');
+        const numInp = tr.querySelector('input[data-campo="numero"]');
+        const seqInp = tr.querySelector('input[data-campo="seq"]');
+        if (typeof imovelTemComplementoBoletim === "function" && imovelTemComplementoBoletim({
+          comp: compInp ? compInp.value : "",
+          numero: numInp ? numInp.value : "",
+          seq: seqInp ? seqInp.value : ""
+        })) {
+          return;
+        }
+      }
       const tipo = String(inp.value || "").trim().toUpperCase();
       if (tipo !== "" && Object.prototype.hasOwnProperty.call(counts, tipo)) counts[tipo]++;
     });
@@ -6324,6 +6457,12 @@
         salvarSelecaoLiraa();
 
         garantirEstruturaBoletins();
+        if (typeof sanitizarBoletinsLiraaSemComplemento === "function") {
+          sanitizarBoletinsLiraaSemComplemento();
+        }
+        if (typeof sincronizarBoletinsDoCicloLocal === "function") {
+          sincronizarBoletinsDoCicloLocal({ salvarNuvem: false });
+        }
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(semanas));
         salvarStatus(); salvarPaginas(); salvarCabecalhos(); salvarRodapes(); salvarFormularios();
@@ -7742,6 +7881,7 @@
   if (!carregar()) criarSemana();
 
   garantirEstruturaBoletins();
+  sanitizarBoletinsLiraaSemComplemento();
   sincronizarBoletinsDoCicloLocal({ salvarNuvem: false });
   aplicarFormatacaoInicialNosInputsNumericos(document);
 
