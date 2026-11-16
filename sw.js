@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pmcd-sugarbo-v41';
+const CACHE_NAME = 'pmcd-sugarbo-v42';
 const ARQUIVOS = [
   './',
   './index.html',
@@ -10,11 +10,19 @@ const ARQUIVOS = [
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js'
 ];
+const ARQUIVOS_OPCIONAIS_PDF = [
+  'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ARQUIVOS)).catch((err) => console.log('SW cache erro:', err))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await cache.addAll(ARQUIVOS).catch((err) => console.log('SW cache erro:', err));
+      await Promise.allSettled(ARQUIVOS_OPCIONAIS_PDF.map((u) => cache.add(u).catch(() => null)));
+    })
   );
 });
 

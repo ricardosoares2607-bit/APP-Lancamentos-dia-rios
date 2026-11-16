@@ -90,8 +90,8 @@
       .seletor-fonte-box label { font-size: 0.78rem; font-weight: 700; color: #fff; }
       .seletor-fonte-box select { background: #fff; color: #14532d; font-weight: 700; font-size: 0.78rem; border: none; border-radius: 4px; padding: 3px 6px; outline: none; }
       .font-assinatura-select { background: #f8fafc; color: #166534; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 4px; font-size: 0.68rem; cursor: pointer; margin-left: 4px; vertical-align: middle; max-width: 118px; font-weight: 600; }
-      @media print { .font-assinatura-select { display: none !important; } }
-      .capturando-pdf .font-assinatura-select { display: none !important; }
+      @media print { .font-assinatura-select, .qd-badge-auto, #formularioDiario .btn-adicionar, #formularioDiario .btn-remover { display: none !important; } }
+      .capturando-pdf .font-assinatura-select, .capturando-pdf .qd-badge-auto, .capturando-pdf .btn-adicionar, .capturando-pdf .btn-remover { display: none !important; }
       .campo-rodape .data-geracao { flex: 1; border-bottom: 1px solid #94a3b8; padding: 2px 4px; font-size: 0.8rem; font-style: italic; color: #166534; font-weight: 700; display: inline-block; min-height: 1.2em; line-height: 1.4; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       #aba-resumo .campo-rodape .data-geracao { border-bottom: 1.5px solid #475569; padding: 4px 6px; font-size: 0.86rem; }
       .capturando-pdf .campo-rodape .data-geracao { font-size: 0.86rem !important; }
@@ -551,6 +551,7 @@
       .capturando-pdf { margin: 0 !important; padding: 10px 14px 12px !important; background: #fff !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; gap: 6px !important; box-sizing: border-box !important; overflow: visible !important; }
       #aba-relatorio-campo .area-impressao { width: 100%; max-width: 1000px; margin: 0 auto 14px; }
       #areaRelatorioCampo.capturando-pdf { padding: 20px 16px !important; display: block !important; }
+      #formularioDiario.capturando-pdf { padding: 8mm 10mm 6mm 10mm !important; display: block !important; }
       #areaImpressao.capturando-pdf { padding: 24px 22px 28px !important; display: block !important; }
       #areaQuarteiroesDesignados.capturando-pdf { padding: 12px 14px 18px !important; display: block !important; overflow: visible !important; }
       #areaQuarteiroesDesignados.capturando-pdf .resumo-wrapper { overflow: visible !important; margin: 4px 0 10px !important; }
@@ -3015,6 +3016,9 @@
 
         <!-- CONTEÚDO -->
         <div class="main-content">
+          <div class="barra-semanas" style="justify-content: flex-end; margin: 4px 4px 8px;">
+            <button type="button" class="btn btn-pdf" id="btnImprimirPDFIndicesLiraa">🖨️ Baixar PDF</button>
+          </div>
           <div id="aba-lancamento" class="aba ativa">
             <div class="max-w-7xl mx-auto px-3 py-3">
 
@@ -5200,18 +5204,18 @@
         return isNaN(n) ? 0 : n;
       }
       const LOCAL_PADRAO_PMCD = "Salvador/BA";
-      let _locCache = LOCAL_PADRAO_PMCD, _locPromise = null;
+      let _locCache = LOCAL_PADRAO_PMCD, _locPromise = null, _locTentado = false;
       function obterLocalizacao() {
-        if (_locCache && _locCache !== LOCAL_PADRAO_PMCD) return Promise.resolve(_locCache);
+        if (_locTentado || (_locCache && _locCache !== LOCAL_PADRAO_PMCD)) return Promise.resolve(_locCache || LOCAL_PADRAO_PMCD);
         if (_locPromise) return _locPromise;
         _locPromise = (async () => {
           if (typeof navigator !== "undefined" && navigator.geolocation) {
             try {
-              const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000, maximumAge: 600000, enableHighAccuracy: false }));
+              const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 1500, maximumAge: 600000, enableHighAccuracy: false }));
               const lat = pos.coords?.latitude, lon = pos.coords?.longitude;
               if (lat != null && lon != null) {
                 try {
-                  const ctrl = new AbortController(); const tmr = setTimeout(() => ctrl.abort(), 2500);
+                  const ctrl = new AbortController(); const tmr = setTimeout(() => ctrl.abort(), 1800);
                   const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`, { signal: ctrl.signal, headers: { "Accept": "application/json" } });
                   clearTimeout(tmr);
                   if (r.ok) {
@@ -5220,6 +5224,7 @@
                     const uf = a.state_code || a.state || "";
                     if (cid && !/s[aã]o paulo/i.test(cid)) {
                       _locCache = uf ? `${cid}/${uf}` : cid;
+                      _locTentado = true;
                       _locPromise = null;
                       return _locCache;
                     }
@@ -5229,6 +5234,7 @@
             } catch(e) {}
           }
           _locCache = LOCAL_PADRAO_PMCD;
+          _locTentado = true;
           _locPromise = null;
           return _locCache;
         })();
@@ -5277,6 +5283,9 @@
         if (!el) return;
         const orientacao = opcoes.orientacao === "portrait" ? "portrait" : "landscape";
         const ehRetrato = orientacao === "portrait";
+        const stEl = document.getElementById("statusNuvem");
+        const stTxtPrev = stEl ? stEl.textContent : "☁️ Nuvem OK";
+        const stClsPrev = stEl ? stEl.className.replace(/\bbadge-nuvem\b/g, "").trim() : "online";
         atualizarStatusNuvem("📄 Gerando PDF...", "salvando");
         let loc = ""; try { loc = await obterLocalizacao(); } catch(e) { loc = _locCache || ""; }
         el.classList.add("capturando-pdf");
@@ -5294,13 +5303,18 @@
         else if (elementoId === "areaQuarteiroesDesignados") { fw = 1050; }
         else if (elementoId === "areaConfigEstrato") { fw = 1100; }
         else if (elementoId === "areaResumoReconhecimento") { fw = 860; }
-        else if (elementoId === "areaIndicesLiraa") { fw = 920; }
+        else if (elementoId === "areaIndicesLiraa" || elementoId === "formularioDiario") { fw = 980; }
         else if (ehRetrato) { fw = 1000; }
         else { fw = 1580; }
         el.style.width = fw + "px"; el.style.maxWidth = "none"; el.style.minWidth = fw + "px";
         void el.offsetWidth;
         const ch = Math.max(el.scrollHeight || 0, el.offsetHeight || 0) + 10;
-        const restaurar = () => { el.classList.remove("capturando-pdf"); el.style.width = ""; el.style.maxWidth = ""; el.style.minWidth = ""; if (wrapper) wrapper.scrollLeft = sc; atualizarStatusNuvem("☁️ Nuvem OK", "online"); };
+        const restaurar = () => {
+          el.classList.remove("capturando-pdf"); el.style.width = ""; el.style.maxWidth = ""; el.style.minWidth = "";
+          if (wrapper) wrapper.scrollLeft = sc;
+          if (typeof firebaseConectado !== "undefined" && firebaseConectado) atualizarStatusNuvem("☁️ Nuvem OK", "online");
+          else atualizarStatusNuvem(stTxtPrev || "📴 Offline", stClsPrev || "offline");
+        };
         const h2c = window.html2canvas || null;
         const JsPDF = (window.jspdf?.jsPDF) || null;
         const clone = (cd) => {
@@ -5313,6 +5327,7 @@
               c.querySelectorAll('.resumo-wrapper').forEach(w => { w.style.overflow = 'visible'; w.style.maxHeight = 'none'; });
             }
             const cont = c || cd;
+            cont.querySelectorAll('.qd-badge-auto, .badge-auto, .badge-legado, .btn-adicionar, .btn-remover, .font-assinatura-select').forEach(rm => rm.remove());
             cont.querySelectorAll('input').forEach(inp => {
               if (inp.type === "checkbox") {
                 const rep = cd.createElement('div');
@@ -5356,7 +5371,7 @@
         const direto = () => {
           if (!h2c || !JsPDF) return Promise.reject(new Error("libs"));
           return (document.fonts?.ready || Promise.resolve())
-            .then(() => h2c(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: fw, scrollX: 0, scrollY: 0, onclone: clone }))
+            .then(() => h2c(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: fw, windowWidth: fw, scrollX: 0, scrollY: 0, onclone: clone }))
             .then(cv => {
               const pdf = new JsPDF({ orientation: orientacao, unit: 'mm', format: 'a4', compress: true });
               const pw = pdf.internal.pageSize.getWidth();
@@ -8626,6 +8641,15 @@
 
         calcularTotaisDiario();
         calcularLarvicidaDiario();
+
+        const bPdfIL = document.getElementById("btnImprimirPDFIndicesLiraa");
+        if (bPdfIL && !bPdfIL.dataset.boundPdf) {
+          bPdfIL.dataset.boundPdf = "1";
+          bPdfIL.addEventListener("click", () => {
+            gerarPDF("formularioDiario", `PMCD_Indices_LIRAa_${hojeISO()}.pdf`, { orientacao: "portrait" })
+              .catch(e => alert("❌ " + (e?.message || e)));
+          });
+        }
       }
 
       function renderizarIndicesLiraa() {
@@ -8842,7 +8866,7 @@
             if (l.concluido && l.revisao) {
               tdS.innerHTML = `<span style="color:#92400e; font-weight:800">⚠️ Revisar</span><span class="qd-badge-revisao">nova ocorrência</span>`;
             } else if (l.concluido && l.auto) {
-              tdS.innerHTML = `<span style="color:#166534; font-weight:800">✓ Concluído</span> <small style="color:#64748b">(auto)</small>`;
+              tdS.innerHTML = `<span style="color:#166534; font-weight:800">✓ Concluído</span> <small class="qd-badge-auto" style="color:#64748b">(auto)</small>`;
             } else if (l.concluido) {
               tdS.innerHTML = `<span style="color:#166534; font-weight:800">✓ Concluído</span>`;
             } else {
@@ -10840,28 +10864,71 @@
                 const pdf = new JsPDF({
                   orientation: "portrait",
                   unit: "mm",
-                  format: "a4"
+                  format: "a4",
+                  compress: true
                 });
 
                 const folhas = secQL.querySelectorAll("[data-pdf-folha]");
                 const A4_LARGURA = 210;
+                const A4_ALTURA = 297;
                 const MARGEM_LATERAL = 6;
                 const MARGEM_SUPERIOR = 6;
                 const LARGURA_UTIL = A4_LARGURA - (MARGEM_LATERAL * 2);
+                const ALTURA_UTIL = A4_ALTURA - (MARGEM_SUPERIOR * 2);
+                let paginaAtual = 0;
 
                 for (let i = 0; i < folhas.length; i++) {
                   const folha = folhas[i];
+                  const prevH = folha.style.height;
+                  const prevMinH = folha.style.minHeight;
+                  const prevOv = folha.style.overflow;
+                  if (folha.scrollHeight > folha.clientHeight + 2) {
+                    folha.style.height = "auto";
+                    folha.style.minHeight = "1140px";
+                    folha.style.overflow = "visible";
+                  }
                   const canvas = await html2canvas(folha, {
                     scale: 2,
                     useCORS: true,
                     logging: false,
-                    backgroundColor: "#ffffff"
+                    backgroundColor: "#ffffff",
+                    width: 820,
+                    windowWidth: 900,
+                    scrollX: 0,
+                    scrollY: 0
+                  }).finally(() => {
+                    folha.style.height = prevH;
+                    folha.style.minHeight = prevMinH;
+                    folha.style.overflow = prevOv;
                   });
-                  const imgData = canvas.toDataURL("image/jpeg", 0.98);
-                  const imgH = (canvas.height * LARGURA_UTIL) / canvas.width;
 
-                  if (i > 0) pdf.addPage();
-                  pdf.addImage(imgData, "JPEG", MARGEM_LATERAL, MARGEM_SUPERIOR, LARGURA_UTIL, imgH);
+                  const scale = LARGURA_UTIL / canvas.width;
+                  const imgH = canvas.height * scale;
+
+                  if (imgH <= ALTURA_UTIL + 0.5) {
+                    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+                    if (paginaAtual > 0) pdf.addPage();
+                    pdf.addImage(imgData, "JPEG", MARGEM_LATERAL, MARGEM_SUPERIOR, LARGURA_UTIL, Math.min(imgH, ALTURA_UTIL));
+                    paginaAtual++;
+                  } else {
+                    const pageCanvasHeight = Math.floor(ALTURA_UTIL / scale);
+                    let sourceY = 0;
+                    while (sourceY < canvas.height) {
+                      if (paginaAtual > 0) pdf.addPage();
+                      const sliceH = Math.min(pageCanvasHeight, canvas.height - sourceY);
+                      const pageCanvas = document.createElement("canvas");
+                      pageCanvas.width = canvas.width;
+                      pageCanvas.height = sliceH;
+                      const pctx = pageCanvas.getContext("2d");
+                      pctx.fillStyle = "#ffffff";
+                      pctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+                      pctx.drawImage(canvas, 0, sourceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+                      const sliceImg = pageCanvas.toDataURL("image/jpeg", 0.98);
+                      pdf.addImage(sliceImg, "JPEG", MARGEM_LATERAL, MARGEM_SUPERIOR, LARGURA_UTIL, sliceH * scale);
+                      sourceY += sliceH;
+                      paginaAtual++;
+                    }
+                  }
                 }
 
                 pdf.save("Quarteiroes_LIRAa_Imoveis_Bases.pdf");

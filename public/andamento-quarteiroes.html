@@ -1310,13 +1310,13 @@
 
   /* ===== ESTILOS PARA EXPORTAÇÃO DE PDF DE ALTA RESOLUÇÃO (SEM CORTES) ===== */
   .pdf-export-wrapper {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
     width: 194mm !important;
     max-width: 194mm !important;
     background: #ffffff !important;
-    z-index: -9999 !important;
+    z-index: auto !important;
     pointer-events: none !important;
     box-sizing: border-box !important;
     margin: 0 !important;
@@ -1338,6 +1338,8 @@
   .pdf-export-wrapper .contador,
   .pdf-export-wrapper .barra-selecao-quarteirao,
   .pdf-export-wrapper .info-regra-bases,
+  .pdf-export-wrapper .badge-auto,
+  .pdf-export-wrapper .badge-legado,
   .pdf-export-wrapper .aviso-sincronizacao { display: none !important; }
 
   .pdf-export-wrapper .pagina-a4 {
@@ -1486,7 +1488,7 @@
     .rodape-pagina .campo-rodape,
     .rodape-pagina .campo-rodape input { font-size: 10px; }
 
-    .btn-status-mini, .status-semana, .aviso-bloqueio-dia, .legenda-codigos, .legenda-colagem { display: none !important; }
+    .btn-status-mini, .status-semana, .aviso-bloqueio-dia, .legenda-codigos, .legenda-colagem, .badge-auto, .badge-legado { display: none !important; }
 
     .bloco-quarteirao { border: none; padding: 0; margin: 0; background: transparent; }
     .titulo-bloco-quarteirao, .barra-botoes-quarteirao { display: none !important; }
@@ -6780,7 +6782,11 @@
 
     mostrarAviso("⏳ Gerando e baixando PDF completo...");
 
-    // Cria o wrapper isolado na resolução exata da folha A4
+    // Cria um contêiner hospedeiro fora da tela para evitar colapso de altura do html2pdf e não piscar na interface
+    const host = document.createElement("div");
+    host.style.cssText = "position:fixed; left:-20000px; top:0; width:1200px; overflow:visible; pointer-events:none; z-index:-9999;";
+
+    // Cria o wrapper isolado na resolução exata da folha A4 (em fluxo relativo normal)
     const wrapper = document.createElement("div");
     wrapper.className = "pdf-export-wrapper " + orientacao;
 
@@ -6793,11 +6799,12 @@
     // Garante que todos os blocos de quarteirões fiquem visíveis no PDF completo
     clone.querySelectorAll(".bloco-quarteirao").forEach(b => b.classList.remove("oculto-por-selecao"));
 
-    // Remove botões de ação e elementos interativos da folha de PDF
-    clone.querySelectorAll(".btn-status-mini, .barra-botoes-quarteirao, .titulo-bloco-quarteirao, .barra-botoes-tabelas, .barra-filtro, .aviso-sincronizacao, .barra-selecao-quarteirao, .legenda-codigos, .legenda-colagem, .seletor-visualizacao-liraa, .card-resumo-liraa").forEach(el => el.remove());
+    // Remove botões de ação, badges desnecessários ("sem comp.", "geral", "auto") e elementos interativos da folha de PDF
+    clone.querySelectorAll(".btn-status-mini, .barra-botoes-quarteirao, .titulo-bloco-quarteirao, .barra-botoes-tabelas, .barra-filtro, .aviso-sincronizacao, .barra-selecao-quarteirao, .legenda-codigos, .legenda-colagem, .seletor-visualizacao-liraa, .card-resumo-liraa, .badge-auto, .badge-legado").forEach(el => el.remove());
 
     wrapper.appendChild(clone);
-    document.body.appendChild(wrapper);
+    host.appendChild(wrapper);
+    document.body.appendChild(host);
 
     // Configuração com margens e viewport dimensionados para preenchimento total e sem corte lateral
     const opt = {
@@ -6827,8 +6834,8 @@
       console.error("Erro ao gerar PDF:", err);
       alert("Houve um problema ao gerar o PDF diretamente. Você pode tentar pela impressão.");
     } finally {
-      if (wrapper.parentNode) {
-        wrapper.parentNode.removeChild(wrapper);
+      if (host.parentNode) {
+        host.parentNode.removeChild(host);
       }
     }
   }
