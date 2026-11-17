@@ -28,7 +28,7 @@
       if ('caches' in window) {
         caches.keys().then((chaves) => {
           chaves.forEach((chave) => {
-            if (chave !== 'pmcd-sugarbo-v43') {
+            if (chave !== 'pmcd-sugarbo-v44') {
               console.log('[Cache] Removendo cache antigo:', chave);
               caches.delete(chave);
             }
@@ -40,7 +40,7 @@
           for (let reg of regs) { reg.update(); }
         });
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js?v=43').then((reg) => {
+          navigator.serviceWorker.register('./sw.js?v=44').then((reg) => {
             reg.update();
             reg.addEventListener('updatefound', () => {
               const novoWorker = reg.installing;
@@ -4490,51 +4490,145 @@
           else el.title = "Os dados continuam salvos localmente neste aparelho";
         }
       }
-      async function conectarGoogleNuvem(exibirAlert = true) {
+      function mostrarAvisoNuvemDiagnostico(titulo, mensagem, mostrarTrocarConta = false) {
+        let box = document.getElementById("avisoDiagnosticoNuvem");
+        if (!box) {
+          box = document.createElement("div");
+          box.id = "avisoDiagnosticoNuvem";
+          box.style.cssText = "position:fixed;bottom:16px;right:16px;left:16px;max-width:480px;margin:0 auto;background:#fff;border:2px solid #dc2626;border-radius:12px;padding:12px 14px;box-shadow:0 12px 30px rgba(0,0,0,0.22);z-index:99999;font-size:0.84rem;color:#1e293b;display:flex;flex-direction:column;gap:8px;";
+          document.body.appendChild(box);
+        }
+        box.innerHTML = "";
+        const top = document.createElement("div");
+        top.style.cssText = "display:flex;justify-content:space-between;align-items:flex-start;gap:8px;";
+        const titleEl = document.createElement("strong");
+        titleEl.style.color = "#991b1b";
+        titleEl.textContent = titulo || "Aviso de Conexão com a Nuvem";
+        const closeBtn = document.createElement("button");
+        closeBtn.type = "button";
+        closeBtn.textContent = "✕";
+        closeBtn.style.cssText = "background:none;border:none;font-size:1rem;font-weight:700;cursor:pointer;color:#64748b;padding:0 4px;";
+        closeBtn.onclick = () => { box.style.display = "none"; };
+        top.appendChild(titleEl);
+        top.appendChild(closeBtn);
+        const msgEl = document.createElement("div");
+        msgEl.style.lineHeight = "1.4";
+        msgEl.textContent = mensagem || "";
+        box.appendChild(top);
+        box.appendChild(msgEl);
+        if (mostrarTrocarConta) {
+          const actRow = document.createElement("div");
+          actRow.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;";
+          const btnTrocar = document.createElement("button");
+          btnTrocar.type = "button";
+          btnTrocar.textContent = "🔄 Entrar com outra Conta Google";
+          btnTrocar.style.cssText = "background:#166534;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:0.8rem;font-weight:700;cursor:pointer;";
+          btnTrocar.onclick = () => {
+            box.style.display = "none";
+            conectarGoogleNuvem(true, true);
+          };
+          actRow.appendChild(btnTrocar);
+          box.appendChild(actRow);
+        }
+        box.style.display = "flex";
+      }
+
+      async function conectarGoogleNuvem(exibirAlert = true, trocarConta = false) {
+        if (window.location.protocol === "file:") {
+          atualizarStatusNuvem("💾 Arquivo local (sem nuvem)", "offline");
+          if (exibirAlert) {
+            mostrarAvisoNuvemDiagnostico(
+              "Arquivo local detectado",
+              "Você abriu uma cópia salva no aparelho (file://). Para conectar com a nuvem, abra o aplicativo pelo link do sistema no navegador."
+            );
+          }
+          return false;
+        }
         if (!navigator.onLine) {
           atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
+          if (exibirAlert) {
+            mostrarAvisoNuvemDiagnostico("Aparelho sem internet", "Conecte-se ao Wi-Fi ou dados móveis para sincronizar com a nuvem.");
+          }
           return false;
         }
         try {
           atualizarStatusNuvem("🔄 Conectando Google...", "salvando");
-          const api = _pmcdBridgeApi || (window.obterPmcdFirebase ? await window.obterPmcdFirebase() : null);
+          let api = _pmcdBridgeApi || window.PmcdFirebase || null;
+          if (!api && window.obterPmcdFirebase) {
+            api = await window.obterPmcdFirebase();
+          }
           if (!api) {
             atualizarStatusNuvem("💾 Modo Local (salvo no aparelho)", "offline");
+            if (exibirAlert) {
+              mostrarAvisoNuvemDiagnostico("Serviço de nuvem indisponível", "Não foi possível carregar o módulo do Firebase neste aparelho. Clique em 'Atualizar Versão' no topo.");
+            }
             return false;
           }
           _pmcdBridgeApi = api;
-          const st = await api.signInWithGoogle();
+          const st = trocarConta && api.switchGoogleAccount
+            ? await api.switchGoogleAccount()
+            : await api.signInWithGoogle();
+          if (st?.redirecting) {
+            atualizarStatusNuvem("🔄 Redirecionando para Google...", "salvando");
+            return true;
+          }
           if (st?.access?.autorizado) {
+            const box = document.getElementById("avisoDiagnosticoNuvem");
+            if (box) box.style.display = "none";
             atualizarStatusNuvem("☁️ Nuvem OK", "online", `Conectado como ${st.access.email}`);
             return true;
           } else {
             erroPermissaoNuvem = true;
-            atualizarStatusNuvem("🔒 Acesso Google não autorizado", "offline", `A conta ${st?.access?.email || ""} não está autorizada na equipe PMCD.`);
+            const emailTentado = st?.access?.email || "(desconhecido)";
+            atualizarStatusNuvem("🔒 Acesso Google não autorizado", "offline", `A conta ${emailTentado} não está autorizada na equipe PMCD.`);
             if (exibirAlert) {
-              alert(`⚠️ A conta Google "${st?.access?.email || ""}" ainda não foi autorizada pelo administrador (ricardosoares2607@gmail.com).`);
+              mostrarAvisoNuvemDiagnostico(
+                "Conta Google ainda não autorizada",
+                `Você entrou neste aparelho com "${emailTentado}", mas esse e-mail ainda não foi liberado em 👥 Acessos pelo administrador (ricardosoares2607@gmail.com).`,
+                true
+              );
             }
             return false;
           }
         } catch (err) {
           console.warn("[PMCD Google Login]", err);
+          const diag = _pmcdBridgeApi?.formatarErroAuth
+            ? _pmcdBridgeApi.formatarErroAuth(err)
+            : { code: err?.code || "", mensagem: err?.message || String(err) };
           const stAtual = _pmcdBridgeApi?.getState?.();
           if (!stAtual?.user) {
-            atualizarStatusNuvem("🔑 Conectar Google (Nuvem)", "pendente", "Clique para entrar com Google e ativar a sincronização em tempo real");
+            atualizarStatusNuvem("🔑 Conectar Google (Nuvem)", "pendente", diag.mensagem);
           } else if (ehErroPermissaoFirebase(err)) {
             erroPermissaoNuvem = true;
-            atualizarStatusNuvem("🔒 Nuvem bloqueada (Permissão Firebase)", "offline");
+            atualizarStatusNuvem("🔒 Nuvem bloqueada (Permissão Firebase)", "offline", diag.mensagem);
+          }
+          if (exibirAlert) {
+            mostrarAvisoNuvemDiagnostico("Não foi possível conectar com o Google", diag.mensagem, Boolean(stAtual?.user));
           }
           return false;
         }
       }
       function clicarStatusNuvem() {
-        const st = _pmcdBridgeApi?.getState?.();
-        if (!navigator.onLine) {
-          atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
+        const st = (_pmcdBridgeApi || window.PmcdFirebase)?.getState?.();
+        if (window.location.protocol === "file:") {
+          conectarGoogleNuvem(true);
           return;
         }
-        if (!st || !st.user || !st.access?.autorizado) {
-          conectarGoogleNuvem(true);
+        if (!navigator.onLine) {
+          atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
+          mostrarAvisoNuvemDiagnostico("Aparelho offline", "Os lançamentos estão salvos no aparelho e serão sincronizados quando houver internet.");
+          return;
+        }
+        if (!st || !st.user) {
+          conectarGoogleNuvem(true, false);
+          return;
+        }
+        if (!st.access?.autorizado) {
+          mostrarAvisoNuvemDiagnostico(
+            "Conta Google sem permissão na equipe",
+            `Este aparelho está conectado como "${st.access?.email || ""}", que ainda não foi autorizado em 👥 Acessos pelo administrador (ricardosoares2607@gmail.com).`,
+            true
+          );
           return;
         }
         atualizarStatusNuvem("🔄 Sincronizando...", "salvando");
@@ -10471,15 +10565,26 @@
             btnEntrarGoogleSis.addEventListener("click", async () => {
               const errEl = document.getElementById("msgErroLogin");
               if (errEl) { errEl.textContent = ""; errEl.style.display = "none"; }
+              if (window.location.protocol === "file:") {
+                if (errEl) {
+                  errEl.textContent = "⚠️ Arquivo local (file://) não pode autenticar com o Google. Abra pelo link do sistema no navegador.";
+                  errEl.style.display = "block";
+                }
+                return;
+              }
               btnEntrarGoogleSis.disabled = true;
               try {
-                const api = _pmcdBridgeApi || (window.obterPmcdFirebase ? await window.obterPmcdFirebase() : null);
+                let api = _pmcdBridgeApi || window.PmcdFirebase || null;
+                if (!api && window.obterPmcdFirebase) {
+                  api = await window.obterPmcdFirebase();
+                }
                 if (!api) throw new Error("Serviço de nuvem indisponível no momento.");
                 _pmcdBridgeApi = api;
                 const st = await api.signInWithGoogle();
+                if (st?.redirecting) return;
                 if (!st?.access?.autorizado) {
                   if (errEl) {
-                    errEl.textContent = `🚫 A conta Google "${st?.access?.email || ""}" não está autorizada pelo administrador.`;
+                    errEl.textContent = `🚫 A conta Google "${st?.access?.email || ""}" ainda não foi autorizada em 👥 Acessos pelo administrador (ricardosoares2607@gmail.com).`;
                     errEl.style.display = "block";
                   }
                   return;
@@ -10496,8 +10601,11 @@
                 salvarSessaoArmazenada(sessao, true);
                 desbloquearSistemaComSessao(sessao);
               } catch (e) {
+                const diag = _pmcdBridgeApi?.formatarErroAuth
+                  ? _pmcdBridgeApi.formatarErroAuth(e)
+                  : { mensagem: e?.message || String(e) };
                 if (errEl) {
-                  errEl.textContent = "⚠️ Login com Google cancelado ou indisponível: " + (e?.message || e);
+                  errEl.textContent = "⚠️ " + diag.mensagem;
                   errEl.style.display = "block";
                 }
               } finally {

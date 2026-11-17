@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pmcd-sugarbo-v43';
+const CACHE_NAME = 'pmcd-sugarbo-v44';
 const ARQUIVOS = [
   './',
   './index.html',
@@ -48,8 +48,14 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Para navegação/páginas HTML: Network-First (busca na rede primeiro, fallback no cache se offline)
-  if (e.request.mode === 'navigate' || e.request.destination === 'document' || e.request.url.includes('index.html')) {
+  // Para páginas HTML e módulo da ponte Firebase: Network-First (sempre pega a versão mais recente quando online)
+  if (
+    e.request.mode === 'navigate' ||
+    e.request.destination === 'document' ||
+    e.request.url.includes('index.html') ||
+    e.request.url.includes('andamento-quarteiroes') ||
+    e.request.url.includes('pmcd-firebase-bridge.js')
+  ) {
     e.respondWith(
       fetch(e.request)
         .then((networkResp) => {

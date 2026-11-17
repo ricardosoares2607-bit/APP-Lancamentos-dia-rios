@@ -3,6 +3,8 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
@@ -41,6 +43,7 @@ let _currentUser = null;
 let _authResolved = false;
 let _accessInfo = { autorizado: false, role: 'none', motivo: 'nao_autenticado', email: '', uid: '' };
 const _authListeners = new Set();
+const _accessInFlight = new Map();
 
 function buildAuthInfo(user) {
   return {
@@ -70,6 +73,46 @@ export function handleFirestoreError(error, operationType, path) {
 export function isPermissionError(err) {
   const msg = String((err && (err.code || err.message)) || err || '').toLowerCase();
   return msg.includes('permission') || msg.includes('missing or insufficient') || msg.includes('unauthorized');
+}
+
+export function formatarErroGoogleAuth(err) {
+  const code = String(err?.code || '');
+  const msg = String(err?.message || err || '');
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  if (code === 'auth/unauthorized-domain') {
+    return {
+      code,
+      mensagem: `Este endereço (${host || 'domínio atual'}) ainda não está autorizado no Firebase Authentication. Adicione "${host}" em Authentication > Settings > Authorized domains no projeto "${_config?.projectId || 'Firebase'}".`
+    };
+  }
+  if (code === 'auth/popup-blocked') {
+    return {
+      code,
+      mensagem: 'O navegador bloqueou a janela de login do Google. Libere pop-ups para este site ou tente novamente para usar o redirecionamento.'
+    };
+  }
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+    return {
+      code,
+      mensagem: 'A janela de login com Google foi fechada antes de concluir.'
+    };
+  }
+  if (code === 'auth/operation-not-supported-in-this-environment' || code === 'auth/web-storage-unsupported') {
+    return {
+      code,
+      mensagem: 'Este navegador/atalho está bloqueando o login por pop-up ou cookies/armazenamento. Tente abrir o link diretamente no Google Chrome ou Safari.'
+    };
+  }
+  if (code === 'auth/network-request-failed') {
+    return {
+      code,
+      mensagem: 'Falha de rede ao conectar com o Google. Verifique a internet deste aparelho e tente novamente.'
+    };
+  }
+  return {
+    code: code || 'auth/unknown',
+    mensagem: msg || 'Não foi possível concluir o login com Google neste aparelho.'
+  };
 }
 
 export function sanitizeEmailId(email) {
@@ -157,6 +200,18 @@ async function ensureUserPrivateProfile(user, role) {
 }
 
 async function ensureWorkspaceAndAccess(user) {
+  const key = user?.uid || 'anon';
+  if (_accessInFlight.has(key)) {
+    return _accessInFlight.get(key);
+  }
+  const promise = _runEnsureWorkspaceAndAccess(user).finally(() => {
+    _accessInFlight.delete(key);
+  });
+  _accessInFlight.set(key, promise);
+  return promise;
+}
+
+async function _runEnsureWorkspaceAndAccess(user) {
   if (!user || !user.emailVerified) {
     return {
       autorizado: false,
@@ -275,7 +330,9 @@ async function ensureWorkspaceAndAccess(user) {
   if (convSnap && convSnap.exists() && convSnap.data()?.ativo === true) {
     const conv = convSnap.data();
     const roleConvidado = conv.role === 'admin' ? 'admin' : 'editor';
-    await ensureUserPrivateProfile(user, roleConvidado);
+    try {
+      await ensureUserPrivateProfile(user, 'editor');
+    } catch (e) {}
     try {
       await setDoc(membroRef, {
         uid: user.uid,
@@ -335,6 +392,11 @@ async function init() {
   _db = getFirestore(_app, _config.firestoreDatabaseId);
   _auth = getAuth(_app);
 
+  // Processa retorno caso este aparelho tenha usado fallback por redirect
+  getRedirectResult(_auth).catch((err) => {
+    console.warn('[PMCD Redirect Auth]', err);
+  });
+
   testConnection();
 
   await new Promise((resolve) => {
@@ -383,15 +445,55 @@ function buildApi() {
       }
       return () => _authListeners.delete(cb);
     },
+    formatarErroAuth: (err) => formatarErroGoogleAuth(err),
     signInWithGoogle: async () => {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      const cred = await signInWithPopup(_auth, provider);
-      _currentUser = cred.user;
-      _accessInfo = await ensureWorkspaceAndAccess(cred.user);
-      _authResolved = true;
-      notifyAuthListeners();
-      return getStateSnapshot();
+      try {
+        const cred = await signInWithPopup(_auth, provider);
+        _currentUser = cred.user;
+        _accessInfo = await ensureWorkspaceAndAccess(cred.user);
+        _authResolved = true;
+        notifyAuthListeners();
+        return getStateSnapshot();
+      } catch (err) {
+        const code = String(err?.code || '');
+        if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+          try {
+            await signInWithRedirect(_auth, provider);
+            return { ...getStateSnapshot(), redirecting: true };
+          } catch (redirErr) {
+            throw redirErr;
+          }
+        }
+        throw err;
+      }
+    },
+    switchGoogleAccount: async () => {
+      try {
+        if (_auth?.currentUser) {
+          await signOut(_auth);
+        }
+      } catch (e) {}
+      _currentUser = null;
+      _accessInfo = { autorizado: false, role: 'none', motivo: 'nao_autenticado', email: '', uid: '' };
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      try {
+        const cred = await signInWithPopup(_auth, provider);
+        _currentUser = cred.user;
+        _accessInfo = await ensureWorkspaceAndAccess(cred.user);
+        _authResolved = true;
+        notifyAuthListeners();
+        return getStateSnapshot();
+      } catch (err) {
+        const code = String(err?.code || '');
+        if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+          await signInWithRedirect(_auth, provider);
+          return { ...getStateSnapshot(), redirecting: true };
+        }
+        throw err;
+      }
     },
     signOutGoogle: async () => {
       await signOut(_auth);

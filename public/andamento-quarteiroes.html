@@ -2707,7 +2707,18 @@
       mostrarAviso("⚡ Seu aparelho está sem conexão com a internet no momento.");
       return;
     }
-    const api = _andamentoBridgeApi || (window.obterPmcdFirebase ? await window.obterPmcdFirebase() : null);
+    if (window.parent && window.parent !== window && typeof window.parent.conectarGoogleNuvem === "function") {
+      const apiParentCheck = _andamentoBridgeApi || window.PmcdFirebase || null;
+      const stParent = apiParentCheck?.getState?.();
+      if (!stParent || !stParent.user || !stParent.access?.autorizado) {
+        window.parent.conectarGoogleNuvem(true, Boolean(stParent?.user && !stParent?.access?.autorizado));
+        return;
+      }
+    }
+    let api = _andamentoBridgeApi || window.PmcdFirebase || null;
+    if (!api && window.obterPmcdFirebase) {
+      api = await window.obterPmcdFirebase();
+    }
     if (!api) {
       mostrarAviso("⚠️ Serviço de nuvem ainda carregando...");
       return;
@@ -2717,11 +2728,16 @@
     if (!st.user || !st.access?.autorizado) {
       atualizarBadgeNuvem(false, "🔄 Conectando Google...");
       try {
-        const stLogin = await api.signInWithGoogle();
+        const trocar = Boolean(st.user && !st.access?.autorizado && api.switchGoogleAccount);
+        const stLogin = trocar ? await api.switchGoogleAccount() : await api.signInWithGoogle();
+        if (stLogin?.redirecting) {
+          atualizarBadgeNuvem(false, "🔄 Redirecionando para Google...");
+          return;
+        }
         if (!stLogin.access?.autorizado) {
           erroPermissaoNuvem = true;
           atualizarBadgeNuvem(false);
-          mostrarAviso(`🔒 A conta ${stLogin.access?.email || ""} não está autorizada.`);
+          mostrarAviso(`🔒 A conta ${stLogin.access?.email || ""} ainda não foi autorizada em 👥 Acessos.`);
           return;
         }
         erroPermissaoNuvem = false;
@@ -2731,7 +2747,8 @@
         mostrarAviso("☁️ Conectado e sincronizado com o Firestore!");
       } catch (e) {
         atualizarBadgeNuvem(false);
-        mostrarAviso("⚠️ Login com Google cancelado ou indisponível.");
+        const diag = api.formatarErroAuth ? api.formatarErroAuth(e) : { mensagem: e?.message || String(e) };
+        mostrarAviso("⚠️ " + diag.mensagem);
       }
       return;
     }
