@@ -20,6 +20,7 @@ import {
   getDocs,
   onSnapshot,
   runTransaction,
+  increment,
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
@@ -44,6 +45,9 @@ let _authResolved = false;
 let _accessInfo = { autorizado: false, role: 'none', motivo: 'nao_autenticado', email: '', uid: '' };
 const _authListeners = new Set();
 const _accessInFlight = new Map();
+const _moduloVersoes = new Map();
+const _profileEnsuredUids = new Set();
+let _quotaBloqueadaAte = 0;
 
 function buildAuthInfo(user) {
   return {
@@ -73,6 +77,19 @@ export function handleFirestoreError(error, operationType, path) {
 export function isPermissionError(err) {
   const msg = String((err && (err.code || err.message)) || err || '').toLowerCase();
   return msg.includes('permission') || msg.includes('missing or insufficient') || msg.includes('unauthorized');
+}
+
+export function isQuotaError(err) {
+  const msg = String((err && (err.code || err.message)) || err || '').toLowerCase();
+  return msg.includes('quota') || msg.includes('resource-exhausted') || msg.includes('free daily read units');
+}
+
+export function registerQuotaErrorIfAny(err) {
+  if (isQuotaError(err)) {
+    _quotaBloqueadaAte = Date.now() + 10 * 60 * 1000;
+    return true;
+  }
+  return false;
 }
 
 export function formatarErroGoogleAuth(err) {
@@ -163,9 +180,13 @@ export function sanitizeForFirestore(value, depth = 0) {
 }
 
 async function testConnection() {
+  if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+    return;
+  }
   try {
     await getDocFromServer(doc(_db, 'test', 'connection'));
   } catch (error) {
+    registerQuotaErrorIfAny(error);
     if (error instanceof Error && error.message.includes('the client is offline')) {
       console.error('Please check your Firebase configuration.');
     }
@@ -173,6 +194,7 @@ async function testConnection() {
 }
 
 async function ensureUserPrivateProfile(user, role) {
+  if (_profileEnsuredUids.has(user.uid)) return;
   const profilePath = `users/${user.uid}/private/profile`;
   const ref = doc(_db, 'users', user.uid, 'private', 'profile');
   try {
@@ -194,8 +216,11 @@ async function ensureUserPrivateProfile(user, role) {
         updatedAt: serverTimestamp()
       });
     }
+    _profileEnsuredUids.add(user.uid);
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, profilePath);
+    if (!registerQuotaErrorIfAny(err)) {
+      handleFirestoreError(err, OperationType.WRITE, profilePath);
+    }
   }
 }
 
@@ -225,6 +250,15 @@ async function _runEnsureWorkspaceAndAccess(user) {
   const email = String(user.email || '').trim().toLowerCase();
   const displayName = String(user.displayName || email.split('@')[0] || 'Usuário').slice(0, 120);
   const isBootstrapAdmin = email === ADMIN_BOOTSTRAP_EMAIL;
+  const cacheKey = `pmcd_ws_bootstrapped_v1_${user.uid}`;
+
+  if (isBootstrapAdmin) {
+    let jaValidado = false;
+    try { jaValidado = localStorage.getItem(cacheKey) === '1'; } catch (e) {}
+    if (jaValidado) {
+      return { autorizado: true, role: 'admin', motivo: 'ok', email, uid: user.uid, nome: displayName };
+    }
+  }
 
   let adminExists = false;
   if (!isBootstrapAdmin) {
@@ -233,6 +267,9 @@ async function _runEnsureWorkspaceAndAccess(user) {
       const admSnap = await getDoc(doc(_db, 'admins', user.uid));
       adminExists = admSnap.exists();
     } catch (err) {
+      if (registerQuotaErrorIfAny(err)) {
+        return { autorizado: true, role: 'editor', motivo: 'quota_cache', email, uid: user.uid, nome: displayName };
+      }
       if (!isPermissionError(err)) {
         handleFirestoreError(err, OperationType.GET, adminPath);
       }
@@ -264,7 +301,9 @@ async function _runEnsureWorkspaceAndAccess(user) {
         });
       }
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, equipePath);
+      if (!registerQuotaErrorIfAny(err)) {
+        handleFirestoreError(err, OperationType.WRITE, equipePath);
+      }
     }
 
     try {
@@ -281,8 +320,11 @@ async function _runEnsureWorkspaceAndAccess(user) {
           updatedAt: serverTimestamp()
         });
       }
+      try { localStorage.setItem(cacheKey, '1'); } catch (e) {}
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, membroPath);
+      if (!registerQuotaErrorIfAny(err)) {
+        handleFirestoreError(err, OperationType.WRITE, membroPath);
+      }
     }
 
     return { autorizado: true, role: 'admin', motivo: 'ok', email, uid: user.uid, nome: displayName };
@@ -513,6 +555,13 @@ function buildApi() {
       _accessInfo = { autorizado: false, role: 'none', motivo: 'nao_autenticado', email: '', uid: '' };
       notifyAuthListeners();
     },
+    isQuotaPaused: () => Date.now() < _quotaBloqueadaAte,
+    isQuotaError: (err) => isQuotaError(err),
+    getQuotaUpgradeUrl: () => {
+      const pid = _config?.projectId || 'youthful-progress-qds98';
+      const dbid = _config?.firestoreDatabaseId || 'ai-studio-pmcdsistemaacela-40647833-ee8c-4a9c-8e9e-b08c8d3db22c';
+      return `https://console.firebase.google.com/project/${pid}/firestore/databases/${dbid}/data?openUpgradeDialog=true`;
+    },
     observeModulo: (moduloId, onData, onError) => {
       const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
       if (!_currentUser || !_accessInfo.autorizado) {
@@ -528,28 +577,35 @@ function buildApi() {
           }
           if (!snap.exists()) {
             // Nunca trata ausência em cache frio como banco vazio antes de confirmar no servidor
-            if (snap.metadata?.fromCache && !serverConfirmado) {
+            if (snap.metadata?.fromCache && !serverConfirmado && Date.now() >= _quotaBloqueadaAte) {
               getDocFromServer(ref)
                 .then((srvSnap) => {
                   serverConfirmado = true;
                   if (srvSnap.exists()) {
-                    onData(srvSnap.data() || {}, srvSnap);
+                    const sd = srvSnap.data() || {};
+                    if (Number(sd.versao) > 0) _moduloVersoes.set(moduloId, Number(sd.versao));
+                    onData(sd, srvSnap);
                   } else {
+                    _moduloVersoes.delete(moduloId);
                     onData(null, srvSnap);
                   }
                 })
-                .catch(() => {
+                .catch((err) => {
+                  registerQuotaErrorIfAny(err);
                   onData(null, snap);
                 });
               return;
             }
+            if (!snap.metadata?.fromCache) _moduloVersoes.delete(moduloId);
             onData(null, snap);
             return;
           }
           const d = snap.data() || {};
+          if (Number(d.versao) > 0) _moduloVersoes.set(moduloId, Number(d.versao));
           onData(d, snap);
         },
         (error) => {
+          registerQuotaErrorIfAny(error);
           try {
             handleFirestoreError(error, OperationType.GET, path);
           } catch (wrapped) {
@@ -564,32 +620,57 @@ function buildApi() {
       if (!_currentUser || !_accessInfo.autorizado) return null;
       const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
       try {
+        if (Date.now() < _quotaBloqueadaAte) {
+          const cached = await getDoc(ref);
+          return cached.exists() ? cached.data() : null;
+        }
         const srvSnap = await getDocFromServer(ref);
-        return srvSnap.exists() ? srvSnap.data() : null;
+        if (srvSnap.exists()) {
+          const d = srvSnap.data() || {};
+          if (Number(d.versao) > 0) _moduloVersoes.set(moduloId, Number(d.versao));
+          return d;
+        }
+        return null;
       } catch (srvErr) {
+        registerQuotaErrorIfAny(srvErr);
         try {
           const snap = await getDoc(ref);
           return snap.exists() ? snap.data() : null;
         } catch (error) {
+          registerQuotaErrorIfAny(error);
           handleFirestoreError(error, OperationType.GET, path);
         }
       }
     },
-    getModuloFromServer: async (moduloId) => {
+    getModuloFromServer: async (moduloId, manual = false) => {
       const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
       if (!_currentUser || !_accessInfo.autorizado) return null;
+      if (!manual && Date.now() < _quotaBloqueadaAte) {
+        throw new Error('Quota exceeded: cota diária de leitura atingida temporariamente.');
+      }
       const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
       try {
         const snap = await getDocFromServer(ref);
-        return snap.exists() ? snap.data() : null;
+        _quotaBloqueadaAte = 0;
+        if (snap.exists()) {
+          const d = snap.data() || {};
+          if (Number(d.versao) > 0) _moduloVersoes.set(moduloId, Number(d.versao));
+          return d;
+        }
+        _moduloVersoes.delete(moduloId);
+        return null;
       } catch (error) {
+        registerQuotaErrorIfAny(error);
         handleFirestoreError(error, OperationType.GET, path);
       }
     },
-    saveModulo: async (moduloId, payloadBruto, atualizadoEmMs = Date.now()) => {
+    saveModulo: async (moduloId, payloadBruto, atualizadoEmMs = Date.now(), manual = false) => {
       const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
       if (!_currentUser || !_accessInfo.autorizado) {
         throw new Error('Usuário Google não autenticado ou sem acesso à equipe.');
+      }
+      if (!manual && Date.now() < _quotaBloqueadaAte) {
+        throw new Error('Quota exceeded: envio pausado temporariamente após atingir a cota diária do Firestore.');
       }
       const payloadLimpo = sanitizeForFirestore(payloadBruto) || {};
       const approxBytes = new Blob([JSON.stringify(payloadLimpo)]).size;
@@ -600,9 +681,36 @@ function buildApi() {
       const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
       const emailAtual = String(_currentUser.email || '').toLowerCase().slice(0, 200);
       const tsMs = Number(atualizadoEmMs) || Date.now();
+      const versaoAtual = _moduloVersoes.get(moduloId) || 0;
 
+      // Caminho rápido com ZERO leituras: updateDoc com increment(1) quando o documento já existe
+      if (versaoAtual >= 1) {
+        try {
+          await updateDoc(ref, {
+            payload: payloadLimpo,
+            versao: increment(1),
+            atualizadoEmMs: tsMs,
+            atualizadoPorUid: _currentUser.uid,
+            atualizadoPorEmail: emailAtual,
+            updatedAt: serverTimestamp()
+          });
+          _quotaBloqueadaAte = 0;
+          const novaVersao = versaoAtual + 1;
+          _moduloVersoes.set(moduloId, novaVersao);
+          return { versao: novaVersao, atualizadoEmMs: tsMs };
+        } catch (updErr) {
+          const code = String(updErr?.code || '').toLowerCase();
+          if (code !== 'not-found' && !String(updErr?.message || '').toLowerCase().includes('no document to update')) {
+            registerQuotaErrorIfAny(updErr);
+            handleFirestoreError(updErr, OperationType.WRITE, path);
+          }
+          _moduloVersoes.delete(moduloId);
+        }
+      }
+
+      // Primeira criação ou documento ainda sem versão conhecida
       try {
-        return await runTransaction(_db, async (tx) => {
+        const res = await runTransaction(_db, async (tx) => {
           const snap = await tx.get(ref);
           if (!snap.exists()) {
             tx.set(ref, {
@@ -631,7 +739,11 @@ function buildApi() {
             return { versao: novaVersao, atualizadoEmMs: tsMs };
           }
         });
+        _quotaBloqueadaAte = 0;
+        if (res?.versao) _moduloVersoes.set(moduloId, Number(res.versao));
+        return res;
       } catch (error) {
+        registerQuotaErrorIfAny(error);
         handleFirestoreError(error, OperationType.WRITE, path);
       }
     },

@@ -2376,6 +2376,8 @@
   let sincronizandoNuvem = false;
   let _versaoNuvemModulo = 0;
   let _puxandoServidorAndamento = false;
+  let _ultimoPullServidorAndamentoMs = 0;
+  let _cotaAndamentoPausadaAte = 0;
 
   function sanitizarParaFirebase(obj) {
     if (obj === undefined) return null;
@@ -2469,6 +2471,11 @@
   function isErroPermissaoFirebase(err) {
     const msg = String((err && (err.code || err.message)) || err || "").toLowerCase();
     return msg.includes("permission") || msg.includes("missing or insufficient") || msg.includes("unauthorized") || msg.includes("401");
+  }
+
+  function isErroCotaFirebase(err) {
+    const msg = String((err && (err.code || err.message)) || err || "").toLowerCase();
+    return msg.includes("quota") || msg.includes("resource-exhausted") || msg.includes("free daily read units");
   }
 
   function mesclarDadosAndamentoRemotoELocal(dadosNuvem) {
@@ -2627,7 +2634,8 @@
 
       const payload = sanitizarParaFirebase(payloadBruto);
 
-      _andamentoBridgeApi.saveModulo("andamento_liraa", payload, agora).then((res) => {
+      _andamentoBridgeApi.saveModulo("andamento_liraa", payload, agora, forcarToast).then((res) => {
+        _cotaAndamentoPausadaAte = 0;
         if (res && Number(res.versao) > 0) {
           _versaoNuvemModulo = Number(res.versao);
         }
@@ -2644,6 +2652,14 @@
         sincronizandoNuvem = false;
         marcarAlteracaoPendente(true);
         console.warn("Falha no envio de dados locais para o Firestore:", err);
+        if (isErroCotaFirebase(err)) {
+          _cotaAndamentoPausadaAte = Date.now() + 10 * 60 * 1000;
+          atualizarBadgeNuvem(false, "⏳ Cota diária atingida (salvo no aparelho)");
+          if (forcarToast) {
+            mostrarAviso("⏳ Cota gratuita diária da nuvem atingida. Dados salvos com segurança no aparelho.");
+          }
+          return;
+        }
         if (isErroPermissaoFirebase(err)) {
           erroPermissaoNuvem = true;
           atualizarBadgeNuvem(false);
@@ -2718,22 +2734,36 @@
   async function puxarServidorAndamento(mostrarToast = false) {
     if (!navigator.onLine || !_andamentoBridgeApi || precisaConectarGoogle || erroPermissaoNuvem) return;
     if (_puxandoServidorAndamento || sincronizandoNuvem) return;
+    const agora = Date.now();
+    if (!mostrarToast && (agora < _cotaAndamentoPausadaAte || _andamentoBridgeApi.isQuotaPaused?.() || (agora - _ultimoPullServidorAndamentoMs) < 180000)) {
+      return;
+    }
     const st = _andamentoBridgeApi.getState?.();
     if (!st?.user || !st?.access?.autorizado) return;
     _puxandoServidorAndamento = true;
+    _ultimoPullServidorAndamentoMs = agora;
     try {
       const fn = _andamentoBridgeApi.getModuloFromServer || _andamentoBridgeApi.getModuloOnce;
       if (typeof fn === "function") {
-        const docData = await fn("andamento_liraa");
+        const docData = await fn("andamento_liraa", mostrarToast);
+        _cotaAndamentoPausadaAte = 0;
         processarSnapshotAndamento(docData, mostrarToast);
-        const docResumo = await fn("resumo_reconhecimento_liraa");
-        const dadosResumo = docResumo && docResumo.payload ? docResumo.payload : null;
-        if (dadosResumo && dadosResumo.timestamp !== ultimoTimestampResumoLocal) {
-          aplicarDadosRemotosPMCD(dadosResumo);
+        if (mostrarToast) {
+          const docResumo = await fn("resumo_reconhecimento_liraa", true);
+          const dadosResumo = docResumo && docResumo.payload ? docResumo.payload : null;
+          if (dadosResumo && dadosResumo.timestamp !== ultimoTimestampResumoLocal) {
+            aplicarDadosRemotosPMCD(dadosResumo);
+          }
         }
       }
     } catch (e) {
-      console.warn("Aviso ao puxar andamento LIRAa do servidor:", e);
+      if (isErroCotaFirebase(e)) {
+        _cotaAndamentoPausadaAte = Date.now() + 10 * 60 * 1000;
+        atualizarBadgeNuvem(false, "⏳ Cota diária atingida (salvo no aparelho)");
+        if (mostrarToast) mostrarAviso("⏳ Cota gratuita diária da nuvem atingida. Dados salvos no aparelho.");
+      } else {
+        console.warn("Aviso ao puxar andamento LIRAa do servidor:", e);
+      }
     } finally {
       _puxandoServidorAndamento = false;
     }
@@ -2867,22 +2897,10 @@
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && navigator.onLine) {
+      if (document.visibilityState === "visible" && navigator.onLine && !(window.parent && window.parent !== window)) {
         puxarServidorAndamento(false);
       }
     });
-
-    window.addEventListener("focus", () => {
-      if (navigator.onLine) {
-        puxarServidorAndamento(false);
-      }
-    });
-
-    setInterval(() => {
-      if (document.visibilityState === "visible" && navigator.onLine) {
-        puxarServidorAndamento(false);
-      }
-    }, 45000);
 
     let _authLigado = false;
     const ligarAuth = (api) => {
