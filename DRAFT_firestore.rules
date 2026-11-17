@@ -1,0 +1,322 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ============ GLOBAL PRIMITIVE HELPERS ============
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'ricardosoares2607@gmail.com';
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        isBootstrappedAdmin() ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function sanitizedAuthEmailId() {
+      return request.auth.token.email.lower().replace('[^a-z0-9_-]', '_');
+    }
+
+    function hasActiveInvite(equipeId) {
+      return isVerifiedUser() &&
+        exists(/databases/$(database)/documents/equipes/$(equipeId)/convites/$(sanitizedAuthEmailId())) &&
+        get(/databases/$(database)/documents/equipes/$(equipeId)/convites/$(sanitizedAuthEmailId())).data.ativo == true;
+    }
+
+    function isActiveMember(equipeId) {
+      return isVerifiedUser() &&
+        exists(/databases/$(database)/documents/equipes/$(equipeId)) &&
+        (
+          isAdmin() ||
+          (
+            exists(/databases/$(database)/documents/equipes/$(equipeId)/membros/$(request.auth.uid)) &&
+            get(/databases/$(database)/documents/equipes/$(equipeId)/membros/$(request.auth.uid)).data.ativo == true
+          )
+        );
+    }
+
+    // ============ VALIDATION BLUEPRINTS ============
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid == userId && isValidId(data.uid) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+        data.displayName is string && data.displayName.size() <= 120 &&
+        data.role is string && data.role in ['admin', 'editor'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAdminMarker(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid == userId && isValidId(data.uid) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidEquipeWorkspace(data) {
+      return data.keys().hasAll(['nome', 'ownerId', 'ownerEmail', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['nome', 'ownerId', 'ownerEmail', 'createdAt', 'updatedAt']) &&
+        data.nome is string && data.nome.size() >= 1 && data.nome.size() <= 120 &&
+        data.ownerId is string && isValidId(data.ownerId) &&
+        data.ownerEmail is string && data.ownerEmail.size() >= 3 && data.ownerEmail.size() <= 200 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidEquipeMembro(data, equipeId, memberUid) {
+      return data.keys().hasAll(['uid', 'equipeId', 'email', 'nome', 'role', 'ativo', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'equipeId', 'email', 'nome', 'role', 'ativo', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid == memberUid && isValidId(data.uid) &&
+        data.equipeId is string && data.equipeId == equipeId && data.equipeId.size() <= 64 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+        data.nome is string && data.nome.size() <= 120 &&
+        data.role is string && data.role in ['admin', 'editor'] &&
+        data.ativo is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidEquipeConvite(data, equipeId) {
+      return data.keys().hasAll(['equipeId', 'email', 'nome', 'role', 'ativo', 'createdBy', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['equipeId', 'email', 'nome', 'role', 'ativo', 'createdBy', 'createdAt', 'updatedAt']) &&
+        data.equipeId is string && data.equipeId == equipeId && data.equipeId.size() <= 64 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+        data.nome is string && data.nome.size() <= 120 &&
+        data.role is string && data.role in ['admin', 'editor'] &&
+        data.ativo is bool &&
+        data.createdBy is string && isValidId(data.createdBy) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidModuloDados(data, equipeId, moduloId) {
+      return data.keys().hasAll(['equipeId', 'moduloId', 'payload', 'versao', 'atualizadoEmMs', 'atualizadoPorUid', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['equipeId', 'moduloId', 'payload', 'versao', 'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'createdAt', 'updatedAt']) &&
+        data.equipeId is string && data.equipeId == equipeId && data.equipeId.size() <= 64 &&
+        data.moduloId is string && data.moduloId == moduloId && data.moduloId.size() <= 64 &&
+        data.moduloId in ['pmcd_principal', 'andamento_ciclo', 'andamento_liraa', 'resumo_reconhecimento', 'resumo_reconhecimento_liraa'] &&
+        data.payload is map && data.payload.size() <= 200 &&
+        data.versao is int && data.versao >= 1 &&
+        data.atualizadoEmMs is number && data.atualizadoEmMs >= 0 &&
+        data.atualizadoPorUid is string && data.atualizadoPorUid == request.auth.uid && isValidId(data.atualizadoPorUid) &&
+        (!('atualizadoPorEmail' in data) || (data.atualizadoPorEmail is string && data.atualizadoPorEmail.size() <= 200)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // ============ CONNECTION HEALTH CHECK ============
+    match /test/connection {
+      allow get: if isAdmin();
+    }
+
+    // ============ USER PRIVATE PII PROFILE ============
+    match /users/{userId}/private/profile {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+
+      allow create: if isVerifiedUser() && isValidId(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (isOwner(userId) && incoming().role == 'editor' && incoming().email.lower() == request.auth.token.email.lower())
+        );
+
+      allow update: if isVerifiedUser() && isValidId(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().uid == existing().uid &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            isOwner(userId) &&
+            incoming().role == existing().role &&
+            incoming().email == existing().email &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt'])
+          )
+        );
+
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // ============ TRUSTED ADMIN MARKERS ============
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+
+      allow create: if isVerifiedUser() && isValidId(userId) &&
+        isValidAdminMarker(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isBootstrappedAdmin();
+
+      allow update: if isVerifiedUser() && isValidId(userId) &&
+        isValidAdminMarker(incoming(), userId) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().uid == existing().uid &&
+        incoming().updatedAt == request.time &&
+        isBootstrappedAdmin() &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']);
+
+      allow delete: if isValidId(userId) && isBootstrappedAdmin();
+    }
+
+    // ============ MASTER WORKSPACE GATE (/equipes/{equipeId}) ============
+    match /equipes/{equipeId} {
+      allow get: if isValidId(equipeId) && (isAdmin() || isActiveMember(equipeId));
+
+      allow create: if isVerifiedUser() && isValidId(equipeId) &&
+        isValidEquipeWorkspace(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+
+      allow update: if isVerifiedUser() && isValidId(equipeId) &&
+        isValidEquipeWorkspace(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        isAdmin() &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['nome', 'ownerEmail', 'updatedAt']);
+
+      allow delete: if isValidId(equipeId) && isBootstrappedAdmin();
+
+      // ---- Subcollection: Membros Ativos ----
+      match /membros/{memberUid} {
+        allow get: if isValidId(equipeId) && isValidId(memberUid) && (isAdmin() || isOwner(memberUid));
+        allow list: if isVerifiedUser() && (isBootstrappedAdmin() || resource.data.uid == request.auth.uid);
+
+        allow create: if isVerifiedUser() && isValidId(equipeId) && isValidId(memberUid) &&
+          isValidEquipeMembro(incoming(), equipeId, memberUid) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          exists(/databases/$(database)/documents/equipes/$(equipeId)) &&
+          (
+            isAdmin() ||
+            (
+              isOwner(memberUid) &&
+              hasActiveInvite(equipeId) &&
+              incoming().role == get(/databases/$(database)/documents/equipes/$(equipeId)/convites/$(sanitizedAuthEmailId())).data.role &&
+              incoming().email.lower() == request.auth.token.email.lower() &&
+              incoming().ativo == true
+            )
+          );
+
+        allow update: if isVerifiedUser() && isValidId(equipeId) && isValidId(memberUid) &&
+          isValidEquipeMembro(incoming(), equipeId, memberUid) &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().uid == existing().uid &&
+          incoming().equipeId == existing().equipeId &&
+          incoming().updatedAt == request.time &&
+          exists(/databases/$(database)/documents/equipes/$(equipeId)) &&
+          (
+            (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['nome', 'email', 'role', 'ativo', 'updatedAt'])) ||
+            (
+              isOwner(memberUid) &&
+              incoming().role == existing().role &&
+              incoming().ativo == existing().ativo &&
+              incoming().email == existing().email &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['nome', 'updatedAt'])
+            )
+          );
+
+        allow delete: if isValidId(equipeId) && isValidId(memberUid) && isAdmin();
+      }
+
+      // ---- Subcollection: Convites Autorizados por Email ----
+      match /convites/{conviteId} {
+        allow get: if isValidId(equipeId) && isValidId(conviteId) &&
+          isVerifiedUser() && (isAdmin() || conviteId == sanitizedAuthEmailId());
+        allow list: if isVerifiedUser() && (
+          isBootstrappedAdmin() ||
+          resource.data.email.lower() == request.auth.token.email.lower()
+        );
+
+        allow create: if isVerifiedUser() && isValidId(equipeId) && isValidId(conviteId) &&
+          isValidEquipeConvite(incoming(), equipeId) &&
+          conviteId == incoming().email.lower().replace('[^a-z0-9_-]', '_') &&
+          incoming().createdBy == request.auth.uid &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          exists(/databases/$(database)/documents/equipes/$(equipeId)) &&
+          isAdmin();
+
+        allow update: if isVerifiedUser() && isValidId(equipeId) && isValidId(conviteId) &&
+          isValidEquipeConvite(incoming(), equipeId) &&
+          incoming().createdBy == existing().createdBy &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().equipeId == existing().equipeId &&
+          incoming().updatedAt == request.time &&
+          exists(/databases/$(database)/documents/equipes/$(equipeId)) &&
+          isAdmin() &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['nome', 'role', 'ativo', 'email', 'updatedAt']);
+
+        allow delete: if isValidId(equipeId) && isValidId(conviteId) && isAdmin();
+      }
+
+      // ---- Subcollection: Dados Sincronizados dos Módulos PMCD ----
+      match /modulos/{moduloId} {
+        allow get: if isValidId(equipeId) && isValidId(moduloId) && (isAdmin() || isActiveMember(equipeId));
+
+        allow create: if isVerifiedUser() && isValidId(equipeId) && isValidId(moduloId) &&
+          isValidModuloDados(incoming(), equipeId, moduloId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          isActiveMember(equipeId);
+
+        allow update: if isVerifiedUser() && isValidId(equipeId) && isValidId(moduloId) &&
+          isValidModuloDados(incoming(), equipeId, moduloId) &&
+          isActiveMember(equipeId) &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().equipeId == existing().equipeId &&
+          incoming().moduloId == existing().moduloId &&
+          incoming().updatedAt == request.time &&
+          (
+            isAdmin() ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['payload', 'versao', 'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'updatedAt']) &&
+              incoming().versao >= existing().versao
+            )
+          );
+
+        allow delete: if isValidId(equipeId) && isValidId(moduloId) && isAdmin();
+      }
+    }
+  }
+}

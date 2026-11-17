@@ -1,14 +1,17 @@
-const CACHE_NAME = 'pmcd-sugarbo-v42';
+const CACHE_NAME = 'pmcd-sugarbo-v43';
 const ARQUIVOS = [
   './',
   './index.html',
   './andamento-quarteiroes.html',
   './andamento-quarteiroes-liraa.html',
+  './pmcd-firebase-bridge.js',
+  './firebase-applet-config.json',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
-  'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js'
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js'
 ];
 const ARQUIVOS_OPCIONAIS_PDF = [
   'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
@@ -35,8 +38,15 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Chamadas do banco de dados Firebase continuam em tempo real
-  if (e.request.url.includes('firebaseio.com')) return;
+  // Chamadas do banco de dados Firestore e Firebase Auth continuam sempre na rede em tempo real
+  if (
+    e.request.url.includes('firestore.googleapis.com') ||
+    e.request.url.includes('identitytoolkit.googleapis.com') ||
+    e.request.url.includes('securetoken.googleapis.com') ||
+    e.request.url.includes('firebase-applet-config.json')
+  ) {
+    return;
+  }
 
   // Para navegação/páginas HTML: Network-First (busca na rede primeiro, fallback no cache se offline)
   if (e.request.mode === 'navigate' || e.request.destination === 'document' || e.request.url.includes('index.html')) {

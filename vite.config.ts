@@ -18,7 +18,7 @@ export default defineConfig({
     {
       name: 'copy-pwa-assets',
       closeBundle() {
-        const files = ['sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png'];
+        const files = ['sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'firebase-applet-config.json'];
         for (const file of files) {
           if (fs.existsSync(file)) {
             fs.copyFileSync(file, path.resolve('dist', file));

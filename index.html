@@ -28,7 +28,7 @@
       if ('caches' in window) {
         caches.keys().then((chaves) => {
           chaves.forEach((chave) => {
-            if (chave !== 'pmcd-sugarbo-v15') {
+            if (chave !== 'pmcd-sugarbo-v43') {
               console.log('[Cache] Removendo cache antigo:', chave);
               caches.delete(chave);
             }
@@ -40,7 +40,7 @@
           for (let reg of regs) { reg.update(); }
         });
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js?v=15').then((reg) => {
+          navigator.serviceWorker.register('./sw.js?v=43').then((reg) => {
             reg.update();
             reg.addEventListener('updatefound', () => {
               const novoWorker = reg.installing;
@@ -68,8 +68,28 @@
         window.location.href = window.location.pathname + '?v=' + Date.now();
       }
     </script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script>
+      if (!window.PmcdFirebaseReady) {
+        window.PmcdFirebaseReady = new Promise(function (resolve, reject) {
+          window.__resolvePmcdFirebaseReady = resolve;
+          window.__rejectPmcdFirebaseReady = reject;
+        });
+      }
+      if (!window.obterPmcdFirebase) {
+        window.obterPmcdFirebase = function () { return window.PmcdFirebaseReady; };
+      }
+      (function () {
+        var s = document.createElement('script');
+        s.type = 'module';
+        s.src = './pmcd-firebase-bridge.js';
+        s.onerror = function (err) {
+          if (typeof window.__rejectPmcdFirebaseReady === 'function') {
+            window.__rejectPmcdFirebaseReady(err || new Error('Falha ao carregar pmcd-firebase-bridge.js'));
+          }
+        };
+        document.head.appendChild(s);
+      })();
+    </script>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body.fonte-inter, body.fonte-inter * { font-family: 'Inter', system-ui, sans-serif !important; }
@@ -82,9 +102,9 @@
       body { background: #f4f6f5; color: #1f2937; min-height: 100vh; }
       header { background: #166534; color: #fff; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
       header h1 { font-size: 1.2rem; }
-      .badge-nuvem { font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+      .badge-nuvem { font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
       .badge-nuvem.online { background: #15803d; border: 1px solid #4ade80; color: #fff; }
-      .badge-nuvem.salvando { background: #b45309; border: 1px solid #fde047; color: #fff; }
+      .badge-nuvem.salvando, .badge-nuvem.pendente { background: #b45309; border: 1px solid #fde047; color: #fff; }
       .badge-nuvem.offline { background: #b91c1c; border: 1px solid #fca5a5; color: #fff; }
       .seletor-fonte-box { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; }
       .seletor-fonte-box label { font-size: 0.78rem; font-weight: 700; color: #fff; }
@@ -1220,6 +1240,26 @@
       }
       .btn-entrar-sistema:active {
         transform: translateY(1px);
+      }
+      .btn-entrar-google {
+        width: 100%;
+        min-height: 44px;
+        background: #ffffff;
+        color: #1e293b;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
+      .btn-entrar-google:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
       }
       .login-rodape-nota {
         text-align: center;
@@ -2522,6 +2562,10 @@
           </label>
           <div id="msgErroLogin" class="login-erro-box" role="alert"></div>
           <button type="submit" id="btnEntrarSistema" class="btn-entrar-sistema">Entrar no Sistema</button>
+          <button type="button" id="btnEntrarGoogleSistema" class="btn-entrar-google">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/><path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/></svg>
+            <span>Entrar com Google (Sincronizar Nuvem)</span>
+          </button>
           <div class="login-rodape-nota">
             Acesso exclusivo para o administrador e usuários previamente autorizados.
           </div>
@@ -2649,7 +2693,7 @@
         <h1>🌿 Lançamentos de Campo</h1>
         <span id="badgeAtividadeHeader" class="badge-aviso-atividade ciclo" style="font-size:0.78rem;">🏡 Ciclo de Visita</span>
         <span id="dataHoje"></span>
-        <span id="statusNuvem" class="badge-nuvem offline">🔄 Conectando...</span>
+        <span id="statusNuvem" class="badge-nuvem pendente" onclick="clicarStatusNuvem()" title="Clique para conectar ou sincronizar com a nuvem">🔄 Conectando...</span>
         <span id="badgeModoAcesso" class="badge-modo-acesso admin" style="display: none;" title="Permissão de acesso">👑 Editor</span>
         <span style="font-size:0.75rem; background:#dcfce7; color:#14532d; font-weight:700; padding:2px 8px; border-radius:9999px; border:1px solid #86efac;">v5.6</span>
         <button onclick="recarregarAppCompleto()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:3px 8px; font-size:0.75rem; cursor:pointer; color:#334155; font-weight:600;">🔄 Atualizar Versão</button>
@@ -4204,8 +4248,8 @@
               Os dois aplicativos podem se comunicar e atualizar a mesma tabela de <strong>Resumo de Reconhecimento</strong> automaticamente em tempo real através do Firebase!
             </p>
             <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 0.78rem;">
-              <div><strong>Servidor Firebase:</strong> <code style="color:#0369a1;">https://tabela-de-lancamentos-default-rtdb.firebaseio.com/</code></div>
-              <div style="margin-top: 4px;"><strong>Chave Compartilhada:</strong> <code style="color:#166534; font-weight:700;">andamento_quarteiroes/resumo_reconhecimento</code></div>
+              <div><strong>Banco em Nuvem:</strong> <code style="color:#0369a1;">Cloud Firestore (Projeto PMCD)</code></div>
+              <div style="margin-top: 4px;"><strong>Documento Compartilhado:</strong> <code style="color:#166534; font-weight:700;">equipes/pmcd_principal/modulos/resumo_reconhecimento</code></div>
             </div>
           </div>
 
@@ -4231,9 +4275,9 @@
           </div>
 
           <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px; font-size: 0.78rem; color: #92400e;">
-            <strong>💡 Como conectar o outro aplicativo ("Andamento dos quarteirões")?</strong>
+            <strong>💡 Como funciona a sincronização integrada?</strong>
             <p style="margin: 4px 0 0; line-height: 1.4;">
-              Basta que o aplicativo "Andamento dos quarteirões" leia e salve na mesma chave <code>andamento_quarteiroes/resumo_reconhecimento</code> no Firebase Realtime Database. Qualquer alteração feita lá reflete aqui automaticamente!
+              Os módulos do sistema agora compartilham o mesmo banco no Cloud Firestore com autenticação Google. Qualquer alteração salva em <strong>Andamento dos quarteirões</strong> reflete aqui em tempo real!
             </p>
           </div>
         </div>
@@ -4396,7 +4440,19 @@
           </div>
         </form>
         <div style="font-weight:800; font-size:0.84rem; color:#1e293b;">📋 Usuários Autorizados</div>
-        <div id="listaUsuariosPermitidos" style="display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto;"></div>
+        <div id="listaUsuariosPermitidos" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;"></div>
+        <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+          <div style="font-weight:800; font-size:0.84rem; color:#0c4a6e;">☁️ Contas Google Autorizadas na Nuvem (Firestore)</div>
+          <div style="font-size:0.76rem; color:#0369a1; line-height:1.4;">
+            Administrador na nuvem: <strong>ricardosoares2607@gmail.com</strong>. Adicione abaixo outros e-mails Google da equipe que podem sincronizar dados com a nuvem.
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="email" id="novoEmailGoogleAutorizado" placeholder="email.agente@gmail.com" style="flex:1; min-width:190px; padding:6px 8px; border:1px solid #7dd3fc; border-radius:5px; font-size:0.82rem;" />
+            <input type="text" id="novoNomeGoogleAutorizado" placeholder="Nome (opcional)" style="width:150px; padding:6px 8px; border:1px solid #7dd3fc; border-radius:5px; font-size:0.82rem;" />
+            <button type="button" id="btnAdicionarEmailGoogle" class="btn btn-verde" style="padding:6px 12px; font-size:0.78rem; font-weight:700;">+ Autorizar Google</button>
+          </div>
+          <div id="listaConvitesGoogle" style="display:flex; flex-direction:column; gap:6px; max-height:150px; overflow-y:auto;"></div>
+        </div>
         <div style="display:flex; justify-content:flex-end; margin-top:4px;">
           <button type="button" class="btn btn-cinza" id="btnFecharModalUsuarios2">Fechar</button>
         </div>
@@ -4404,22 +4460,88 @@
     </div>
 
     <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyA1YbZ9uGY3WW5fiMLVpTC2_fC2qKB6vos",
-        authDomain: "tabela-de-lancamentos.firebaseapp.com",
-        databaseURL: "https://tabela-de-lancamentos-default-rtdb.firebaseio.com",
-        projectId: "tabela-de-lancamentos",
-        storageBucket: "tabela-de-lancamentos.firebasestorage.app",
-        messagingSenderId: "765398861975",
-        appId: "1:765398861975:web:755041000a44ae269801d2"
-      };
-      let db = null, dbAtivo = false, salvandoLocalmente = false, sincronizadoInicial = false, firebaseConectado = false;
-      function inicializarFirebase() {
-        if (typeof firebase === "undefined") return false;
-        try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); db = firebase.database(); dbAtivo = true; return true; }
-        catch (e) { dbAtivo = false; return false; }
+      let db = null, dbAtivo = false, salvandoLocalmente = false, sincronizadoInicial = false, firebaseConectado = false, erroPermissaoNuvem = false;
+      let _pmcdBridgeApi = null;
+      let _unsubModuloPrincipal = null;
+      let _unsubResumoRec = null;
+      let _unsubAndamentoLiraa = null;
+      let _versaoNuvemLocal = 0;
+
+      function ehErroPermissaoFirebase(err) {
+        const msg = String((err && (err.code || err.message)) || err || "").toLowerCase();
+        return msg.includes("permission") || msg.includes("missing or insufficient") || msg.includes("unauthorized") || msg.includes("401");
       }
-      function atualizarStatusNuvem(t, c) { const el = document.getElementById("statusNuvem"); if (el) { el.textContent = t; el.className = "badge-nuvem " + (c || "offline"); } }
+      function inicializarFirebase() {
+        if (window.PmcdFirebase) {
+          _pmcdBridgeApi = window.PmcdFirebase;
+          dbAtivo = true;
+          return true;
+        }
+        return false;
+      }
+      function atualizarStatusNuvem(t, c, titulo = "") {
+        const el = document.getElementById("statusNuvem");
+        if (el) {
+          el.textContent = t;
+          el.className = "badge-nuvem " + (c || "offline");
+          if (titulo) el.title = titulo;
+          else if (c === "online") el.title = "Sincronizado em tempo real com o Cloud Firestore";
+          else if (c === "pendente") el.title = "Clique para conectar sua conta Google e sincronizar na nuvem";
+          else el.title = "Os dados continuam salvos localmente neste aparelho";
+        }
+      }
+      async function conectarGoogleNuvem(exibirAlert = true) {
+        if (!navigator.onLine) {
+          atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
+          return false;
+        }
+        try {
+          atualizarStatusNuvem("🔄 Conectando Google...", "salvando");
+          const api = _pmcdBridgeApi || (window.obterPmcdFirebase ? await window.obterPmcdFirebase() : null);
+          if (!api) {
+            atualizarStatusNuvem("💾 Modo Local (salvo no aparelho)", "offline");
+            return false;
+          }
+          _pmcdBridgeApi = api;
+          const st = await api.signInWithGoogle();
+          if (st?.access?.autorizado) {
+            atualizarStatusNuvem("☁️ Nuvem OK", "online", `Conectado como ${st.access.email}`);
+            return true;
+          } else {
+            erroPermissaoNuvem = true;
+            atualizarStatusNuvem("🔒 Acesso Google não autorizado", "offline", `A conta ${st?.access?.email || ""} não está autorizada na equipe PMCD.`);
+            if (exibirAlert) {
+              alert(`⚠️ A conta Google "${st?.access?.email || ""}" ainda não foi autorizada pelo administrador (ricardosoares2607@gmail.com).`);
+            }
+            return false;
+          }
+        } catch (err) {
+          console.warn("[PMCD Google Login]", err);
+          const stAtual = _pmcdBridgeApi?.getState?.();
+          if (!stAtual?.user) {
+            atualizarStatusNuvem("🔑 Conectar Google (Nuvem)", "pendente", "Clique para entrar com Google e ativar a sincronização em tempo real");
+          } else if (ehErroPermissaoFirebase(err)) {
+            erroPermissaoNuvem = true;
+            atualizarStatusNuvem("🔒 Nuvem bloqueada (Permissão Firebase)", "offline");
+          }
+          return false;
+        }
+      }
+      function clicarStatusNuvem() {
+        const st = _pmcdBridgeApi?.getState?.();
+        if (!navigator.onLine) {
+          atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
+          return;
+        }
+        if (!st || !st.user || !st.access?.autorizado) {
+          conectarGoogleNuvem(true);
+          return;
+        }
+        atualizarStatusNuvem("🔄 Sincronizando...", "salvando");
+        salvarNuvem(true);
+      }
+      window.clicarStatusNuvem = clicarStatusNuvem;
+      window.conectarGoogleNuvem = conectarGoogleNuvem;
       function aplicarFonte(n) {
         const cs = ["fonte-inter","fonte-roboto","fonte-montserrat","fonte-merriweather","fonte-segoe","fonte-arial","fonte-trebuchet"];
         cs.forEach(c => document.body.classList.remove(c));
@@ -4991,11 +5113,50 @@
           cont.appendChild(card);
         });
       }
+      async function renderizarListaConvitesGoogle() {
+        const cont = document.getElementById("listaConvitesGoogle");
+        if (!cont) return;
+        const api = _pmcdBridgeApi;
+        const st = api?.getState?.();
+        if (!api || !st?.user || st?.access?.role !== "admin") {
+          cont.innerHTML = `<div style="font-size:0.75rem; color:#0369a1; padding:6px;">Conecte-se com a conta Google do administrador para gerenciar acessos na nuvem.</div>`;
+          return;
+        }
+        cont.innerHTML = `<div style="font-size:0.75rem; color:#64748b; padding:6px;">Carregando e-mails autorizados...</div>`;
+        try {
+          const lista = await api.listarConvitesGoogle();
+          cont.innerHTML = "";
+          if (!lista || lista.length === 0) {
+            cont.innerHTML = `<div style="font-size:0.75rem; color:#64748b; padding:6px;">Nenhum e-mail adicional autorizado na nuvem ainda.</div>`;
+            return;
+          }
+          lista.forEach((c) => {
+            const row = document.createElement("div");
+            row.style.cssText = "display:flex; justify-content:space-between; align-items:center; gap:8px; background:#ffffff; border:1px solid #bae6fd; border-radius:6px; padding:6px 10px; font-size:0.78rem;";
+            row.innerHTML = `
+              <div>
+                <strong>${c.nome || c.email}</strong>
+                <div style="font-size:0.72rem; color:#475569;">${c.email} · ${c.ativo !== false ? "✅ Ativo" : "🚫 Bloqueado"}</div>
+              </div>
+              <button type="button" class="btn btn-cinza btn-rem-google" style="padding:3px 8px; font-size:0.72rem; background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;">🗑️</button>
+            `;
+            row.querySelector(".btn-rem-google").addEventListener("click", async () => {
+              if (!confirm(`Remover autorização na nuvem de "${c.email}"?`)) return;
+              await api.removerConviteGoogle(c.id);
+              renderizarListaConvitesGoogle();
+            });
+            cont.appendChild(row);
+          });
+        } catch (err) {
+          cont.innerHTML = `<div style="font-size:0.75rem; color:#991b1b; padding:6px;">Erro ao carregar convites Google.</div>`;
+        }
+      }
       function abrirModalGerenciarUsuarios() {
         if (!_sessaoUsuarioAtual || _sessaoUsuarioAtual.papel !== "admin") return;
         const m = document.getElementById("modalGerenciarUsuarios");
         if (!m) return;
         renderizarListaUsuariosPermitidos();
+        renderizarListaConvitesGoogle();
         m.classList.add("ativo");
       }
       function fecharModalGerenciarUsuarios() {
@@ -5312,8 +5473,9 @@
         const restaurar = () => {
           el.classList.remove("capturando-pdf"); el.style.width = ""; el.style.maxWidth = ""; el.style.minWidth = "";
           if (wrapper) wrapper.scrollLeft = sc;
-          if (typeof firebaseConectado !== "undefined" && firebaseConectado) atualizarStatusNuvem("☁️ Nuvem OK", "online");
-          else atualizarStatusNuvem(stTxtPrev || "📴 Offline", stClsPrev || "offline");
+          if (erroPermissaoNuvem) atualizarStatusNuvem("🔒 Nuvem bloqueada (Permissão Firebase)", "offline", "Sem permissão de escrita no Firestore para esta conta.");
+          else if (typeof firebaseConectado !== "undefined" && firebaseConectado) atualizarStatusNuvem("☁️ Nuvem OK", "online");
+          else atualizarStatusNuvem(stTxtPrev || "💾 Modo Offline (salvo no aparelho)", stClsPrev || "offline");
         };
         const h2c = window.html2canvas || null;
         const JsPDF = (window.jspdf?.jsPDF) || null;
@@ -6129,32 +6291,38 @@
       }
       let timeoutSalvarReconhecimentoNuvem = null;
       function salvarReconhecimentoCompartilhado() {
-        if (estaModoLeitura() || !dbAtivo || !db) return;
+        if (estaModoLeitura() || !_pmcdBridgeApi || !firebaseConectado) return;
         const rec = estado.resumoReconhecimento;
         if (!rec) return;
         clearTimeout(timeoutSalvarReconhecimentoNuvem);
         timeoutSalvarReconhecimentoNuvem = setTimeout(() => {
           try {
-            db.ref("andamento_quarteiroes/resumo_reconhecimento").set(JSON.parse(JSON.stringify(rec))).catch(() => {});
-          } catch(e) {}
+            _pmcdBridgeApi.saveModulo("resumo_reconhecimento", rec, Date.now()).catch(() => {});
+          } catch (e) {}
         }, 800);
       }
       function salvarNuvem(forcado = false) {
         if (estaModoLeitura()) return;
-        if (!dbAtivo || !db) {
-          atualizarStatusNuvem("💾 Salvo no aparelho (offline)", "offline");
+        const stAuth = _pmcdBridgeApi?.getState?.();
+        if (!_pmcdBridgeApi || !stAuth?.user || !stAuth?.access?.autorizado) {
+          if (navigator.onLine !== false) {
+            if (erroPermissaoNuvem) {
+              atualizarStatusNuvem("🔒 Acesso Google não autorizado", "offline");
+            } else {
+              atualizarStatusNuvem("🔑 Conectar Google (Nuvem)", "pendente", "Clique para conectar sua conta Google e salvar os lançamentos na nuvem");
+            }
+          } else {
+            atualizarStatusNuvem("💾 Salvo no aparelho (offline)", "offline");
+          }
           return;
         }
 
         const online = (navigator.onLine !== false) && firebaseConectado;
-
-        // Se offline ou sem conexão ativa com o Firebase, mantém seguro no aparelho
         if (!online) {
           atualizarStatusNuvem("💾 Salvo no aparelho (offline)", "offline");
           return;
         }
 
-        // Se não houve sincronização inicial e não é um salvamento forçado, aguarda
         if (!sincronizadoInicial && !forcado) {
           console.warn("[PMCD] Aguardando conexão inicial da nuvem antes de salvar...");
           return;
@@ -6170,29 +6338,35 @@
             dadosParaEnviar._pendenteSync = false;
             dadosParaEnviar._atualizadoEm = estado._atualizadoEm || Date.now();
 
-            db.ref("pmcd_dados/principal").set(dadosParaEnviar)
-              .then(() => {
+            _pmcdBridgeApi.saveModulo("pmcd_principal", dadosParaEnviar, dadosParaEnviar._atualizadoEm)
+              .then((res) => {
                 sincronizadoInicial = true;
+                erroPermissaoNuvem = false;
+                if (res && res.versao) _versaoNuvemLocal = res.versao;
                 if (estado) {
                   estado._pendenteSync = false;
                   estado._ultimoSyncNuvem = Date.now();
                   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
                 }
-                atualizarStatusNuvem("☁️ Nuvem OK", "online");
+                atualizarStatusNuvem("☁️ Nuvem OK", "online", `Sincronizado no Cloud Firestore (${stAuth.access.email})`);
               })
               .catch((err) => {
-                console.warn("[PMCD] Falha temporária ao sincronizar com Firebase (mantido no aparelho):", err);
+                console.warn("[PMCD] Falha ao sincronizar com Firestore (mantido no aparelho):", err);
                 if (estado) {
                   estado._pendenteSync = true;
                   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
                 }
-                atualizarStatusNuvem("💾 Salvo local (pendente)", "offline");
+                if (ehErroPermissaoFirebase(err)) {
+                  erroPermissaoNuvem = true;
+                  atualizarStatusNuvem("🔒 Nuvem bloqueada (Permissão Firebase)", "offline", "Verifique se sua conta Google está autorizada nas regras do Firestore.");
+                } else {
+                  atualizarStatusNuvem("💾 Salvo local (pendente)", "offline");
+                }
               })
               .finally(() => {
                 setTimeout(() => { salvandoLocalmente = false; }, 400);
               });
 
-            // Sincroniza no nó compartilhado SOMENTE se houver quarteirões preenchidos localmente
             if (estado.resumoReconhecimento && contarPreenchidosReconhecimento(estado.resumoReconhecimento) > 0) {
               salvarReconhecimentoCompartilhado();
             }
@@ -6421,38 +6595,28 @@
 
         return resultado;
       }
-      function iniciarSincronizacaoNuvem() {
-        if (!dbAtivo && !inicializarFirebase()) {
-          atualizarStatusNuvem("💾 Modo Local (salvo no aparelho)", "offline");
-          return;
-        }
+      function limparOuvintesFirestorePrincipal() {
+        try { if (typeof _unsubModuloPrincipal === "function") _unsubModuloPrincipal(); } catch (e) {}
+        try { if (typeof _unsubResumoRec === "function") _unsubResumoRec(); } catch (e) {}
+        try { if (typeof _unsubAndamentoLiraa === "function") _unsubAndamentoLiraa(); } catch (e) {}
+        _unsubModuloPrincipal = null;
+        _unsubResumoRec = null;
+        _unsubAndamentoLiraa = null;
+      }
+      function conectarListenersFirestore(api) {
+        limparOuvintesFirestorePrincipal();
+        firebaseConectado = true;
+        dbAtivo = true;
+        erroPermissaoNuvem = false;
+        atualizarStatusNuvem("🔄 Sincronizando...", "salvando");
 
-        atualizarStatusNuvem("🔄 Conectando...", "salvando");
-
-        // Ouvinte do status de conexão direta com o Firebase
-        db.ref(".info/connected").on("value", snap => {
-          const on = snap.val() === true;
-          firebaseConectado = on;
-          if (on) {
-            console.log("[PMCD] Conexão com Firebase estabelecida.");
-            if (estado && estado._pendenteSync) {
-              console.log("[PMCD] Há lançamentos offline pendentes. Sincronizando com a nuvem...");
-              atualizarStatusNuvem("🔄 Enviando pendências...", "salvando");
-              salvarNuvem(true);
-            } else {
-              atualizarStatusNuvem(sincronizadoInicial ? "☁️ Nuvem OK" : "🔄 Sincronizando...", "online");
-            }
-          } else {
-            console.log("[PMCD] Conexão com Firebase inativa.");
-            atualizarStatusNuvem(estado && estado._pendenteSync ? "💾 Salvo local (pendente)" : "💾 Modo Offline (salvo no aparelho)", "offline");
-          }
-        });
-
-        // Ouvinte em tempo real da base principal
-        db.ref("pmcd_dados/principal").on("value", snapshot => {
+        _unsubModuloPrincipal = api.observeModulo("pmcd_principal", (docData) => {
+          erroPermissaoNuvem = false;
+          firebaseConectado = true;
           if (salvandoLocalmente) return;
           sincronizadoInicial = true;
-          const d = snapshot.val();
+          const d = docData && docData.payload ? docData.payload : null;
+          if (docData && docData.versao) _versaoNuvemLocal = docData.versao;
           const temDadosNuvem = d && typeof d === "object" && (d.semanas || d.semanasLiraa);
           const temPendenciaLocal = !!(estado && estado._pendenteSync);
           const qLocal = contarTotalLancamentos(estado);
@@ -6460,7 +6624,7 @@
 
           if (!temDadosNuvem) {
             if (qLocal > 0) {
-              console.log("[PMCD] Nuvem vazia enquanto local possui lançamentos. Enviando dados locais para a nuvem...");
+              console.log("[PMCD] Firestore vazio enquanto local possui lançamentos. Enviando dados locais para a nuvem...");
               salvarNuvem(true);
             } else {
               atualizarStatusNuvem("☁️ Nuvem OK", "online");
@@ -6468,9 +6632,8 @@
             return;
           }
 
-          // Se há pendência local ou o local possui mais lançamentos que a nuvem, mescla preservando o trabalho local
           if (temPendenciaLocal || qLocal > qNuvem) {
-            console.log(`[PMCD] Sincronização inteligente: preservando lançamentos locais (Local: ${qLocal}, Nuvem: ${qNuvem})...`);
+            console.log(`[PMCD] Mesclagem segura com Firestore (Local: ${qLocal}, Nuvem: ${qNuvem})...`);
             atualizarStatusNuvem("🔄 Sincronizando...", "salvando");
             estado = mesclarEstados(estado, d);
             estado._pendenteSync = true;
@@ -6480,10 +6643,9 @@
             renderizar();
             atualizarTotais();
             validarSessaoAposSync();
-            // Propaga os dados mesclados para a nuvem para que outros dispositivos também recebam
             salvarNuvem(true);
           } else {
-            console.log("[PMCD] Atualização recebida da nuvem aplicada.");
+            console.log("[PMCD] Atualização recebida do Firestore aplicada.");
             estado = mesclarEstados(estado, d);
             estado._pendenteSync = false;
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
@@ -6494,48 +6656,74 @@
             validarSessaoAposSync();
             atualizarStatusNuvem("☁️ Nuvem OK", "online");
           }
-        }, err => {
-          console.warn("[PMCD] Erro na sincronização Firebase:", err);
-          atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
-        });
-
-        // Ouvinte em tempo real para a chave compartilhada com o aplicativo "Andamento dos quarteirões"
-        db.ref("andamento_quarteiroes/resumo_reconhecimento").on("value", snapshot => {
-          aplicarAtualizacaoReconhecimentoNuvem(snapshot.val(), "Andamento");
-        });
-
-        // Ouvinte de apoio para andamento_quarteiroes
-        db.ref("andamento_quarteiroes").on("value", snapshot => {
-          const val = snapshot.val();
-          if (val && typeof val === "object") {
-            const dados = val.resumo_reconhecimento || (val.quarteiroes ? val : (val.tabela1 ? val : null));
-            if (dados) aplicarAtualizacaoReconhecimentoNuvem(dados, "Andamento");
+        }, (err) => {
+          console.warn("[PMCD] Erro no ouvinte Firestore:", err);
+          if (ehErroPermissaoFirebase(err)) {
+            erroPermissaoNuvem = true;
+            firebaseConectado = false;
+            atualizarStatusNuvem("🔒 Nuvem bloqueada (Permissão Firebase)", "offline", "Sem permissão de leitura no Cloud Firestore.");
+          } else {
+            atualizarStatusNuvem("💾 Modo Offline (salvo no aparelho)", "offline");
           }
         });
 
-        // Consulta inicial imediata da chave compartilhada para garantir recebimento dos lançamentos
-        Promise.all([
-          db.ref("andamento_quarteiroes/resumo_reconhecimento").once("value"),
-          db.ref("andamento_quarteiroes").once("value")
-        ]).then(([snapResumo, snapGeral]) => {
-          const valResumo = snapResumo.val();
-          const valGeral = snapGeral.val();
-          const dados = (valResumo && typeof valResumo === "object") ? valResumo : (valGeral?.resumo_reconhecimento || (valGeral?.quarteiroes ? valGeral : (valGeral?.tabela1 ? valGeral : null)));
-          if (dados && typeof dados === "object") {
-            aplicarAtualizacaoReconhecimentoNuvem(dados, "Andamento");
+        _unsubResumoRec = api.observeModulo("resumo_reconhecimento", (docData) => {
+          if (docData && docData.payload && typeof docData.payload === "object") {
+            aplicarAtualizacaoReconhecimentoNuvem(docData.payload, "Andamento");
           }
-        }).catch(() => {});
+        }, () => {});
 
-        // Ouvinte somente leitura para Boletins de Reconhecimento do Andamento dos quarteirões do LIRAa
-        try {
-          db.ref("andamento_quarteiroes_liraa/diario_producao_pmcd").on("value", snapshot => {
-            const val = snapshot.val();
-            const pQ = val && val.dadosFormularios && val.dadosFormularios.boletins && val.dadosFormularios.boletins.porQuarteirao;
-            if (pQ && typeof pQ === "object" && typeof window._sincronizarQuarteiroesLiraaComBoletins === "function") {
-              window._sincronizarQuarteiroesLiraaComBoletins({ cloudPorQ: pQ, cloudTs: Number(val.timestamp) || 0 });
+        _unsubAndamentoLiraa = api.observeModulo("andamento_liraa", (docData) => {
+          const val = docData && docData.payload ? docData.payload : null;
+          const pQ = val && val.dadosFormularios && val.dadosFormularios.boletins && val.dadosFormularios.boletins.porQuarteirao;
+          if (pQ && typeof pQ === "object" && typeof window._sincronizarQuarteiroesLiraaComBoletins === "function") {
+            window._sincronizarQuarteiroesLiraaComBoletins({ cloudPorQ: pQ, cloudTs: Number(val.timestamp) || 0 });
+          }
+        }, () => {});
+      }
+      function iniciarSincronizacaoNuvem() {
+        const iniciarComApi = (api) => {
+          _pmcdBridgeApi = api;
+          dbAtivo = true;
+          api.onAuthChange((st) => {
+            if (!st.authResolved) {
+              atualizarStatusNuvem("🔄 Conectando...", "salvando");
+              return;
             }
-          }, () => {});
-        } catch (e) {}
+            if (!navigator.onLine) {
+              firebaseConectado = false;
+              limparOuvintesFirestorePrincipal();
+              atualizarStatusNuvem(estado && estado._pendenteSync ? "💾 Salvo local (pendente)" : "💾 Modo Offline (salvo no aparelho)", "offline");
+              return;
+            }
+            if (!st.user) {
+              firebaseConectado = false;
+              erroPermissaoNuvem = false;
+              limparOuvintesFirestorePrincipal();
+              atualizarStatusNuvem("🔑 Conectar Google (Nuvem)", "pendente", "Clique para entrar com Google e sincronizar seus lançamentos na nuvem");
+              return;
+            }
+            if (!st.access?.autorizado) {
+              firebaseConectado = false;
+              erroPermissaoNuvem = true;
+              limparOuvintesFirestorePrincipal();
+              atualizarStatusNuvem("🔒 Acesso Google não autorizado", "offline", `A conta ${st.access?.email || ""} não está autorizada.`);
+              return;
+            }
+            conectarListenersFirestore(api);
+          });
+        };
+
+        if (window.PmcdFirebase) {
+          iniciarComApi(window.PmcdFirebase);
+        } else if (window.PmcdFirebaseReady) {
+          atualizarStatusNuvem("🔄 Conectando...", "salvando");
+          window.PmcdFirebaseReady.then(iniciarComApi).catch(() => {
+            atualizarStatusNuvem("💾 Modo Local (salvo no aparelho)", "offline");
+          });
+        } else {
+          atualizarStatusNuvem("💾 Modo Local (salvo no aparelho)", "offline");
+        }
       }
       function salvar() {
         if (estaModoLeitura()) return;
@@ -9695,20 +9883,15 @@
         const btnPuxar = document.getElementById("btnPuxarNuvemAndamento");
         if (btnPuxar) {
           btnPuxar.addEventListener("click", () => {
-            if (!dbAtivo || !db) {
-              alert("⚠️ Conexão com Firebase não está ativa.");
+            if (!_pmcdBridgeApi || !firebaseConectado) {
+              alert("⚠️ Conecte sua conta Google na nuvem antes de puxar os dados.");
               return;
             }
             btnPuxar.disabled = true;
             btnPuxar.textContent = "⏳ Puxando dados...";
-            Promise.all([
-              db.ref("andamento_quarteiroes/resumo_reconhecimento").once("value"),
-              db.ref("andamento_quarteiroes").once("value")
-            ])
-              .then(([snapResumo, snapGeral]) => {
-                const valResumo = snapResumo.val();
-                const valGeral = snapGeral.val();
-                const val = (valResumo && typeof valResumo === "object") ? valResumo : (valGeral?.resumo_reconhecimento || valGeral);
+            _pmcdBridgeApi.getModuloOnce("resumo_reconhecimento")
+              .then((docData) => {
+                const val = docData && docData.payload ? docData.payload : null;
                 if (val && typeof val === "object") {
                   const normalizado = normalizarDadosReconhecimento(val);
                   const q = contarPreenchidosReconhecimento(normalizado);
@@ -9716,10 +9899,10 @@
                   salvar();
                   renderizarResumoReconhecimento();
                   if (txtSyncJSON) txtSyncJSON.value = JSON.stringify(normalizado, null, 2);
-                  alert(`✅ Dados sincronizados com sucesso do aplicativo 'Andamento dos quarteirões'!\n• Quarteirões preenchidos: ${q}\n• Localidade: ${normalizado.cabecalho.localidade || '—'}\n• Município: ${normalizado.cabecalho.municipio || '—'}`);
+                  alert(`✅ Dados sincronizados com sucesso do módulo 'Andamento dos quarteirões'!\n• Quarteirões preenchidos: ${q}\n• Localidade: ${normalizado.cabecalho.localidade || '—'}\n• Município: ${normalizado.cabecalho.municipio || '—'}`);
                   fecharModalSync();
                 } else {
-                  alert("ℹ️ Ainda não há dados gravados na chave 'andamento_quarteiroes/resumo_reconhecimento'. Você pode usar o botão 'Enviar para Nuvem' para compartilhar a tabela atual pela primeira vez.");
+                  alert("ℹ️ Ainda não há dados gravados no documento compartilhado de Resumo de Reconhecimento. Você pode usar o botão 'Enviar para Nuvem' para compartilhar a tabela atual pela primeira vez.");
                 }
               })
               .catch(err => alert("❌ Erro ao puxar dados: " + (err?.message || err)))
@@ -9733,17 +9916,17 @@
         const btnEnviar = document.getElementById("btnEnviarNuvemAndamento");
         if (btnEnviar) {
           btnEnviar.addEventListener("click", () => {
-            if (!dbAtivo || !db) {
-              alert("⚠️ Conexão com Firebase não está ativa.");
+            if (!_pmcdBridgeApi || !firebaseConectado) {
+              alert("⚠️ Conecte sua conta Google na nuvem antes de enviar os dados.");
               return;
             }
             const rec = garantirResumoReconhecimento();
             const q = contarPreenchidosReconhecimento(rec);
             btnEnviar.disabled = true;
             btnEnviar.textContent = "⏳ Enviando dados...";
-            db.ref("andamento_quarteiroes/resumo_reconhecimento").set(JSON.parse(JSON.stringify(rec)))
+            _pmcdBridgeApi.saveModulo("resumo_reconhecimento", rec, Date.now())
               .then(() => {
-                alert(`✅ Tabela do Resumo de Reconhecimento enviada com sucesso para 'andamento_quarteiroes/resumo_reconhecimento'!\n• Quarteirões preenchidos: ${q}`);
+                alert(`✅ Tabela do Resumo de Reconhecimento enviada com sucesso para a nuvem compartilhada!\n• Quarteirões preenchidos: ${q}`);
               })
               .catch(err => alert("❌ Erro ao enviar: " + (err?.message || err)))
               .finally(() => {
@@ -9798,14 +9981,15 @@
           inicializarFirebase(); carregar(); iniciarSincronizacaoNuvem();
           window.addEventListener("online", () => {
             console.log("[PMCD] Conexão com a internet restabelecida.");
-            if (db) {
-              try { firebase.database().goOnline(); } catch(e) {}
+            const st = _pmcdBridgeApi?.getState?.();
+            if (st?.user && st?.access?.autorizado) {
+              conectarListenersFirestore(_pmcdBridgeApi);
+              if (estado && estado._pendenteSync) {
+                atualizarStatusNuvem("🔄 Enviando pendências...", "salvando");
+                salvarNuvem(true);
+              }
             } else {
-              inicializarFirebase();
-            }
-            if (estado && estado._pendenteSync) {
-              atualizarStatusNuvem("🔄 Enviando pendências...", "salvando");
-              salvarNuvem(true);
+              atualizarStatusNuvem("🔑 Conectar Google (Nuvem)", "pendente");
             }
           });
           window.addEventListener("offline", () => {
@@ -9868,14 +10052,9 @@
             if (id === "quarteiroes-designados") { renderizarQuarteiroesDesignados(); }
             if (id === "resumo-reconhecimento") {
               renderizarResumoReconhecimento();
-              if (dbAtivo && db) {
-                Promise.all([
-                  db.ref("andamento_quarteiroes/resumo_reconhecimento").once("value"),
-                  db.ref("andamento_quarteiroes").once("value")
-                ]).then(([snapResumo, snapGeral]) => {
-                  const valResumo = snapResumo.val();
-                  const valGeral = snapGeral.val();
-                  const dados = (valResumo && typeof valResumo === "object") ? valResumo : (valGeral?.resumo_reconhecimento || (valGeral?.quarteiroes ? valGeral : (valGeral?.tabela1 ? valGeral : null)));
+              if (_pmcdBridgeApi && firebaseConectado) {
+                _pmcdBridgeApi.getModuloOnce("resumo_reconhecimento").then((docData) => {
+                  const dados = docData && docData.payload ? docData.payload : null;
                   if (dados && typeof dados === "object") {
                     aplicarAtualizacaoReconhecimentoNuvem(dados, "Andamento");
                   }
@@ -10284,6 +10463,75 @@
               const sessao = { usuario: res.usuario, nome: res.nome, papel: res.papel, id: res.id, manterConectado: manter, autenticadoEm: Date.now() };
               salvarSessaoArmazenada(sessao, manter);
               desbloquearSistemaComSessao(sessao);
+            });
+          }
+
+          const btnEntrarGoogleSis = document.getElementById("btnEntrarGoogleSistema");
+          if (btnEntrarGoogleSis) {
+            btnEntrarGoogleSis.addEventListener("click", async () => {
+              const errEl = document.getElementById("msgErroLogin");
+              if (errEl) { errEl.textContent = ""; errEl.style.display = "none"; }
+              btnEntrarGoogleSis.disabled = true;
+              try {
+                const api = _pmcdBridgeApi || (window.obterPmcdFirebase ? await window.obterPmcdFirebase() : null);
+                if (!api) throw new Error("Serviço de nuvem indisponível no momento.");
+                _pmcdBridgeApi = api;
+                const st = await api.signInWithGoogle();
+                if (!st?.access?.autorizado) {
+                  if (errEl) {
+                    errEl.textContent = `🚫 A conta Google "${st?.access?.email || ""}" não está autorizada pelo administrador.`;
+                    errEl.style.display = "block";
+                  }
+                  return;
+                }
+                const manter = !!document.getElementById("checkManterConectado")?.checked;
+                const sessao = {
+                  usuario: st.access.email === "ricardosoares2607@gmail.com" ? "Ricardo" : st.access.email,
+                  nome: st.access.nome || st.access.email,
+                  papel: st.access.role === "admin" ? "admin" : "editor",
+                  id: st.access.uid,
+                  manterConectado: true || manter,
+                  autenticadoEm: Date.now()
+                };
+                salvarSessaoArmazenada(sessao, true);
+                desbloquearSistemaComSessao(sessao);
+              } catch (e) {
+                if (errEl) {
+                  errEl.textContent = "⚠️ Login com Google cancelado ou indisponível: " + (e?.message || e);
+                  errEl.style.display = "block";
+                }
+              } finally {
+                btnEntrarGoogleSis.disabled = false;
+              }
+            });
+          }
+
+          const btnAddGoogleEmail = document.getElementById("btnAdicionarEmailGoogle");
+          if (btnAddGoogleEmail) {
+            btnAddGoogleEmail.addEventListener("click", async () => {
+              const inpE = document.getElementById("novoEmailGoogleAutorizado");
+              const inpN = document.getElementById("novoNomeGoogleAutorizado");
+              const emailVal = (inpE?.value || "").trim().toLowerCase();
+              const nomeVal = (inpN?.value || "").trim();
+              if (!emailVal || !emailVal.includes("@")) {
+                alert("⚠️ Informe um e-mail Google válido.");
+                return;
+              }
+              if (!_pmcdBridgeApi || _pmcdBridgeApi.getState()?.access?.role !== "admin") {
+                alert("⚠️ Conecte-se primeiro com a conta Google do administrador (ricardosoares2607@gmail.com).");
+                return;
+              }
+              btnAddGoogleEmail.disabled = true;
+              try {
+                await _pmcdBridgeApi.salvarConviteGoogle({ email: emailVal, nome: nomeVal, role: "editor", ativo: true });
+                if (inpE) inpE.value = "";
+                if (inpN) inpN.value = "";
+                await renderizarListaConvitesGoogle();
+              } catch (err) {
+                alert("❌ Erro ao autorizar e-mail Google: " + (err?.message || err));
+              } finally {
+                btnAddGoogleEmail.disabled = false;
+              }
             });
           }
 

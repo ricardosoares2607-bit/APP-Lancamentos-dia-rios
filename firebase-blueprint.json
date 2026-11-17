@@ -1,0 +1,271 @@
+{
+  "entities": {
+    "UserPrivateProfile": {
+      "title": "UserPrivateProfile",
+      "description": "Perfil privado do usuário autenticado via Google Auth (PII isolada).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128,
+          "description": "UID do Firebase Auth."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200,
+          "description": "Email verificado do usuário."
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Nome de exibição do usuário."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "editor"],
+          "description": "Papel do usuário no sistema."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp do servidor na criação."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp do servidor na última atualização."
+        }
+      },
+      "required": ["uid", "email", "displayName", "role", "createdAt", "updatedAt"]
+    },
+    "AdminMarker": {
+      "title": "AdminMarker",
+      "description": "Registro confiável de administradores autorizados.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "EquipeWorkspace": {
+      "title": "EquipeWorkspace",
+      "description": "Espaço de trabalho principal da equipe PMCD.",
+      "type": "object",
+      "properties": {
+        "nome": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "ownerId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "ownerEmail": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["nome", "ownerId", "ownerEmail", "createdAt", "updatedAt"]
+    },
+    "EquipeMembro": {
+      "title": "EquipeMembro",
+      "description": "Membro ativo vinculado à equipe PMCD.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "equipeId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "nome": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "editor"]
+        },
+        "ativo": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "equipeId", "email", "nome", "role", "ativo", "createdAt", "updatedAt"]
+    },
+    "EquipeConvite": {
+      "title": "EquipeConvite",
+      "description": "Autorização prévia por e-mail Google gerenciada pelo administrador.",
+      "type": "object",
+      "properties": {
+        "equipeId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "nome": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "editor"]
+        },
+        "ativo": {
+          "type": "boolean"
+        },
+        "createdBy": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["equipeId", "email", "nome", "role", "ativo", "createdBy", "createdAt", "updatedAt"]
+    },
+    "PmcdModuloDados": {
+      "title": "PmcdModuloDados",
+      "description": "Documento estruturado de sincronização por módulo do sistema PMCD.",
+      "type": "object",
+      "properties": {
+        "equipeId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "moduloId": {
+          "type": "string",
+          "enum": [
+            "pmcd_principal",
+            "andamento_ciclo",
+            "andamento_liraa",
+            "resumo_reconhecimento",
+            "resumo_reconhecimento_liraa"
+          ],
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "description": "Mapa nativo com os dados estruturados do módulo."
+        },
+        "versao": {
+          "type": "integer"
+        },
+        "atualizadoEmMs": {
+          "type": "number"
+        },
+        "atualizadoPorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "atualizadoPorEmail": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "equipeId",
+        "moduloId",
+        "payload",
+        "versao",
+        "atualizadoEmMs",
+        "atualizadoPorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/private/profile": {
+      "schema": { "$ref": "#/entities/UserPrivateProfile" },
+      "description": "Dados privados do usuário autenticado (email, nome, papel)."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminMarker" },
+      "description": "Lista confiável de administradores."
+    },
+    "/equipes/{equipeId}": {
+      "schema": { "$ref": "#/entities/EquipeWorkspace" },
+      "description": "Documento mestre do workspace da equipe PMCD."
+    },
+    "/equipes/{equipeId}/membros/{memberUid}": {
+      "schema": { "$ref": "#/entities/EquipeMembro" },
+      "description": "Membros ativos vinculados à equipe."
+    },
+    "/equipes/{equipeId}/convites/{conviteId}": {
+      "schema": { "$ref": "#/entities/EquipeConvite" },
+      "description": "Convites/autorizações de e-mail gerenciados pelo administrador."
+    },
+    "/equipes/{equipeId}/modulos/{moduloId}": {
+      "schema": { "$ref": "#/entities/PmcdModuloDados" },
+      "description": "Dados sincronizados em tempo real para cada módulo (Ciclo/LIRAa/Andamento/Reconhecimento)."
+    }
+  }
+}

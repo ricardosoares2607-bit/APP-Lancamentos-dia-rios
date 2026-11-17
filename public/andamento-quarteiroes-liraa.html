@@ -24,8 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&display=swap" rel="stylesheet">
 
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script type="module" src="./pmcd-firebase-bridge.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
@@ -1860,16 +1859,6 @@
 </div>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDtsMZIl8JPmL0s0VdQR-v8m41HWP_lvDo",
-    authDomain: "diario-pmcd.firebaseapp.com",
-    databaseURL: "https://diario-pmcd-default-rtdb.firebaseio.com",
-    projectId: "diario-pmcd",
-    storageBucket: "diario-pmcd.firebasestorage.app",
-    messagingSenderId: "421384453007",
-    appId: "1:421384453007:web:d47efd2763f434e656a9fa"
-  };
-
   const dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
   const colunas = ["Agente", "Quarteirão", "R", "C", "TB", "PE", "O", "Total"];
   const linhas = 20;
@@ -2038,43 +2027,16 @@
     resumo: "Resumo de Reconhecimento"
   };
 
-  let dbRef = null;
   let nuvemAtiva = false;
-  let appNuvemPrincipal = null;
-  let appNuvemAtiva = null;
-  let usandoNuvemReserva = false;
   let erroPermissaoNuvem = false;
-
-  try {
-    appNuvemPrincipal = (firebase.apps && firebase.apps.find(a => a.name === "[DEFAULT]")) || firebase.initializeApp(firebaseConfig);
-    appNuvemAtiva = appNuvemPrincipal;
-    const db = appNuvemPrincipal.database();
-    dbRef = db.ref("diario_producao_pmcd_liraa");
-    nuvemAtiva = true;
-  } catch (err) { console.error("Falha ao inicializar Firebase:", err); }
-
-  // ===== INTEGRAÇÃO COM PMCD - SISTEMA ACE (RESUMO DE RECONHECIMENTO) =====
-  const firebasePMCDConfig = {
-    apiKey: "AIzaSyA1YbZ9uGY3WW5fiMLVpTC2_fC2qKB6vos",
-    authDomain: "tabela-de-lancamentos.firebaseapp.com",
-    databaseURL: "https://tabela-de-lancamentos-default-rtdb.firebaseio.com",
-    projectId: "tabela-de-lancamentos"
-  };
-
-  let pmcdApp = null;
-  let dbPMCDRef = null;
   let pmcdSincAtiva = false;
   let ultimoTimestampResumoLocal = 0;
   let timeoutSalvarPMCD = null;
-
-  try {
-    pmcdApp = (firebase.apps && firebase.apps.find(a => a.name === "pmcd_sync")) || firebase.initializeApp(firebasePMCDConfig, "pmcd_sync");
-    const dbPMCD = pmcdApp.database();
-    dbPMCDRef = dbPMCD.ref("andamento_quarteiroes_liraa/resumo_reconhecimento");
-    pmcdSincAtiva = true;
-  } catch (err) {
-    console.error("Falha ao inicializar Firebase PMCD:", err);
-  }
+  let _andamentoBridgeApi = null;
+  let _unsubAndamentoLiraa = null;
+  let _unsubPMCDResumo = null;
+  let _unsubCicloBoletins = null;
+  let precisaConectarGoogle = false;
 
   function atualizarBadgePMCD(conectado, textoCustom) {
     const badge = document.getElementById("statusPMCD");
@@ -2201,19 +2163,19 @@
   }
 
   function salvarResumoReconhecimentoPMCD(permitirVazio = false) {
-    if (!pmcdSincAtiva || !dbPMCDRef) return;
+    if (!_andamentoBridgeApi || !pmcdSincAtiva || !firebaseSocketConectado || erroPermissaoNuvem) return;
     try {
       const payload = obterDadosResumoReconhecimento();
       if (!permitirVazio && payload.totalQuarteiroes === 0 && !temDadosReaisLocais()) {
         return;
       }
       ultimoTimestampResumoLocal = payload.timestamp;
-      dbPMCDRef.set(payload)
+      _andamentoBridgeApi.saveModulo("resumo_reconhecimento_liraa", payload, payload.timestamp)
         .then(() => {
           atualizarBadgePMCD(true);
         })
         .catch(err => {
-          console.error("Erro ao salvar no PMCD:", err);
+          console.error("Erro ao salvar no PMCD Firestore:", err);
           atualizarBadgePMCD(false);
         });
     } catch (err) {
@@ -2311,27 +2273,19 @@
   }
 
   function iniciarOuvintePMCDResumo() {
-    if (!pmcdSincAtiva || !dbPMCDRef) {
-      atualizarBadgePMCD(false, "⚠️ PMCD não configurado");
+    if (!_andamentoBridgeApi || !firebaseSocketConectado) {
+      atualizarBadgePMCD(false, precisaConectarGoogle ? "🔑 Conectar Google" : "⚡ PMCD Desconectado");
       return;
     }
+    try { if (typeof _unsubPMCDResumo === "function") _unsubPMCDResumo(); } catch (e) {}
 
-    try {
-      pmcdApp.database().ref(".info/connected").on("value", (snap) => {
-        const conectado = snap.val() === true;
-        atualizarBadgePMCD(conectado);
-      });
-    } catch (e) {}
-
-    // Ouvinte em tempo real (.on("value")) no nó andamento_quarteiroes_liraa/resumo_reconhecimento
-    dbPMCDRef.on("value", (snapshot) => {
-      const dados = snapshot.val();
+    _unsubPMCDResumo = _andamentoBridgeApi.observeModulo("resumo_reconhecimento_liraa", (docData) => {
+      atualizarBadgePMCD(true);
+      const dados = docData && docData.payload ? docData.payload : null;
       if (!dados) return;
-
       if (dados.timestamp && dados.timestamp === ultimoTimestampResumoLocal) {
         return;
       }
-
       aplicarDadosRemotosPMCD(dados);
     }, (err) => {
       console.error("Erro no ouvinte PMCD:", err);
@@ -2340,14 +2294,14 @@
   }
 
   function sincronizarResumoPMCDAgora() {
-    if (!pmcdSincAtiva || !dbPMCDRef) {
-      mostrarAviso("⚠️ Firebase PMCD não configurado.");
+    if (!_andamentoBridgeApi || !firebaseSocketConectado) {
+      mostrarAviso("🔑 Conecte sua conta Google para sincronizar com o PMCD.");
       return;
     }
     mostrarAviso("🔄 Sincronizando Resumo com PMCD...");
     salvarResumoReconhecimentoPMCD();
-    dbPMCDRef.once("value").then((snapshot) => {
-      const dados = snapshot.val();
+    _andamentoBridgeApi.getModuloOnce("resumo_reconhecimento_liraa").then((docData) => {
+      const dados = docData && docData.payload ? docData.payload : null;
       if (dados) {
         aplicarDadosRemotosPMCD(dados);
         mostrarAviso("✅ Resumo sincronizado com PMCD em tempo real!");
@@ -2363,10 +2317,6 @@
   let firebaseSocketConectado = false;
   let emHandshakeNuvem = navigator.onLine;
   let timerHandshakeNuvem = null;
-  let connectedRefAtual = null;
-  let connectedCallbackAtual = null;
-  let dbRefOuvinteAtual = null;
-  let dbValueCallbackAtual = null;
 
   function atualizarBadgeNuvem(online, textoCustom) {
     const badge = document.getElementById("statusNuvem");
@@ -2378,7 +2328,12 @@
     }
     if (erroPermissaoNuvem) {
       badge.className = "badge-nuvem offline";
-      badge.textContent = "🔒 Nuvem bloqueada (Permissão Firebase)";
+      badge.textContent = "🔒 Acesso Google não autorizado";
+      return;
+    }
+    if (precisaConectarGoogle && navigator.onLine) {
+      badge.className = "badge-nuvem pendente";
+      badge.textContent = "🔑 Clique para conectar Google (Nuvem)";
       return;
     }
     const pendente = (function() {
@@ -2393,7 +2348,7 @@
         badge.className = "badge-nuvem online";
         badge.textContent = "☁️ Nuvem Conectada (Tempo Real)";
       }
-    } else if (navigator.onLine && emHandshakeNuvem && nuvemAtiva) {
+    } else if (navigator.onLine && emHandshakeNuvem) {
       badge.className = "badge-nuvem pendente";
       badge.textContent = "☁️ Conectando à nuvem...";
     } else {
@@ -2511,11 +2466,11 @@
 
   function isErroPermissaoFirebase(err) {
     const msg = String((err && (err.code || err.message)) || err || "").toLowerCase();
-    return msg.includes("permission") || msg.includes("unauthorized") || msg.includes("401");
+    return msg.includes("permission") || msg.includes("missing or insufficient") || msg.includes("unauthorized") || msg.includes("401");
   }
 
   function enviarDadosLocaisParaNuvem(forcarToast = false, permitirVazio = false) {
-    if (!nuvemAtiva || !dbRef || !navigator.onLine) return;
+    if (!nuvemAtiva || !_andamentoBridgeApi || !firebaseSocketConectado || !navigator.onLine || erroPermissaoNuvem) return;
     if (sincronizandoNuvem) return;
 
     const semanasCheck = coletarDados();
@@ -2524,7 +2479,6 @@
       statusQuarteiroes: statusQuarteiroes,
       dadosFormularios: dadosFormularios
     };
-    // Proteção absoluta: nunca enviar estado completamente vazio para a nuvem por acidente
     if (!permitirVazio && !temDadosReais(payloadCheck)) {
       marcarAlteracaoPendente(false);
       atualizarBadgeNuvem(firebaseSocketConectado && !erroPermissaoNuvem);
@@ -2537,7 +2491,6 @@
       ultimoTimestampLocal = agora;
       try { localStorage.setItem(STORAGE_ULTIMO_TS, String(agora)); } catch (e) {}
 
-      // Limpa flag pendente antes do despacho para evitar que ouvintes síncronos locais gerem loop recursivo
       marcarAlteracaoPendente(false);
 
       const payloadBruto = {
@@ -2553,7 +2506,7 @@
 
       const payload = sanitizarParaFirebase(payloadBruto);
 
-      dbRef.set(payload).then(() => {
+      _andamentoBridgeApi.saveModulo("andamento_liraa", payload, agora).then(() => {
         sincronizandoNuvem = false;
         erroPermissaoNuvem = false;
         firebaseSocketConectado = true;
@@ -2566,11 +2519,8 @@
       }).catch(err => {
         sincronizandoNuvem = false;
         marcarAlteracaoPendente(true);
-        console.warn("Falha no envio de dados locais para a nuvem:", err);
+        console.warn("Falha no envio de dados locais para o Firestore:", err);
         if (isErroPermissaoFirebase(err)) {
-          if (!usandoNuvemReserva && ativarNuvemReserva("permission_denied_write")) {
-            return;
-          }
           erroPermissaoNuvem = true;
           atualizarBadgeNuvem(false);
         }
@@ -2583,7 +2533,7 @@
   }
 
   function sincronizarTudoComNuvem() {
-    if (!navigator.onLine) return;
+    if (!navigator.onLine || !_andamentoBridgeApi || !firebaseSocketConectado) return;
     const pendente = (function() {
       try { return localStorage.getItem(STORAGE_PENDENTE_NUVEM) === "1"; } catch (e) { return false; }
     })();
@@ -2594,95 +2544,35 @@
   }
 
   function limparOuvintesNuvem() {
-    try {
-      if (connectedRefAtual && connectedCallbackAtual) {
-        connectedRefAtual.off("value", connectedCallbackAtual);
-      }
-    } catch (e) {}
-    try {
-      if (dbRefOuvinteAtual && dbValueCallbackAtual) {
-        dbRefOuvinteAtual.off("value", dbValueCallbackAtual);
-      }
-    } catch (e) {}
-    connectedRefAtual = null;
-    connectedCallbackAtual = null;
-    dbRefOuvinteAtual = null;
-    dbValueCallbackAtual = null;
-  }
-
-  function ativarNuvemReserva(motivo) {
-    if (usandoNuvemReserva || !pmcdApp) return false;
-    try {
-      console.warn("Alternando sincronização para nuvem ativa PMCD devido a:", motivo);
-      limparOuvintesNuvem();
-      usandoNuvemReserva = true;
-      erroPermissaoNuvem = false;
-      appNuvemAtiva = pmcdApp;
-      dbRef = pmcdApp.database().ref("andamento_quarteiroes_liraa/diario_producao_pmcd");
-      nuvemAtiva = true;
-      emHandshakeNuvem = navigator.onLine;
-      atualizarBadgeNuvem(false);
-      iniciarListenersNuvemAtiva();
-      if (typeof iniciarOuvinteBoletinsCicloNuvem === "function" && !usandoCicloReserva) {
-        iniciarOuvinteBoletinsCicloNuvem(true);
-      }
-      return true;
-    } catch (e) {
-      console.error("Erro ao ativar nuvem reserva:", e);
-      return false;
-    }
+    try { if (typeof _unsubAndamentoLiraa === "function") _unsubAndamentoLiraa(); } catch (e) {}
+    try { if (typeof _unsubPMCDResumo === "function") _unsubPMCDResumo(); } catch (e) {}
+    try { if (typeof _unsubCicloBoletins === "function") _unsubCicloBoletins(); } catch (e) {}
+    _unsubAndamentoLiraa = null;
+    _unsubPMCDResumo = null;
+    _unsubCicloBoletins = null;
   }
 
   function iniciarListenersNuvemAtiva() {
-    if (!nuvemAtiva || !dbRef || !appNuvemAtiva) {
-      atualizarBadgeNuvem(false, "⚠️ Nuvem em modo local");
+    if (!_andamentoBridgeApi || precisaConectarGoogle || erroPermissaoNuvem) {
+      atualizarBadgeNuvem(false);
       return;
     }
 
     limparOuvintesNuvem();
-    clearTimeout(timerHandshakeNuvem);
-    emHandshakeNuvem = navigator.onLine;
-    timerHandshakeNuvem = setTimeout(() => {
-      emHandshakeNuvem = false;
-      if (!firebaseSocketConectado) {
-        if (!usandoNuvemReserva && pmcdApp && navigator.onLine) {
-          ativarNuvemReserva("handshake_timeout");
-        } else {
-          atualizarBadgeNuvem(false);
-        }
-      }
-    }, 6000);
+    nuvemAtiva = true;
+    pmcdSincAtiva = true;
+    firebaseSocketConectado = true;
+    emHandshakeNuvem = false;
+    atualizarBadgeNuvem(true);
 
-    try {
-      const dbInstancia = appNuvemAtiva.database();
-      try { dbInstancia.goOnline(); } catch (e) {}
-      connectedRefAtual = dbInstancia.ref(".info/connected");
-      connectedCallbackAtual = (snap) => {
-        const conectado = snap.val() === true;
-        firebaseSocketConectado = conectado;
-        if (conectado) {
-          emHandshakeNuvem = false;
-          clearTimeout(timerHandshakeNuvem);
-        }
-        atualizarBadgeNuvem(conectado && !erroPermissaoNuvem);
-        if (conectado && !erroPermissaoNuvem) {
-          sincronizarTudoComNuvem();
-        }
-      };
-      connectedRefAtual.on("value", connectedCallbackAtual);
-    } catch (e) {}
-
-    dbRefOuvinteAtual = dbRef;
-    dbValueCallbackAtual = (snapshot) => {
+    _unsubAndamentoLiraa = _andamentoBridgeApi.observeModulo("andamento_liraa", (docData) => {
       erroPermissaoNuvem = false;
       firebaseSocketConectado = true;
       emHandshakeNuvem = false;
-      clearTimeout(timerHandshakeNuvem);
 
-      // Se estivermos ativamente no meio de um envio, este disparo é reflexo local da nossa própria gravação
       if (sincronizandoNuvem) return;
 
-      const dadosNuvem = snapshot.val();
+      const dadosNuvem = docData && docData.payload ? docData.payload : null;
       const localTemDados = temDadosReaisLocais();
       if (!dadosNuvem) {
         if (localTemDados) {
@@ -2697,13 +2587,11 @@
       const tsRemoto = Number(dadosNuvem.timestamp) || 0;
       const tsLocal = Number(ultimoTimestampLocal) || 0;
 
-      // Se o snapshot remoto for idêntico ao nosso último timestamp local enviado, ignorar
       if (tsRemoto > 0 && tsRemoto === tsLocal) {
         atualizarBadgeNuvem(true);
         return;
       }
 
-      // Nunca deixar dados locais reais serem apagados por snapshot remoto vazio
       if (localTemDados && !remotoTemDados) {
         enviarDadosLocaisParaNuvem();
         return;
@@ -2725,41 +2613,59 @@
 
       aplicarDadosRemotos(dadosNuvem);
       atualizarBadgeNuvem(true);
-    };
-
-    dbRef.on("value", dbValueCallbackAtual, (err) => {
-      console.warn("Aviso de conexão Firebase:", err);
+    }, (err) => {
+      console.warn("Aviso de conexão Firestore:", err);
       emHandshakeNuvem = false;
-      clearTimeout(timerHandshakeNuvem);
       if (isErroPermissaoFirebase(err)) {
-        if (!usandoNuvemReserva && ativarNuvemReserva("permission_denied_read")) {
-          return;
-        }
         erroPermissaoNuvem = true;
+        firebaseSocketConectado = false;
       }
       atualizarBadgeNuvem(false);
     });
+
+    iniciarOuvintePMCDResumo();
+    if (typeof iniciarOuvinteBoletinsCicloNuvem === "function") {
+      iniciarOuvinteBoletinsCicloNuvem();
+    }
   }
 
-  function forcarReconexaoNuvem() {
+  async function forcarReconexaoNuvem() {
     if (!navigator.onLine) {
       atualizarBadgeNuvem(false);
       mostrarAviso("⚡ Seu aparelho está sem conexão com a internet no momento.");
       return;
     }
-    if (erroPermissaoNuvem && appNuvemPrincipal) {
-      usandoNuvemReserva = false;
-      appNuvemAtiva = appNuvemPrincipal;
-      dbRef = appNuvemPrincipal.database().ref("diario_producao_pmcd_liraa");
-      mostrarAviso("🔒 Banco Firebase sem permissão. Tentando reconectar...");
-    } else {
-      mostrarAviso("🔄 Verificando conexão com a nuvem...");
+    const api = _andamentoBridgeApi || (window.obterPmcdFirebase ? await window.obterPmcdFirebase() : null);
+    if (!api) {
+      mostrarAviso("⚠️ Serviço de nuvem ainda carregando...");
+      return;
     }
+    _andamentoBridgeApi = api;
+    const st = api.getState();
+    if (!st.user || !st.access?.autorizado) {
+      atualizarBadgeNuvem(false, "🔄 Conectando Google...");
+      try {
+        const stLogin = await api.signInWithGoogle();
+        if (!stLogin.access?.autorizado) {
+          erroPermissaoNuvem = true;
+          atualizarBadgeNuvem(false);
+          mostrarAviso(`🔒 A conta ${stLogin.access?.email || ""} não está autorizada.`);
+          return;
+        }
+        erroPermissaoNuvem = false;
+        precisaConectarGoogle = false;
+        iniciarListenersNuvemAtiva();
+        sincronizarTudoComNuvem();
+        mostrarAviso("☁️ Conectado e sincronizado com o Firestore!");
+      } catch (e) {
+        atualizarBadgeNuvem(false);
+        mostrarAviso("⚠️ Login com Google cancelado ou indisponível.");
+      }
+      return;
+    }
+    mostrarAviso("🔄 Sincronizando dados com a nuvem...");
     erroPermissaoNuvem = false;
-    emHandshakeNuvem = true;
-    atualizarBadgeNuvem(false, "🔄 Conectando à nuvem...");
-    try { if (appNuvemAtiva) appNuvemAtiva.database().goOnline(); } catch (e) {}
-    try { if (pmcdApp) pmcdApp.database().goOnline(); } catch (e) {}
+    precisaConectarGoogle = false;
     iniciarListenersNuvemAtiva();
     sincronizarTudoComNuvem();
   }
@@ -2770,13 +2676,15 @@
 
     window.addEventListener("online", () => {
       emHandshakeNuvem = true;
-      erroPermissaoNuvem = false;
       atualizarBadgeNuvem(false);
-      mostrarAviso("🌐 Conexão restabelecida! Sincronizando dados...");
-      try { if (appNuvemAtiva) appNuvemAtiva.database().goOnline(); } catch (e) {}
-      try { if (pmcdApp) pmcdApp.database().goOnline(); } catch (e) {}
-      iniciarListenersNuvemAtiva();
-      sincronizarTudoComNuvem();
+      mostrarAviso("🌐 Conexão restabelecida!");
+      if (_andamentoBridgeApi) {
+        const st = _andamentoBridgeApi.getState();
+        if (st.user && st.access?.autorizado) {
+          iniciarListenersNuvemAtiva();
+          sincronizarTudoComNuvem();
+        }
+      }
     });
 
     window.addEventListener("offline", () => {
@@ -2786,7 +2694,56 @@
       mostrarAviso("⚡ Operando offline. Todos os seus lançamentos ficam 100% salvos no aparelho!");
     });
 
-    iniciarListenersNuvemAtiva();
+    let _authLigado = false;
+    const ligarAuth = (api) => {
+      if (!api || _authLigado) return;
+      _authLigado = true;
+      _andamentoBridgeApi = api;
+      api.onAuthChange((st) => {
+        if (!st.authResolved) return;
+        emHandshakeNuvem = false;
+        if (!st.user) {
+          precisaConectarGoogle = true;
+          erroPermissaoNuvem = false;
+          firebaseSocketConectado = false;
+          nuvemAtiva = false;
+          pmcdSincAtiva = false;
+          limparOuvintesNuvem();
+          atualizarBadgeNuvem(false);
+          atualizarBadgePMCD(false, "🔑 Conectar Google");
+          return;
+        }
+        if (!st.access?.autorizado) {
+          precisaConectarGoogle = false;
+          erroPermissaoNuvem = true;
+          firebaseSocketConectado = false;
+          nuvemAtiva = false;
+          pmcdSincAtiva = false;
+          limparOuvintesNuvem();
+          atualizarBadgeNuvem(false);
+          atualizarBadgePMCD(false, "🔒 Sem permissão");
+          return;
+        }
+        precisaConectarGoogle = false;
+        erroPermissaoNuvem = false;
+        iniciarListenersNuvemAtiva();
+        sincronizarTudoComNuvem();
+      });
+    };
+
+    if (window.PmcdFirebase) {
+      ligarAuth(window.PmcdFirebase);
+    } else {
+      window.addEventListener("pmcd-firebase-ready", (ev) => {
+        if (ev?.detail) ligarAuth(ev.detail);
+      }, { once: true });
+      if (window.PmcdFirebaseReady) {
+        window.PmcdFirebaseReady.then(ligarAuth).catch(() => {
+          emHandshakeNuvem = false;
+          atualizarBadgeNuvem(false);
+        });
+      }
+    }
   }
 
   function aplicarDadosRemotos(dados) {
@@ -4362,7 +4319,7 @@
       salvarFormularios();
       salvarCabecalhos();
       salvarRodapes();
-      if (opcoes.salvarNuvem && navigator.onLine && nuvemAtiva && dbRef && !erroPermissaoNuvem) {
+      if (opcoes.salvarNuvem && navigator.onLine && nuvemAtiva && firebaseSocketConectado && !erroPermissaoNuvem) {
         salvarComAtraso();
       }
     }
@@ -4374,10 +4331,6 @@
     const cicloLocal = lerBoletinsDoCicloLocal();
     return mesclarBoletinsDoCiclo(cicloLocal, opcoes);
   }
-
-  let dbRefCicloBoletins = null;
-  let dbCicloCallback = null;
-  let usandoCicloReserva = false;
 
   function processarSnapshotBoletinsCicloRemoto(dadosCiclo) {
     if (!dadosCiclo || typeof dadosCiclo !== "object") return false;
@@ -4407,35 +4360,13 @@
     return mudou;
   }
 
-  function iniciarOuvinteBoletinsCicloNuvem(forcarReserva = false) {
-    try {
-      if (dbRefCicloBoletins && dbCicloCallback) {
-        dbRefCicloBoletins.off("value", dbCicloCallback);
-      }
-    } catch (e) {}
-
-    const alvoReserva = forcarReserva || usandoNuvemReserva || !appNuvemPrincipal;
-    let refAlvo = null;
-    try {
-      if (!alvoReserva && appNuvemPrincipal) {
-        refAlvo = appNuvemPrincipal.database().ref("diario_producao_pmcd");
-      } else if (pmcdApp) {
-        usandoCicloReserva = true;
-        refAlvo = pmcdApp.database().ref("andamento_quarteiroes/diario_producao_pmcd");
-      }
-    } catch (e) {}
-
-    if (!refAlvo) return;
-    dbRefCicloBoletins = refAlvo;
-    dbCicloCallback = (snapshot) => {
-      processarSnapshotBoletinsCicloRemoto(snapshot.val());
-    };
-    refAlvo.on("value", dbCicloCallback, (err) => {
-      if (!usandoCicloReserva && pmcdApp && isErroPermissaoFirebase(err)) {
-        usandoCicloReserva = true;
-        iniciarOuvinteBoletinsCicloNuvem(true);
-      }
-    });
+  function iniciarOuvinteBoletinsCicloNuvem() {
+    try { if (typeof _unsubCicloBoletins === "function") _unsubCicloBoletins(); } catch (e) {}
+    if (!_andamentoBridgeApi || !firebaseSocketConectado) return;
+    _unsubCicloBoletins = _andamentoBridgeApi.observeModulo("andamento_ciclo", (docData) => {
+      const dados = docData && docData.payload ? docData.payload : null;
+      processarSnapshotBoletinsCicloRemoto(dados);
+    }, () => {});
   }
 
   function sincronizarQuarteiroesInformados() {
@@ -4482,10 +4413,10 @@
     if (!document.getElementById("painel-resumo").classList.contains("oculto")) {
       renderizarResumoIntegrado();
     }
-    if (navigator.onLine && dbRefCicloBoletins) {
+    if (navigator.onLine && _andamentoBridgeApi && firebaseSocketConectado) {
       try {
-        dbRefCicloBoletins.once("value").then(snap => {
-          processarSnapshotBoletinsCicloRemoto(snap.val());
+        _andamentoBridgeApi.getModuloOnce("andamento_ciclo").then(docData => {
+          processarSnapshotBoletinsCicloRemoto(docData && docData.payload ? docData.payload : null);
         }).catch(() => {});
       } catch (e) {}
     }
@@ -6213,7 +6144,7 @@
 
       marcarAlteracaoPendente(true);
 
-      if (navigator.onLine && nuvemAtiva && dbRef && !erroPermissaoNuvem) {
+      if (navigator.onLine && nuvemAtiva && firebaseSocketConectado && !erroPermissaoNuvem) {
         enviarDadosLocaisParaNuvem(true, permitirVazio);
       } else {
         atualizarBadgeNuvem(false);
