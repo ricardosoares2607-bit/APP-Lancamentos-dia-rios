@@ -82,7 +82,7 @@ export function formatarErroGoogleAuth(err) {
   if (code === 'auth/unauthorized-domain') {
     return {
       code,
-      mensagem: `Este endereço (${host || 'domínio atual'}) ainda não está autorizado no Firebase Authentication. Adicione "${host}" em Authentication > Settings > Authorized domains no projeto "${_config?.projectId || 'Firebase'}".`
+      mensagem: `Domínio "${host || 'atual'}" não autorizado no Firebase Auth. Como o app está publicado fora do AI Studio (ex.: GitHub Pages), abra o Console do Firebase (${_config?.projectId || 'youthful-progress-qds98'}) → Authentication → Settings → Authorized domains e adicione "${host}".`
     };
   }
   if (code === 'auth/popup-blocked') {
@@ -383,11 +383,23 @@ function getStateSnapshot() {
 async function init() {
   if (_db && _auth) return buildApi();
 
-  const resp = await fetch('./firebase-applet-config.json', { cache: 'no-store' });
-  if (!resp.ok) {
-    throw new Error(`Falha ao carregar firebase-applet-config.json (HTTP ${resp.status})`);
+  const configUrls = ['./firebase-applet-config.json', '../firebase-applet-config.json'];
+  let loadedConfig = null;
+  let lastStatus = 0;
+  for (const url of configUrls) {
+    try {
+      const resp = await fetch(url, { cache: 'no-store' });
+      lastStatus = resp.status;
+      if (resp.ok) {
+        loadedConfig = await resp.json();
+        break;
+      }
+    } catch (e) {}
   }
-  _config = await resp.json();
+  if (!loadedConfig) {
+    throw new Error(`Falha ao carregar firebase-applet-config.json (HTTP ${lastStatus || 'erro'})`);
+  }
+  _config = loadedConfig;
   _app = initializeApp(_config);
   _db = getFirestore(_app, _config.firestoreDatabaseId);
   _auth = getAuth(_app);

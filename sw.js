@@ -1,10 +1,13 @@
-const CACHE_NAME = 'pmcd-sugarbo-v44';
+const CACHE_NAME = 'pmcd-sugarbo-v45';
 const ARQUIVOS = [
   './',
   './index.html',
   './andamento-quarteiroes.html',
   './andamento-quarteiroes-liraa.html',
   './pmcd-firebase-bridge.js',
+  './public/andamento-quarteiroes.html',
+  './public/andamento-quarteiroes-liraa.html',
+  './public/pmcd-firebase-bridge.js',
   './firebase-applet-config.json',
   './manifest.json',
   './icon-192.png',
@@ -23,7 +26,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      await cache.addAll(ARQUIVOS).catch((err) => console.log('SW cache erro:', err));
+      await Promise.allSettled(ARQUIVOS.map((u) => cache.add(u).catch(() => null)));
       await Promise.allSettled(ARQUIVOS_OPCIONAIS_PDF.map((u) => cache.add(u).catch(() => null)));
     })
   );
