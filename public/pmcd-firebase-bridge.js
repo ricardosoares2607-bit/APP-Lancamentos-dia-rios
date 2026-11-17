@@ -519,10 +519,30 @@ function buildApi() {
         return () => {};
       }
       const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
-      return onSnapshot(
+      let serverConfirmado = false;
+      const unsub = onSnapshot(
         ref,
         (snap) => {
+          if (!snap.metadata?.fromCache) {
+            serverConfirmado = true;
+          }
           if (!snap.exists()) {
+            // Nunca trata ausência em cache frio como banco vazio antes de confirmar no servidor
+            if (snap.metadata?.fromCache && !serverConfirmado) {
+              getDocFromServer(ref)
+                .then((srvSnap) => {
+                  serverConfirmado = true;
+                  if (srvSnap.exists()) {
+                    onData(srvSnap.data() || {}, srvSnap);
+                  } else {
+                    onData(null, srvSnap);
+                  }
+                })
+                .catch(() => {
+                  onData(null, snap);
+                });
+              return;
+            }
             onData(null, snap);
             return;
           }
@@ -537,13 +557,30 @@ function buildApi() {
           }
         }
       );
+      return unsub;
     },
     getModuloOnce: async (moduloId) => {
       const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
       if (!_currentUser || !_accessInfo.autorizado) return null;
       const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
       try {
-        const snap = await getDoc(ref);
+        const srvSnap = await getDocFromServer(ref);
+        return srvSnap.exists() ? srvSnap.data() : null;
+      } catch (srvErr) {
+        try {
+          const snap = await getDoc(ref);
+          return snap.exists() ? snap.data() : null;
+        } catch (error) {
+          handleFirestoreError(error, OperationType.GET, path);
+        }
+      }
+    },
+    getModuloFromServer: async (moduloId) => {
+      const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
+      if (!_currentUser || !_accessInfo.autorizado) return null;
+      const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
+      try {
+        const snap = await getDocFromServer(ref);
         return snap.exists() ? snap.data() : null;
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, path);

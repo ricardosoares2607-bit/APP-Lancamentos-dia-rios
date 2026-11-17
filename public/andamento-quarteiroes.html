@@ -2451,6 +2451,8 @@
   }
 
   let sincronizandoNuvem = false;
+  let _versaoNuvemModulo = 0;
+  let _puxandoServidorAndamento = false;
 
   function sanitizarParaFirebase(obj) {
     if (obj === undefined) return null;
@@ -2546,6 +2548,120 @@
     return msg.includes("permission") || msg.includes("missing or insufficient") || msg.includes("unauthorized") || msg.includes("401");
   }
 
+  function mesclarDadosAndamentoRemotoELocal(dadosNuvem) {
+    if (!dadosNuvem || typeof dadosNuvem !== "object") return;
+    try {
+      const semanasLocais = normalizarArraySemanas(coletarDados());
+      const semanasRemotas = normalizarArraySemanas(dadosNuvem.semanas);
+      const mapaPorId = new Map();
+
+      const temValorNaoVazio = (val) => val !== undefined && val !== null && String(val).trim() !== "";
+
+      semanasRemotas.forEach((sr) => {
+        if (!sr) return;
+        const idNum = Number(sr.id) || 0;
+        if (idNum > 0) mapaPorId.set(idNum, JSON.parse(JSON.stringify(sr)));
+      });
+
+      const semanasMescladas = [];
+      const idsJaUsados = new Set();
+
+      semanasLocais.forEach((sl) => {
+        if (!sl) return;
+        const idNum = Number(sl.id) || 0;
+        if (idNum > 0) idsJaUsados.add(idNum);
+        const sr = idNum > 0 ? mapaPorId.get(idNum) : null;
+        if (!sr) {
+          semanasMescladas.push(sl);
+          return;
+        }
+        const vals = Object.assign({}, sr.valores || {});
+        Object.keys(sl.valores || {}).forEach((k) => {
+          if (temValorNaoVazio(sl.valores[k]) || !(k in vals)) {
+            vals[k] = sl.valores[k];
+          }
+        });
+        const datas = [];
+        const maxD = Math.max(Array.isArray(sl.datas) ? sl.datas.length : 0, Array.isArray(sr.datas) ? sr.datas.length : 0);
+        for (let i = 0; i < maxD; i++) {
+          const dl = Array.isArray(sl.datas) ? sl.datas[i] : "";
+          const dr = Array.isArray(sr.datas) ? sr.datas[i] : "";
+          datas[i] = temValorNaoVazio(dl) ? dl : (dr || "");
+        }
+        semanasMescladas.push(Object.assign({}, sr, sl, {
+          titulo: temValorNaoVazio(sl.titulo) ? sl.titulo : (sr.titulo || ""),
+          datas: datas,
+          valores: vals
+        }));
+      });
+
+      semanasRemotas.forEach((sr) => {
+        if (!sr) return;
+        const idNum = Number(sr.id) || 0;
+        if (idNum > 0 && !idsJaUsados.has(idNum)) {
+          semanasMescladas.push(sr);
+        }
+      });
+
+      semanasMescladas.sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+
+      statusQuarteiroes = Object.assign({}, dadosNuvem.statusQuarteiroes || {}, statusQuarteiroes || {});
+      paginas = Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, dadosNuvem.paginas || {}, paginas || {});
+
+      ["andamento", "concluidos", "boletins", "resumo", "bases", "basesliraa", "coflagrados", "resumogeral"].forEach((sec) => {
+        cabecalhos[sec] = Object.assign({}, (dadosNuvem.cabecalhos && dadosNuvem.cabecalhos[sec]) || {}, (cabecalhos && cabecalhos[sec]) || {});
+        rodapes[sec] = Object.assign({}, (dadosNuvem.rodapes && dadosNuvem.rodapes[sec]) || {}, (rodapes && rodapes[sec]) || {});
+      });
+
+      const dfRem = dadosNuvem.dadosFormularios || {};
+      if (!dadosFormularios || typeof dadosFormularios !== "object") dadosFormularios = {};
+      if (!dadosFormularios.boletins) dadosFormularios.boletins = { porQuarteirao: {} };
+      if (!dadosFormularios.boletins.porQuarteirao) dadosFormularios.boletins.porQuarteirao = {};
+      const remPorQ = (dfRem.boletins && dfRem.boletins.porQuarteirao) || {};
+      Object.keys(remPorQ).forEach((qKey) => {
+        const remQ = remPorQ[qKey];
+        if (!remQ) return;
+        if (!dadosFormularios.boletins.porQuarteirao[qKey]) {
+          dadosFormularios.boletins.porQuarteirao[qKey] = JSON.parse(JSON.stringify(remQ));
+        } else {
+          const locQ = dadosFormularios.boletins.porQuarteirao[qKey];
+          locQ.imoveis = Object.assign({}, remQ.imoveis || {}, locQ.imoveis || {});
+        }
+      });
+      ["resumo", "bases", "coflagrados"].forEach((sec) => {
+        if (!dadosFormularios[sec]) dadosFormularios[sec] = {};
+        const remSec = dfRem[sec] || {};
+        Object.keys(remSec).forEach((rk) => {
+          dadosFormularios[sec][rk] = Object.assign({}, remSec[rk] || {}, dadosFormularios[sec][rk] || {});
+        });
+      });
+
+      garantirEstruturaBoletins();
+      if (Array.isArray(dadosNuvem.liraaSelecionados)) {
+        dadosNuvem.liraaSelecionados.forEach((q) => quarteiroesLiraaSelecionados.add(String(q)));
+        salvarSelecaoLiraa();
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(semanasMescladas));
+      salvarStatus(); salvarPaginas(); salvarCabecalhos(); salvarRodapes(); salvarFormularios();
+
+      document.getElementById("semanas").innerHTML = "";
+      semanaCount = 0;
+      if (semanasMescladas.length > 0) {
+        semanasMescladas.forEach(s => criarSemana(s));
+      } else {
+        criarSemana();
+      }
+
+      recalcular(); atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
+      atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
+      renderizarResumoIntegrado(); renderizarBasesIntegrado();
+      renderizarBasesLiraaIntegrado(); renderizarCoflagrados(); renderizarResumoGeral();
+    } catch (e) {
+      console.warn("Aviso ao mesclar andamento:", e);
+    }
+  }
+
   function enviarDadosLocaisParaNuvem(forcarToast = false, permitirVazio = false) {
     if (!nuvemAtiva || !_andamentoBridgeApi || !firebaseSocketConectado || !navigator.onLine || erroPermissaoNuvem) return;
     if (sincronizandoNuvem) return;
@@ -2583,7 +2699,10 @@
 
       const payload = sanitizarParaFirebase(payloadBruto);
 
-      _andamentoBridgeApi.saveModulo("andamento_ciclo", payload, agora).then(() => {
+      _andamentoBridgeApi.saveModulo("andamento_ciclo", payload, agora).then((res) => {
+        if (res && Number(res.versao) > 0) {
+          _versaoNuvemModulo = Number(res.versao);
+        }
         sincronizandoNuvem = false;
         erroPermissaoNuvem = false;
         firebaseSocketConectado = true;
@@ -2609,14 +2728,92 @@
     }
   }
 
-  function sincronizarTudoComNuvem() {
-    if (!navigator.onLine || !_andamentoBridgeApi || !firebaseSocketConectado) return;
+  function processarSnapshotAndamento(docData, mostrarToast = false) {
+    erroPermissaoNuvem = false;
+    firebaseSocketConectado = true;
+    emHandshakeNuvem = false;
+
+    if (sincronizandoNuvem) return;
+
+    const dadosNuvem = docData && docData.payload ? docData.payload : null;
+    const versaoRemota = Number(docData?.versao) || 0;
+    const localTemDados = temDadosReaisLocais();
+
+    if (!dadosNuvem) {
+      if (localTemDados) {
+        enviarDadosLocaisParaNuvem(mostrarToast);
+      } else {
+        atualizarBadgeNuvem(true);
+        if (mostrarToast) mostrarAviso("☁️ Nuvem conectada e atualizada!");
+      }
+      return;
+    }
+
+    const remotoTemDados = temDadosReais(dadosNuvem);
+    const tsRemoto = Number(dadosNuvem.timestamp) || 0;
+    const tsLocal = Number(ultimoTimestampLocal) || 0;
     const pendente = (function() {
       try { return localStorage.getItem(STORAGE_PENDENTE_NUVEM) === "1"; } catch (e) { return false; }
     })();
-    if (pendente) {
-      enviarDadosLocaisParaNuvem();
+
+    if (!pendente && versaoRemota > 0 && versaoRemota === _versaoNuvemModulo && tsRemoto === tsLocal) {
+      atualizarBadgeNuvem(true);
+      if (mostrarToast) mostrarAviso("☁️ Tudo sincronizado entre seus aparelhos!");
+      return;
     }
+
+    if (localTemDados && !remotoTemDados) {
+      enviarDadosLocaisParaNuvem(mostrarToast);
+      return;
+    }
+
+    if (pendente) {
+      if (remotoTemDados && versaoRemota > 0 && versaoRemota !== _versaoNuvemModulo) {
+        mesclarDadosAndamentoRemotoELocal(dadosNuvem);
+      }
+      if (versaoRemota > 0) _versaoNuvemModulo = versaoRemota;
+      enviarDadosLocaisParaNuvem(mostrarToast);
+      return;
+    }
+
+    if ((versaoRemota > 0 && versaoRemota !== _versaoNuvemModulo) || tsRemoto !== tsLocal) {
+      if (versaoRemota > 0) _versaoNuvemModulo = versaoRemota;
+      aplicarDadosRemotos(dadosNuvem);
+      atualizarBadgeNuvem(true);
+      return;
+    }
+
+    atualizarBadgeNuvem(true);
+    if (mostrarToast) mostrarAviso("☁️ Tudo sincronizado entre seus aparelhos!");
+  }
+
+  async function puxarServidorAndamento(mostrarToast = false) {
+    if (!navigator.onLine || !_andamentoBridgeApi || precisaConectarGoogle || erroPermissaoNuvem) return;
+    if (_puxandoServidorAndamento || sincronizandoNuvem) return;
+    const st = _andamentoBridgeApi.getState?.();
+    if (!st?.user || !st?.access?.autorizado) return;
+    _puxandoServidorAndamento = true;
+    try {
+      const fn = _andamentoBridgeApi.getModuloFromServer || _andamentoBridgeApi.getModuloOnce;
+      if (typeof fn === "function") {
+        const docData = await fn("andamento_ciclo");
+        processarSnapshotAndamento(docData, mostrarToast);
+        const docResumo = await fn("resumo_reconhecimento");
+        const dadosResumo = docResumo && docResumo.payload ? docResumo.payload : null;
+        if (dadosResumo && dadosResumo.timestamp !== ultimoTimestampResumoLocal) {
+          aplicarDadosRemotosPMCD(dadosResumo);
+        }
+      }
+    } catch (e) {
+      console.warn("Aviso ao puxar andamento do servidor:", e);
+    } finally {
+      _puxandoServidorAndamento = false;
+    }
+  }
+
+  async function sincronizarTudoComNuvem(mostrarToast = false) {
+    if (!navigator.onLine || !_andamentoBridgeApi || !firebaseSocketConectado) return;
+    await puxarServidorAndamento(mostrarToast);
     salvarResumoReconhecimentoPMCD();
   }
 
@@ -2641,53 +2838,7 @@
     atualizarBadgeNuvem(true);
 
     _unsubAndamentoCiclo = _andamentoBridgeApi.observeModulo("andamento_ciclo", (docData) => {
-      erroPermissaoNuvem = false;
-      firebaseSocketConectado = true;
-      emHandshakeNuvem = false;
-
-      if (sincronizandoNuvem) return;
-
-      const dadosNuvem = docData && docData.payload ? docData.payload : null;
-      const localTemDados = temDadosReaisLocais();
-      if (!dadosNuvem) {
-        if (localTemDados) {
-          enviarDadosLocaisParaNuvem();
-        } else {
-          atualizarBadgeNuvem(true);
-        }
-        return;
-      }
-
-      const remotoTemDados = temDadosReais(dadosNuvem);
-      const tsRemoto = Number(dadosNuvem.timestamp) || 0;
-      const tsLocal = Number(ultimoTimestampLocal) || 0;
-
-      if (tsRemoto > 0 && tsRemoto === tsLocal) {
-        atualizarBadgeNuvem(true);
-        return;
-      }
-
-      if (localTemDados && !remotoTemDados) {
-        enviarDadosLocaisParaNuvem();
-        return;
-      }
-
-      const pendente = (function() {
-        try { return localStorage.getItem(STORAGE_PENDENTE_NUVEM) === "1"; } catch (e) { return false; }
-      })();
-
-      if ((pendente || tsLocal > tsRemoto) && (localTemDados || !remotoTemDados)) {
-        enviarDadosLocaisParaNuvem();
-        return;
-      }
-
-      if (tsRemoto <= tsLocal && (localTemDados || !remotoTemDados)) {
-        atualizarBadgeNuvem(true);
-        return;
-      }
-
-      aplicarDadosRemotos(dadosNuvem);
-      atualizarBadgeNuvem(true);
+      processarSnapshotAndamento(docData, false);
     }, (err) => {
       console.warn("Aviso de conexão Firestore:", err);
       emHandshakeNuvem = false;
@@ -2743,8 +2894,7 @@
         erroPermissaoNuvem = false;
         precisaConectarGoogle = false;
         iniciarListenersNuvemAtiva();
-        sincronizarTudoComNuvem();
-        mostrarAviso("☁️ Conectado e sincronizado com o Firestore!");
+        await sincronizarTudoComNuvem(true);
       } catch (e) {
         atualizarBadgeNuvem(false);
         const diag = api.formatarErroAuth ? api.formatarErroAuth(e) : { mensagem: e?.message || String(e) };
@@ -2756,7 +2906,7 @@
     erroPermissaoNuvem = false;
     precisaConectarGoogle = false;
     iniciarListenersNuvemAtiva();
-    sincronizarTudoComNuvem();
+    await sincronizarTudoComNuvem(true);
   }
 
   function monitorarConexaoNuvem() {
@@ -2771,7 +2921,7 @@
         const st = _andamentoBridgeApi.getState();
         if (st.user && st.access?.autorizado) {
           iniciarListenersNuvemAtiva();
-          sincronizarTudoComNuvem();
+          sincronizarTudoComNuvem(false);
         }
       }
     });
@@ -2782,6 +2932,24 @@
       atualizarBadgeNuvem(false);
       mostrarAviso("⚡ Operando offline. Todos os seus lançamentos ficam 100% salvos no aparelho!");
     });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && navigator.onLine) {
+        puxarServidorAndamento(false);
+      }
+    });
+
+    window.addEventListener("focus", () => {
+      if (navigator.onLine) {
+        puxarServidorAndamento(false);
+      }
+    });
+
+    setInterval(() => {
+      if (document.visibilityState === "visible" && navigator.onLine) {
+        puxarServidorAndamento(false);
+      }
+    }, 45000);
 
     let _authLigado = false;
     const ligarAuth = (api) => {
@@ -2816,7 +2984,7 @@
         precisaConectarGoogle = false;
         erroPermissaoNuvem = false;
         iniciarListenersNuvemAtiva();
-        sincronizarTudoComNuvem();
+        sincronizarTudoComNuvem(false);
       });
     };
 
