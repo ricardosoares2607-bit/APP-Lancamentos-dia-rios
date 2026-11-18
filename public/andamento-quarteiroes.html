@@ -2558,6 +2558,10 @@
   function mesclarDadosAndamentoRemotoELocal(dadosNuvem) {
     if (!dadosNuvem || typeof dadosNuvem !== "object") return;
     try {
+      const tsRemoto = Number(dadosNuvem.timestamp) || 0;
+      const tsLocal = Number(ultimoTimestampLocal) || 0;
+      const preferirRemoto = tsRemoto > tsLocal;
+
       const semanasLocais = normalizarArraySemanas(coletarDados());
       const semanasRemotas = normalizarArraySemanas(dadosNuvem.semanas);
       const mapaPorId = new Map();
@@ -2584,8 +2588,12 @@
         }
         const vals = Object.assign({}, sr.valores || {});
         Object.keys(sl.valores || {}).forEach((k) => {
-          if (temValorNaoVazio(sl.valores[k]) || !(k in vals)) {
-            vals[k] = sl.valores[k];
+          const vLoc = sl.valores[k];
+          const vRem = vals[k];
+          if (temValorNaoVazio(vLoc) && (!preferirRemoto || !temValorNaoVazio(vRem))) {
+            vals[k] = vLoc;
+          } else if (!(k in vals)) {
+            vals[k] = vLoc;
           }
         });
         const datas = [];
@@ -2593,10 +2601,15 @@
         for (let i = 0; i < maxD; i++) {
           const dl = Array.isArray(sl.datas) ? sl.datas[i] : "";
           const dr = Array.isArray(sr.datas) ? sr.datas[i] : "";
-          datas[i] = temValorNaoVazio(dl) ? dl : (dr || "");
+          datas[i] = preferirRemoto
+            ? (temValorNaoVazio(dr) ? dr : (dl || ""))
+            : (temValorNaoVazio(dl) ? dl : (dr || ""));
         }
-        semanasMescladas.push(Object.assign({}, sr, sl, {
-          titulo: temValorNaoVazio(sl.titulo) ? sl.titulo : (sr.titulo || ""),
+        const base = preferirRemoto ? Object.assign({}, sl, sr) : Object.assign({}, sr, sl);
+        semanasMescladas.push(Object.assign({}, base, {
+          titulo: preferirRemoto
+            ? (temValorNaoVazio(sr.titulo) ? sr.titulo : (sl.titulo || ""))
+            : (temValorNaoVazio(sl.titulo) ? sl.titulo : (sr.titulo || "")),
           datas: datas,
           valores: vals
         }));
@@ -2612,12 +2625,20 @@
 
       semanasMescladas.sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
 
-      statusQuarteiroes = Object.assign({}, dadosNuvem.statusQuarteiroes || {}, statusQuarteiroes || {});
-      paginas = Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, dadosNuvem.paginas || {}, paginas || {});
+      statusQuarteiroes = preferirRemoto
+        ? Object.assign({}, statusQuarteiroes || {}, dadosNuvem.statusQuarteiroes || {})
+        : Object.assign({}, dadosNuvem.statusQuarteiroes || {}, statusQuarteiroes || {});
+      paginas = preferirRemoto
+        ? Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, paginas || {}, dadosNuvem.paginas || {})
+        : Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, dadosNuvem.paginas || {}, paginas || {});
 
       ["andamento", "concluidos", "boletins", "resumo", "bases", "basesliraa", "coflagrados", "resumogeral"].forEach((sec) => {
-        cabecalhos[sec] = Object.assign({}, (dadosNuvem.cabecalhos && dadosNuvem.cabecalhos[sec]) || {}, (cabecalhos && cabecalhos[sec]) || {});
-        rodapes[sec] = Object.assign({}, (dadosNuvem.rodapes && dadosNuvem.rodapes[sec]) || {}, (rodapes && rodapes[sec]) || {});
+        cabecalhos[sec] = preferirRemoto
+          ? Object.assign({}, (cabecalhos && cabecalhos[sec]) || {}, (dadosNuvem.cabecalhos && dadosNuvem.cabecalhos[sec]) || {})
+          : Object.assign({}, (dadosNuvem.cabecalhos && dadosNuvem.cabecalhos[sec]) || {}, (cabecalhos && cabecalhos[sec]) || {});
+        rodapes[sec] = preferirRemoto
+          ? Object.assign({}, (rodapes && rodapes[sec]) || {}, (dadosNuvem.rodapes && dadosNuvem.rodapes[sec]) || {})
+          : Object.assign({}, (dadosNuvem.rodapes && dadosNuvem.rodapes[sec]) || {}, (rodapes && rodapes[sec]) || {});
       });
 
       const dfRem = dadosNuvem.dadosFormularios || {};
@@ -2632,20 +2653,48 @@
           dadosFormularios.boletins.porQuarteirao[qKey] = JSON.parse(JSON.stringify(remQ));
         } else {
           const locQ = dadosFormularios.boletins.porQuarteirao[qKey];
-          locQ.imoveis = Object.assign({}, remQ.imoveis || {}, locQ.imoveis || {});
+          const imoveisMesclados = preferirRemoto
+            ? Object.assign({}, locQ.imoveis || {}, remQ.imoveis || {})
+            : Object.assign({}, remQ.imoveis || {}, locQ.imoveis || {});
+          const cabMesclado = preferirRemoto
+            ? Object.assign({}, locQ.cabecalho || {}, remQ.cabecalho || {})
+            : Object.assign({}, remQ.cabecalho || {}, locQ.cabecalho || {});
+          const rodMesclado = preferirRemoto
+            ? Object.assign({}, locQ.rodape || {}, remQ.rodape || {})
+            : Object.assign({}, remQ.rodape || {}, locQ.rodape || {});
+          const resMesclado = preferirRemoto
+            ? Object.assign({}, locQ.resumo || {}, remQ.resumo || {})
+            : Object.assign({}, remQ.resumo || {}, locQ.resumo || {});
+          dadosFormularios.boletins.porQuarteirao[qKey] = Object.assign(
+            {},
+            preferirRemoto ? locQ : remQ,
+            preferirRemoto ? remQ : locQ,
+            {
+              imoveis: imoveisMesclados,
+              cabecalho: cabMesclado,
+              rodape: rodMesclado,
+              resumo: resMesclado
+            }
+          );
         }
       });
       ["resumo", "bases", "coflagrados"].forEach((sec) => {
         if (!dadosFormularios[sec]) dadosFormularios[sec] = {};
         const remSec = dfRem[sec] || {};
         Object.keys(remSec).forEach((rk) => {
-          dadosFormularios[sec][rk] = Object.assign({}, remSec[rk] || {}, dadosFormularios[sec][rk] || {});
+          dadosFormularios[sec][rk] = preferirRemoto
+            ? Object.assign({}, dadosFormularios[sec][rk] || {}, remSec[rk] || {})
+            : Object.assign({}, remSec[rk] || {}, dadosFormularios[sec][rk] || {});
         });
       });
 
       garantirEstruturaBoletins();
       if (Array.isArray(dadosNuvem.liraaSelecionados)) {
-        dadosNuvem.liraaSelecionados.forEach((q) => quarteiroesLiraaSelecionados.add(String(q)));
+        if (preferirRemoto) {
+          quarteiroesLiraaSelecionados = new Set(dadosNuvem.liraaSelecionados.map(String));
+        } else {
+          dadosNuvem.liraaSelecionados.forEach((q) => quarteiroesLiraaSelecionados.add(String(q)));
+        }
         salvarSelecaoLiraa();
       }
 
@@ -2688,11 +2737,6 @@
     sincronizandoNuvem = true;
     try {
       const agora = Math.max(Date.now(), (Number(ultimoTimestampLocal) || 0) + 1);
-      ultimoTimestampLocal = agora;
-      try { localStorage.setItem(STORAGE_ULTIMO_TS, String(agora)); } catch (e) {}
-
-      marcarAlteracaoPendente(false);
-
       const payloadBruto = {
         timestamp: agora,
         semanas: semanasCheck,
@@ -2708,6 +2752,8 @@
 
       _andamentoBridgeApi.saveModulo("andamento_ciclo", payload, agora, forcarToast).then((res) => {
         _cotaAndamentoPausadaAte = 0;
+        ultimoTimestampLocal = agora;
+        try { localStorage.setItem(STORAGE_ULTIMO_TS, String(agora)); } catch (e) {}
         if (res && Number(res.versao) > 0) {
           _versaoNuvemModulo = Number(res.versao);
         }
@@ -2735,6 +2781,14 @@
         if (isErroPermissaoFirebase(err)) {
           erroPermissaoNuvem = true;
           atualizarBadgeNuvem(false);
+          if (forcarToast) {
+            mostrarAviso("🔒 Sem permissão de gravação na nuvem para esta conta Google.");
+          }
+          return;
+        }
+        atualizarBadgeNuvem(false);
+        if (forcarToast) {
+          mostrarAviso("⚠️ Não foi possível enviar agora (dados mantidos no aparelho).");
         }
       });
     } catch (e) {
@@ -2783,8 +2837,8 @@
       return;
     }
 
-    if (pendente) {
-      if (remotoTemDados && versaoRemota > 0 && versaoRemota !== _versaoNuvemModulo) {
+    if (pendente || (tsLocal > tsRemoto && localTemDados)) {
+      if (remotoTemDados && (versaoRemota !== _versaoNuvemModulo || tsRemoto > 0)) {
         mesclarDadosAndamentoRemotoELocal(dadosNuvem);
       }
       if (versaoRemota > 0) _versaoNuvemModulo = versaoRemota;
@@ -2796,6 +2850,7 @@
       if (versaoRemota > 0) _versaoNuvemModulo = versaoRemota;
       aplicarDadosRemotos(dadosNuvem);
       atualizarBadgeNuvem(true);
+      if (mostrarToast) mostrarAviso("☁️ Tudo sincronizado entre seus aparelhos!");
       return;
     }
 
@@ -2846,6 +2901,7 @@
     await puxarServidorAndamento(mostrarToast);
     salvarResumoReconhecimentoPMCD();
   }
+  window.sincronizarTudoComNuvem = sincronizarTudoComNuvem;
 
   function limparOuvintesNuvem() {
     try { if (typeof _unsubAndamentoCiclo === "function") _unsubAndamentoCiclo(); } catch (e) {}
