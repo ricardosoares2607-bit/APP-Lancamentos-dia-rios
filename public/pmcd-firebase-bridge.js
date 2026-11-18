@@ -577,7 +577,13 @@ function buildApi() {
           }
           if (!snap.exists()) {
             // Nunca trata ausência em cache frio como banco vazio antes de confirmar no servidor
-            if (snap.metadata?.fromCache && !serverConfirmado && Date.now() >= _quotaBloqueadaAte) {
+            if (snap.metadata?.fromCache && !serverConfirmado) {
+              if (Date.now() < _quotaBloqueadaAte) {
+                if (typeof onError === 'function') {
+                  onError(new Error('Quota exceeded: cota diária de leitura atingida temporariamente.'));
+                }
+                return;
+              }
               getDocFromServer(ref)
                 .then((srvSnap) => {
                   serverConfirmado = true;
@@ -592,7 +598,9 @@ function buildApi() {
                 })
                 .catch((err) => {
                   registerQuotaErrorIfAny(err);
-                  onData(null, snap);
+                  if ((isQuotaError(err) || isPermissionError(err)) && typeof onError === 'function') {
+                    onError(err);
+                  }
                 });
               return;
             }

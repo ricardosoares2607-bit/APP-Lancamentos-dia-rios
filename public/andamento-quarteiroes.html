@@ -2872,6 +2872,11 @@
     }, (err) => {
       console.warn("Aviso de conexão Firestore:", err);
       emHandshakeNuvem = false;
+      if (isErroCotaFirebase(err)) {
+        _cotaAndamentoPausadaAte = Date.now() + 10 * 60 * 1000;
+        atualizarBadgeNuvem(false, "⏳ Cota diária atingida (salvo no aparelho)");
+        return;
+      }
       if (isErroPermissaoFirebase(err)) {
         erroPermissaoNuvem = true;
         firebaseSocketConectado = false;
