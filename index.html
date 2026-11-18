@@ -2407,6 +2407,16 @@
         color: #000; background: var(--posicao-bg);
       }
       #aba-quarteiroes-liraa td.posicao:hover { background: #cbd5e1; }
+      #aba-quarteiroes-liraa td.ordem-sel {
+        font-weight: 800; color: #1e293b; background: #e2e8f0 !important;
+        user-select: none;
+      }
+      #aba-quarteiroes-liraa td.campo-total-quarteiroes-selecionados {
+        cursor: default !important;
+        font-weight: 800 !important;
+        color: #14532d !important;
+        background: #f0fdf4 !important;
+      }
       #aba-quarteiroes-liraa td.total-linha { background: var(--total-col-bg); font-weight: bold; color: #000; }
       #aba-quarteiroes-liraa td.liraa-calc { background: var(--liraa-col-bg); color: var(--liraa-col-texto); font-weight: 800; font-size: 10px; }
       #aba-quarteiroes-liraa td.editavel { background: #fff; cursor: text; }
@@ -4149,18 +4159,18 @@
                   <td class="campo-label">Localidade:</td>
                   <td class="campo-valor" contenteditable="true" data-sync="localidade" spellcheck="false"></td>
                   <td class="campo-label">Total de Quarteirões:</td>
-                  <td class="campo-valor campo-total-quarteiroes" contenteditable="true" data-sync="total_quart" spellcheck="false">0</td>
+                  <td id="ql-total-quarteiroes-selecionados" class="campo-valor campo-total-quarteiroes-selecionados" spellcheck="false">0</td>
                 </tr>
               </table>
 
               <table id="tabela-liraa">
                 <colgroup>
-                  <col style="width:10%"><col style="width:16%"><col style="width:7%"><col style="width:7%">
-                  <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:13%"><col style="width:12%">
+                  <col style="width:6%"><col style="width:9%"><col style="width:17%"><col style="width:7%"><col style="width:7%">
+                  <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:17%"><col style="width:16%">
                 </colgroup>
                 <thead>
                   <tr>
-                    <th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
+                    <th>Nº</th><th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
                     <th>PE</th><th>O</th><th>TOTAL</th><th class="col-liraa">LIRAa</th>
                   </tr>
                 </thead>
@@ -11169,19 +11179,33 @@
                 (a, b) => parseInt(a.dataset.posicao, 10) - parseInt(b.dataset.posicao, 10)
               );
 
+              const elTotalSel = secQL.querySelector("#ql-total-quarteiroes-selecionados");
+              if (elTotalSel) {
+                elTotalSel.textContent = String(lista.length);
+              }
+
+              const totalColunasTabelaLiraa = NUM_COLUNAS + 1;
+
               if (lista.length === 0) {
                 const tr = document.createElement("tr");
                 const td = document.createElement("td");
-                td.colSpan = NUM_COLUNAS;
+                td.colSpan = totalColunasTabelaLiraa;
                 td.textContent = "Nenhum quarteirão selecionado ainda.";
                 td.classList.add("vazio");
                 tr.appendChild(td);
                 tbodyLiraa.appendChild(tr);
-                return;
               }
 
-              lista.forEach(origem => {
+              let somaR = 0, somaC = 0, somaTB = 0, somaPE = 0, somaO = 0, somaTotal = 0, somaLiraa = 0;
+
+              lista.forEach((origem, idx) => {
                 const tr = document.createElement("tr");
+
+                const tdNum = document.createElement("td");
+                tdNum.textContent = String(idx + 1);
+                tdNum.classList.add("ordem-sel");
+                tr.appendChild(tdNum);
+
                 for (let i = 0; i < NUM_COLUNAS; i++) {
                   const td = document.createElement("td");
                   td.textContent = origem.children[i].textContent;
@@ -11190,8 +11214,48 @@
                   if (i === COL_LIRAA) td.classList.add("liraa-calc");
                   tr.appendChild(td);
                 }
+
+                const lerNum = col => {
+                  const v = parseInt((origem.children[col]?.textContent || "").trim(), 10);
+                  return isNaN(v) ? 0 : v;
+                };
+                somaR += lerNum(2);
+                somaC += lerNum(3);
+                somaTB += lerNum(4);
+                somaPE += lerNum(5);
+                somaO += lerNum(6);
+                somaTotal += lerNum(COL_TOTAL_LINHA);
+                somaLiraa += lerNum(COL_LIRAA);
+
                 tbodyLiraa.appendChild(tr);
               });
+
+              const trTotal = document.createElement("tr");
+              trTotal.classList.add("total");
+
+              const tdTotalLabel = document.createElement("td");
+              tdTotalLabel.colSpan = 3;
+              tdTotalLabel.textContent = `TOTAL (${lista.length} ${lista.length === 1 ? "quarteirão" : "quarteirões"})`;
+              trTotal.appendChild(tdTotalLabel);
+
+              const colunasTotais = [
+                { val: String(somaR), col: null },
+                { val: String(somaC), col: null },
+                { val: String(somaTB), col: null },
+                { val: String(somaPE), col: null },
+                { val: String(somaO), col: null },
+                { val: String(somaTotal), col: "7" },
+                { val: somaLiraa > 0 ? String(somaLiraa).padStart(2, "0") : "0", col: "8" }
+              ];
+
+              colunasTotais.forEach(item => {
+                const td = document.createElement("td");
+                td.textContent = item.val;
+                if (item.col) td.dataset.col = item.col;
+                trTotal.appendChild(td);
+              });
+
+              tbodyLiraa.appendChild(trTotal);
             }
 
             function coletarDadosCompletos() {
