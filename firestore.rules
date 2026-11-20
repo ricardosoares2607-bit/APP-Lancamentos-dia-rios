@@ -138,6 +138,77 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function isValidSyncMeta(data, equipeId, metaId) {
+      return data.keys().hasAll(['equipeId', 'metaId', 'minClientVersion', 'baselineEpoch', 'versao', 'atualizadoEmMs', 'atualizadoPorUid', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['equipeId', 'metaId', 'minClientVersion', 'baselineEpoch', 'migratedFromLegacyV1', 'sourceChecksum', 'versao', 'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'createdAt', 'updatedAt']) &&
+        data.equipeId is string && data.equipeId == equipeId && data.equipeId.size() <= 64 &&
+        data.metaId is string && data.metaId == metaId && data.metaId.size() <= 64 &&
+        data.metaId in ['sync_config', 'migracao_v2'] &&
+        data.minClientVersion is int && data.minClientVersion >= 1 &&
+        data.baselineEpoch is int && data.baselineEpoch >= 1 &&
+        (!('migratedFromLegacyV1' in data) || data.migratedFromLegacyV1 is bool) &&
+        (!('sourceChecksum' in data) || (data.sourceChecksum is string && data.sourceChecksum.size() <= 128)) &&
+        data.versao is int && data.versao >= 1 &&
+        data.atualizadoEmMs is number && data.atualizadoEmMs >= 0 &&
+        data.atualizadoPorUid is string && data.atualizadoPorUid == request.auth.uid && isValidId(data.atualizadoPorUid) &&
+        (!('atualizadoPorEmail' in data) || (data.atualizadoPorEmail is string && data.atualizadoPorEmail.size() <= 200)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidDominioDados(data, equipeId, dominioId) {
+      return data.keys().hasAll(['equipeId', 'dominioId', 'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch', 'atualizadoEmMs', 'atualizadoPorUid', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['equipeId', 'dominioId', 'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch', 'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'createdAt', 'updatedAt']) &&
+        data.equipeId is string && data.equipeId == equipeId && data.equipeId.size() <= 64 &&
+        data.dominioId is string && data.dominioId == dominioId && data.dominioId.size() <= 64 &&
+        data.dominioId in ['config_geral', 'relatorios_e_resumo'] &&
+        data.payload is map && data.payload.size() <= 200 &&
+        data.versao is int && data.versao >= 1 &&
+        data.syncProtocolVersion is int && data.syncProtocolVersion >= 2 &&
+        data.baselineEpoch is int && data.baselineEpoch >= 0 &&
+        data.atualizadoEmMs is number && data.atualizadoEmMs >= 0 &&
+        data.atualizadoPorUid is string && data.atualizadoPorUid == request.auth.uid && isValidId(data.atualizadoPorUid) &&
+        (!('atualizadoPorEmail' in data) || (data.atualizadoPorEmail is string && data.atualizadoPorEmail.size() <= 200)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSemanaDados(data, equipeId, semanaId) {
+      return data.keys().hasAll(['equipeId', 'semanaId', 'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch', 'atualizadoEmMs', 'atualizadoPorUid', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['equipeId', 'semanaId', 'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch', 'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'createdAt', 'updatedAt']) &&
+        data.equipeId is string && data.equipeId == equipeId && data.equipeId.size() <= 64 &&
+        data.semanaId is string && data.semanaId == semanaId && data.semanaId.size() <= 64 && isValidId(data.semanaId) &&
+        data.payload is map && data.payload.size() <= 100 &&
+        data.versao is int && data.versao >= 1 &&
+        data.syncProtocolVersion is int && data.syncProtocolVersion >= 2 &&
+        data.baselineEpoch is int && data.baselineEpoch >= 0 &&
+        data.atualizadoEmMs is number && data.atualizadoEmMs >= 0 &&
+        data.atualizadoPorUid is string && data.atualizadoPorUid == request.auth.uid && isValidId(data.atualizadoPorUid) &&
+        (!('atualizadoPorEmail' in data) || (data.atualizadoPorEmail is string && data.atualizadoPorEmail.size() <= 200)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAndamentoDados(data, equipeId, andamentoId) {
+      return data.keys().hasAll(['equipeId', 'andamentoId', 'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch', 'atualizadoEmMs', 'atualizadoPorUid', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['equipeId', 'andamentoId', 'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch', 'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'createdAt', 'updatedAt']) &&
+        data.equipeId is string && data.equipeId == equipeId && data.equipeId.size() <= 64 &&
+        data.andamentoId is string && data.andamentoId == andamentoId && data.andamentoId.size() <= 64 &&
+        data.andamentoId in [
+          'ciclo_meta', 'ciclo_b0', 'ciclo_b1', 'ciclo_b2', 'ciclo_b3',
+          'liraa_meta', 'liraa_b0', 'liraa_b1', 'liraa_b2', 'liraa_b3'
+        ] &&
+        data.payload is map && data.payload.size() <= 200 &&
+        data.versao is int && data.versao >= 1 &&
+        data.syncProtocolVersion is int && data.syncProtocolVersion >= 2 &&
+        data.baselineEpoch is int && data.baselineEpoch >= 0 &&
+        data.atualizadoEmMs is number && data.atualizadoEmMs >= 0 &&
+        data.atualizadoPorUid is string && data.atualizadoPorUid == request.auth.uid && isValidId(data.atualizadoPorUid) &&
+        (!('atualizadoPorEmail' in data) || (data.atualizadoPorEmail is string && data.atualizadoPorEmail.size() <= 200)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
     // ============ CONNECTION HEALTH CHECK ============
     match /test/connection {
       allow get: if isAdmin();
@@ -290,7 +361,118 @@ service cloud.firestore {
         allow delete: if isValidId(equipeId) && isValidId(conviteId) && isAdmin();
       }
 
-      // ---- Subcollection: Dados Sincronizados dos Módulos PMCD ----
+      // ---- Subcollection: Controle de Protocolo e Época (/meta/{metaId}) ----
+      match /meta/{metaId} {
+        allow get: if isValidId(equipeId) && isValidId(metaId) && (isAdmin() || isActiveMember(equipeId));
+
+        allow create: if isVerifiedUser() && isValidId(equipeId) && isValidId(metaId) &&
+          isValidSyncMeta(incoming(), equipeId, metaId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          incoming().versao == 1 &&
+          isAdmin() &&
+          exists(/databases/$(database)/documents/equipes/$(equipeId));
+
+        allow update: if isVerifiedUser() && isValidId(equipeId) && isValidId(metaId) &&
+          isValidSyncMeta(incoming(), equipeId, metaId) &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().equipeId == existing().equipeId &&
+          incoming().metaId == existing().metaId &&
+          incoming().updatedAt == request.time &&
+          incoming().versao == existing().versao + 1 &&
+          isAdmin() &&
+          exists(/databases/$(database)/documents/equipes/$(equipeId)) &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'minClientVersion', 'baselineEpoch', 'migratedFromLegacyV1',
+            'sourceChecksum', 'versao', 'atualizadoEmMs',
+            'atualizadoPorUid', 'atualizadoPorEmail', 'updatedAt'
+          ]);
+
+        allow delete: if isValidId(equipeId) && isValidId(metaId) && isBootstrappedAdmin();
+      }
+
+      // ---- Subcollection: Domínios Granulares v2 (/dominios/{dominioId}) ----
+      match /dominios/{dominioId} {
+        allow get: if isValidId(equipeId) && isValidId(dominioId) && (isAdmin() || isActiveMember(equipeId));
+
+        allow create: if isVerifiedUser() && isValidId(equipeId) && isValidId(dominioId) &&
+          isValidDominioDados(incoming(), equipeId, dominioId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          incoming().versao == 1 &&
+          isActiveMember(equipeId);
+
+        allow update: if isVerifiedUser() && isValidId(equipeId) && isValidId(dominioId) &&
+          isValidDominioDados(incoming(), equipeId, dominioId) &&
+          isActiveMember(equipeId) &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().equipeId == existing().equipeId &&
+          incoming().dominioId == existing().dominioId &&
+          incoming().updatedAt == request.time &&
+          incoming().versao == existing().versao + 1 &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch',
+            'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'updatedAt'
+          ]);
+
+        allow delete: if isValidId(equipeId) && isValidId(dominioId) && isAdmin();
+      }
+
+      // ---- Subcollection: Semanas Epidemiológicas Isoladas (/semanas/{semanaId}) ----
+      match /semanas/{semanaId} {
+        allow get: if isValidId(equipeId) && isValidId(semanaId) && (isAdmin() || isActiveMember(equipeId));
+
+        allow create: if isVerifiedUser() && isValidId(equipeId) && isValidId(semanaId) &&
+          isValidSemanaDados(incoming(), equipeId, semanaId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          incoming().versao == 1 &&
+          isActiveMember(equipeId);
+
+        allow update: if isVerifiedUser() && isValidId(equipeId) && isValidId(semanaId) &&
+          isValidSemanaDados(incoming(), equipeId, semanaId) &&
+          isActiveMember(equipeId) &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().equipeId == existing().equipeId &&
+          incoming().semanaId == existing().semanaId &&
+          incoming().updatedAt == request.time &&
+          incoming().versao == existing().versao + 1 &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch',
+            'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'updatedAt'
+          ]);
+
+        allow delete: if isValidId(equipeId) && isValidId(semanaId) && isAdmin();
+      }
+
+      // ---- Subcollection: Andamento dos Quarteirões Granular (/andamentos/{andamentoId}) ----
+      match /andamentos/{andamentoId} {
+        allow get: if isValidId(equipeId) && isValidId(andamentoId) && (isAdmin() || isActiveMember(equipeId));
+
+        allow create: if isVerifiedUser() && isValidId(equipeId) && isValidId(andamentoId) &&
+          isValidAndamentoDados(incoming(), equipeId, andamentoId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          incoming().versao == 1 &&
+          isActiveMember(equipeId);
+
+        allow update: if isVerifiedUser() && isValidId(equipeId) && isValidId(andamentoId) &&
+          isValidAndamentoDados(incoming(), equipeId, andamentoId) &&
+          isActiveMember(equipeId) &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().equipeId == existing().equipeId &&
+          incoming().andamentoId == existing().andamentoId &&
+          incoming().updatedAt == request.time &&
+          incoming().versao == existing().versao + 1 &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'payload', 'versao', 'syncProtocolVersion', 'baselineEpoch',
+            'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'updatedAt'
+          ]);
+
+        allow delete: if isValidId(equipeId) && isValidId(andamentoId) && isAdmin();
+      }
+
+      // ---- Subcollection Legada: Módulos PMCD (/modulos/{moduloId}) ----
       match /modulos/{moduloId} {
         allow get: if isValidId(equipeId) && isValidId(moduloId) && (isAdmin() || isActiveMember(equipeId));
 
@@ -311,7 +493,7 @@ service cloud.firestore {
             isAdmin() ||
             (
               incoming().diff(existing()).affectedKeys().hasOnly(['payload', 'versao', 'atualizadoEmMs', 'atualizadoPorUid', 'atualizadoPorEmail', 'updatedAt']) &&
-              incoming().versao >= existing().versao
+              incoming().versao == existing().versao + 1
             )
           );
 

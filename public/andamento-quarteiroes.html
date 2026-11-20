@@ -24,6 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&display=swap" rel="stylesheet">
 
+<script src="./pmcd-sync-engine.js"></script>
 <script type="module" src="./pmcd-firebase-bridge.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -1755,6 +1756,7 @@
     <button class="acao" onclick="exportarCSV()">📥 Exportar CSV</button>
     <button class="acao sucesso" onclick="exportarBackupJSON()">💾 Backup JSON</button>
     <button class="acao info" onclick="dispararImportacaoJSON()">📂 Restaurar Backup</button>
+    <button class="acao info" id="btnCarregarSeedAndamentoCiclo" onclick="dispararSeedAndamentoCiclo()" style="background:#0284c7; border-color:#0369a1;" title="Carregar JSON enviado de Andamento dos Quarteirões do Ciclo (19/11/2026)">📥 Carregar JSON (19/11)</button>
     <button class="acao perigo" onclick="limparTudo()">🗑️ Limpar Tudo</button>
     <button class="acao info btn-toggle-selecao" id="btnModoSelecaoDiario" onclick="alternarModoSelecao('diario')">🔲 Selecionar Células</button>
     <input type="file" id="inputBackupJSON" accept=".json" style="display: none;" onchange="importarBackupJSON(event)">
@@ -1960,6 +1962,11 @@
   const STORAGE_PENDENTE_NUVEM = "diario_pendente_nuvem_v1";
   const STORAGE_ULTIMO_TS = "diario_ultimo_timestamp_v1";
   const STORAGE_BACKUP_COMPLETO = "diario_backup_completo_offline_v1";
+  const STORAGE_V2_META = "diario_v2_meta_ts_v1";
+  const V2_SYNC_SCOPE = "andamento_ciclo";
+  const V2_ANDAMENTO_TIPO = "ciclo";
+  const SEED_ANDAMENTO_CICLO_URL = "./assets/aistudio/backup_andamento_quarteiroes_2026-11-19_43bee3f0.json";
+  const SEED_ANDAMENTO_CICLO_FLAG = "pmcd_seed_andamento_ciclo_20261119_v1";
 
   function normalizarArraySemanas(val) {
     if (!val) return [];
@@ -2011,9 +2018,77 @@
   let todasLinhasCacheBasesLiraa = [];
   let visualizacaoLiraaAtual = "todas";
 
+  let _v2Meta = (function() {
+    const base = {
+      statusTs: {},
+      liraaSelMap: {},
+      paginasTs: {},
+      cabecalhosTs: {},
+      rodapesTs: {},
+      secoesTs: { resumo: {}, bases: {}, coflagrados: {} },
+      resumoCabTs: {},
+      semanasTombstones: {},
+      boletinsTombstones: {},
+      versoesDoc: {},
+      diarioSemanaMeta: {}
+    };
+    try {
+      const raw = localStorage.getItem(STORAGE_V2_META);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          return Object.assign(base, parsed, {
+            secoesTs: Object.assign({ resumo: {}, bases: {}, coflagrados: {} }, parsed.secoesTs || {})
+          });
+        }
+      }
+    } catch (e) {}
+    return base;
+  })();
+
+  function salvarV2Meta() {
+    try { localStorage.setItem(STORAGE_V2_META, JSON.stringify(_v2Meta)); } catch (e) {}
+  }
+
+  function seEngine() {
+    return (typeof window !== "undefined" && window.PmcdSyncEngine) ? window.PmcdSyncEngine : null;
+  }
+
+  function agoraSyncMs(minFloor = 0) {
+    const floor = Math.max(Number(minFloor) || 0, Number(ultimoTimestampLocal) || 0);
+    const eng = seEngine();
+    if (eng && typeof eng.monotonicNowMs === "function") return eng.monotonicNowMs(floor);
+    const api = _andamentoBridgeApi || (typeof window !== "undefined" ? window.PmcdFirebase : null);
+    if (api && typeof api.getServerNowMs === "function") return Math.max(api.getServerNowMs(), floor + 1);
+    if (eng && typeof eng.serverNowMs === "function") return Math.max(eng.serverNowMs(), floor + 1);
+    return Math.max(Date.now(), floor + 1);
+  }
+
+  function marcarCarimboDiario(idSemana, tipoCampo, chaveOuIdx, valTs) {
+    const ts = valTs || agoraSyncMs();
+    if (!_v2Meta.diarioSemanaMeta) _v2Meta.diarioSemanaMeta = {};
+    const key = String(idSemana);
+    if (!_v2Meta.diarioSemanaMeta[key]) {
+      _v2Meta.diarioSemanaMeta[key] = { _ts: ts, tituloTs: 0, datasTs: [0, 0, 0, 0, 0], valoresTs: {} };
+    }
+    const sm = _v2Meta.diarioSemanaMeta[key];
+    sm._ts = Math.max(Number(sm._ts) || 0, ts);
+    if (tipoCampo === "titulo") {
+      sm.tituloTs = ts;
+    } else if (tipoCampo === "data") {
+      if (!Array.isArray(sm.datasTs)) sm.datasTs = [0, 0, 0, 0, 0];
+      sm.datasTs[Number(chaveOuIdx) || 0] = ts;
+    } else if (tipoCampo === "valor" && chaveOuIdx) {
+      if (!sm.valoresTs) sm.valoresTs = {};
+      sm.valoresTs[String(chaveOuIdx)] = ts;
+    }
+    salvarV2Meta();
+  }
+
   function salvarSelecaoLiraa() {
     try {
       localStorage.setItem(STORAGE_LIRAA_SELECIONADOS, JSON.stringify(Array.from(quarteiroesLiraaSelecionados)));
+      salvarV2Meta();
     } catch (e) {}
   }
 
@@ -2111,9 +2186,76 @@
   let ultimoTimestampResumoLocal = 0;
   let timeoutSalvarPMCD = null;
   let _andamentoBridgeApi = null;
-  let _unsubAndamentoCiclo = null;
+  let _unsubAndamentoMeta = null;
+  let _unsubAndamentoBuckets = [null, null, null, null];
   let _unsubPMCDResumo = null;
+  let _unsubSyncConfig = null;
   let precisaConectarGoogle = false;
+  let _v2ApplyingRemote = false;
+  let _v2SyncEpochAtual = (function() {
+    const eng = seEngine();
+    return eng && typeof eng.getDeviceEpoch === "function" ? eng.getDeviceEpoch() : 1;
+  })();
+  let _v2CompatBlocked = false;
+  let _v2MigrationChecked = false;
+  let _v2EpochChecked = false;
+  let _v2FlushingQueue = false;
+  let _v2RemoteMetaSnapshot = null;
+  let _v2RemoteBuckets = [{}, {}, {}, {}];
+
+  function marcarMetaAndamentoSujo() {
+    if (_v2ApplyingRemote) return;
+    const eng = seEngine();
+    if (eng && typeof eng.enqueueSyncOp === "function") {
+      eng.enqueueSyncOp(V2_SYNC_SCOPE, "andamentos", `${V2_ANDAMENTO_TIPO}_meta`, {
+        dirtyKeys: ["meta"],
+        updatedAtMs: agoraSyncMs()
+      });
+    }
+  }
+
+  function marcarBucketAndamentoSujo(qKey) {
+    if (_v2ApplyingRemote || !qKey) return;
+    const eng = seEngine();
+    const bIdx = eng && typeof eng.bucketIndexForQuarteirao === "function" ? eng.bucketIndexForQuarteirao(qKey) : 0;
+    if (eng && typeof eng.enqueueSyncOp === "function") {
+      eng.enqueueSyncOp(V2_SYNC_SCOPE, "andamentos", `${V2_ANDAMENTO_TIPO}_b${bIdx}`, {
+        dirtyKeys: [String(qKey)],
+        updatedAtMs: agoraSyncMs()
+      });
+    }
+  }
+
+  function marcarTodosBucketsSujos() {
+    if (_v2ApplyingRemote) return;
+    const eng = seEngine();
+    if (!eng || typeof eng.enqueueSyncOp !== "function") return;
+    const buckets = new Set();
+    const porQ = (dadosFormularios.boletins && dadosFormularios.boletins.porQuarteirao) || {};
+    Object.keys(porQ).forEach(q => buckets.add(eng.bucketIndexForQuarteirao(q)));
+    Object.keys(_v2Meta.boletinsTombstones || {}).forEach(q => buckets.add(eng.bucketIndexForQuarteirao(q)));
+    if (buckets.size === 0) {
+      [0, 1, 2, 3].forEach(b => buckets.add(b));
+    }
+    const now = agoraSyncMs();
+    buckets.forEach(bIdx => {
+      eng.enqueueSyncOp(V2_SYNC_SCOPE, "andamentos", `${V2_ANDAMENTO_TIPO}_b${bIdx}`, {
+        dirtyKeys: [`bucket_${bIdx}`],
+        updatedAtMs: now
+      });
+    });
+  }
+
+  function marcarResumoPMCDSujo() {
+    if (_v2ApplyingRemote) return;
+    const eng = seEngine();
+    if (eng && typeof eng.enqueueSyncOp === "function") {
+      eng.enqueueSyncOp(V2_SYNC_SCOPE, "dominios", "relatorios_e_resumo", {
+        dirtyKeys: ["resumoReconhecimento"],
+        updatedAtMs: agoraSyncMs()
+      });
+    }
+  }
 
   function atualizarBadgePMCD(conectado, textoCustom) {
     const badge = document.getElementById("statusPMCD");
@@ -2135,6 +2277,7 @@
   function obterDadosResumoReconhecimento() {
     const cabecalhoResumo = (cabecalhos.resumo && cabecalhos.resumo[0]) || {};
     const rodapeResumo = (rodapes.resumo && rodapes.resumo[0]) || {};
+    const agora = agoraSyncMs();
 
     const resumosBoletins = coletarResumosBoletins();
     const quarteiroesB = Object.keys(resumosBoletins).sort((a, b) => {
@@ -2158,7 +2301,8 @@
         C: parseInt(l.c, 10) || 0,
         TB: parseInt(l.tb, 10) || 0,
         PE: parseInt(l.pe, 10) || 0,
-        O: parseInt(l.o, 10) || 0
+        O: parseInt(l.o, 10) || 0,
+        atualizadoEmMs: Number(l._ts || l.atualizadoEmMs) || (_v2Meta.secoesTs?.resumo?.[rowKey] || agora)
       });
     });
     legacy.sort((a, b) => a.q.localeCompare(b.q, "pt-BR", { numeric: true }));
@@ -2170,6 +2314,7 @@
     quarteiroesB.forEach(q => {
       const d = resumosBoletins[q];
       const totalQ = d.total || (d.R + d.C + d.TB + d.PE + d.O);
+      const qTs = Number(dadosFormularios?.boletins?.porQuarteirao?.[q]?._ts) || agora;
       const item = {
         quarteirao: formatarIdentificador2Digitos(q),
         origem: "boletins",
@@ -2178,7 +2323,8 @@
         TB: d.TB || 0,
         PE: d.PE || 0,
         O: d.O || 0,
-        total: totalQ
+        total: totalQ,
+        atualizadoEmMs: qTs
       };
       listaQuarteiroes.push(item);
       mapaQuarteiroes[q] = item;
@@ -2199,7 +2345,8 @@
         TB: e.TB,
         PE: e.PE,
         O: e.O,
-        total: totalQ
+        total: totalQ,
+        atualizadoEmMs: e.atualizadoEmMs || agora
       };
       listaQuarteiroes.push(item);
       mapaQuarteiroes[e.q] = item;
@@ -2212,8 +2359,15 @@
 
     totais.total = totais.R + totais.C + totais.TB + totais.PE + totais.O;
 
+    const cabTsMap = Object.assign({}, _v2Meta.resumoCabTs || {});
+    ["uf", "distrito", "municipio", "localidade", "subdistrito", "sublocal", "categoria"].forEach(k => {
+      if (cabecalhoResumo[k] && !cabTsMap[k]) cabTsMap[k] = agora;
+    });
+
     return {
-      timestamp: Date.now(),
+      timestamp: agora,
+      atualizadoEmMs: agora,
+      _ts: agora,
       origem: "andamento_quarteiroes",
       cabecalho: {
         uf: cabecalhoResumo.uf || "",
@@ -2224,6 +2378,7 @@
         sublocal: cabecalhoResumo.sublocal || "",
         categoria: cabecalhoResumo.categoria || ""
       },
+      _cabTs: cabTsMap,
       cabecalhos: cabecalhos.resumo || {},
       rodape: {
         supervisor: rodapeResumo.supervisor || "",
@@ -2240,21 +2395,17 @@
   }
 
   function salvarResumoReconhecimentoPMCD(permitirVazio = false) {
-    if (!_andamentoBridgeApi || !pmcdSincAtiva || !firebaseSocketConectado || erroPermissaoNuvem) return;
+    if (_v2ApplyingRemote) return;
     try {
       const payload = obterDadosResumoReconhecimento();
       if (!permitirVazio && payload.totalQuarteiroes === 0 && !temDadosReaisLocais()) {
         return;
       }
       ultimoTimestampResumoLocal = payload.timestamp;
-      _andamentoBridgeApi.saveModulo("resumo_reconhecimento", payload, payload.timestamp)
-        .then(() => {
-          atualizarBadgePMCD(true);
-        })
-        .catch(err => {
-          console.error("Erro ao salvar no PMCD Firestore:", err);
-          atualizarBadgePMCD(false);
-        });
+      marcarResumoPMCDSujo();
+      if (_andamentoBridgeApi && pmcdSincAtiva && firebaseSocketConectado && !erroPermissaoNuvem && navigator.onLine) {
+        flushAndamentoSyncQueueV2(false);
+      }
     } catch (err) {
       console.error("Erro ao preparar dados PMCD:", err);
     }
@@ -2269,82 +2420,125 @@
 
   function aplicarDadosRemotosPMCD(dados) {
     try {
-      if (!dados) return;
+      if (!dados || typeof dados !== "object") return;
 
+      _v2ApplyingRemote = true;
       let alterou = false;
+      try {
+        // 1. Atualizar cabeçalhos preservando campos mais novos
+        if (dados.cabecalhos && typeof dados.cabecalhos === "object") {
+          cabecalhos.resumo = Object.assign({}, cabecalhos.resumo, dados.cabecalhos);
+          alterou = true;
+        } else if (dados.cabecalho && typeof dados.cabecalho === "object") {
+          if (!cabecalhos.resumo) cabecalhos.resumo = {};
+          if (!cabecalhos.resumo[0]) cabecalhos.resumo[0] = {};
+          const remCabTs = dados._cabTs || {};
+          const locCabTs = _v2Meta.resumoCabTs || {};
+          Object.keys(dados.cabecalho).forEach(ck => {
+            const rT = Number(remCabTs[ck] || dados._ts || dados.atualizadoEmMs || dados.timestamp) || 0;
+            const lT = Number(locCabTs[ck]) || 0;
+            if (rT >= lT) {
+              cabecalhos.resumo[0][ck] = dados.cabecalho[ck];
+              locCabTs[ck] = rT;
+            }
+          });
+          _v2Meta.resumoCabTs = locCabTs;
+          alterou = true;
+        }
 
-      // 1. Atualizar cabeçalhos
-      if (dados.cabecalhos && typeof dados.cabecalhos === "object") {
-        cabecalhos.resumo = Object.assign({}, cabecalhos.resumo, dados.cabecalhos);
-        alterou = true;
-      } else if (dados.cabecalho && typeof dados.cabecalho === "object") {
-        if (!cabecalhos.resumo) cabecalhos.resumo = {};
-        cabecalhos.resumo[0] = Object.assign({}, cabecalhos.resumo[0], dados.cabecalho);
-        alterou = true;
-      }
+        // 2. Atualizar rodapés
+        if (dados.rodapes && typeof dados.rodapes === "object") {
+          rodapes.resumo = Object.assign({}, rodapes.resumo, dados.rodapes);
+          alterou = true;
+        } else if (dados.rodape && typeof dados.rodape === "object") {
+          if (!rodapes.resumo) rodapes.resumo = {};
+          rodapes.resumo[0] = Object.assign({}, rodapes.resumo[0], dados.rodape);
+          alterou = true;
+        }
 
-      // 2. Atualizar rodapés
-      if (dados.rodapes && typeof dados.rodapes === "object") {
-        rodapes.resumo = Object.assign({}, rodapes.resumo, dados.rodapes);
-        alterou = true;
-      } else if (dados.rodape && typeof dados.rodape === "object") {
-        if (!rodapes.resumo) rodapes.resumo = {};
-        rodapes.resumo[0] = Object.assign({}, rodapes.resumo[0], dados.rodape);
-        alterou = true;
-      }
+        // 3. Atualizar dadosFormularios.resumo respeitando timestamp por linha
+        if (dados.dadosFormulariosResumo && typeof dados.dadosFormulariosResumo === "object") {
+          if (!dadosFormularios.resumo) dadosFormularios.resumo = {};
+          Object.keys(dados.dadosFormulariosResumo).forEach(rk => {
+            const remRow = dados.dadosFormulariosResumo[rk];
+            if (!remRow) return;
+            const rTs = Math.max(
+              Number(remRow._ts) || 0,
+              Number(remRow.atualizadoEmMs) || 0,
+              Number(remRow._clearedAtMs) || 0,
+              Number(dados._ts) || 0,
+              Number(dados.timestamp) || 0
+            );
+            const locRow = dadosFormularios.resumo[rk];
+            const lTs = Math.max(
+              Number(_v2Meta.secoesTs?.resumo?.[rk]) || 0,
+              Number(locRow?._ts) || 0,
+              Number(locRow?._clearedAtMs) || 0
+            );
+            if (!locRow || rTs > lTs || (rTs === lTs && Number(remRow._clearedAtMs) > 0 && Number(remRow._clearedAtMs) === rTs)) {
+              dadosFormularios.resumo[rk] = Object.assign({}, remRow);
+              _v2Meta.secoesTs.resumo[rk] = rTs;
+            }
+          });
+          alterou = true;
+        }
 
-      // 3. Atualizar dadosFormularios.resumo se fornecido diretamente
-      if (dados.dadosFormulariosResumo && typeof dados.dadosFormulariosResumo === "object") {
-        dadosFormularios.resumo = Object.assign({}, dadosFormularios.resumo, dados.dadosFormulariosResumo);
-        alterou = true;
-      }
+        // 4. Se houver array ou objeto de quarteirões recebido do PMCD sem dadosFormulariosResumo
+        let lista = [];
+        if (Array.isArray(dados.quarteiroes)) {
+          lista = dados.quarteiroes;
+        } else if (dados.quarteiroes && typeof dados.quarteiroes === "object") {
+          lista = Object.values(dados.quarteiroes);
+        } else if (Array.isArray(dados.linhas)) {
+          lista = dados.linhas;
+        } else if (dados.mapaQuarteiroes && typeof dados.mapaQuarteiroes === "object") {
+          lista = Object.values(dados.mapaQuarteiroes);
+        }
 
-      // 4. Se houver array ou objeto de quarteirões recebido do PMCD
-      let lista = [];
-      if (Array.isArray(dados.quarteiroes)) {
-        lista = dados.quarteiroes;
-      } else if (dados.quarteiroes && typeof dados.quarteiroes === "object") {
-        lista = Object.values(dados.quarteiroes);
-      } else if (Array.isArray(dados.linhas)) {
-        lista = dados.linhas;
-      } else if (dados.mapaQuarteiroes && typeof dados.mapaQuarteiroes === "object") {
-        lista = Object.values(dados.mapaQuarteiroes);
-      }
+        if (lista.length > 0 && !dados.dadosFormulariosResumo) {
+          if (!dadosFormularios.resumo) dadosFormularios.resumo = {};
+          lista.forEach((item, idx) => {
+            const qVal = item.quarteirao || item.q || item.numero || item.id || "";
+            if (!qVal) return;
+            const p = Math.floor(idx / 64);
+            const t = (Math.floor(idx / 32) % 2) + 1;
+            const l = idx % 32;
+            const rowKey = `${p}_${t}_${l}`;
+            const rTs = Number(item.atualizadoEmMs || dados._ts || dados.timestamp) || 0;
+            const lTs = Number((_v2Meta.secoesTs?.resumo?.[rowKey]) || 0);
+            if (rTs >= lTs || !dadosFormularios.resumo[rowKey]) {
+              dadosFormularios.resumo[rowKey] = {
+                q: formatarIdentificador2Digitos(qVal),
+                r: String(item.R !== undefined ? item.R : (item.r || 0)),
+                c: String(item.C !== undefined ? item.C : (item.c || 0)),
+                tb: String(item.TB !== undefined ? item.TB : (item.tb || 0)),
+                pe: String(item.PE !== undefined ? item.PE : (item.pe || 0)),
+                o: String(item.O !== undefined ? item.O : (item.o || 0)),
+                _ts: rTs
+              };
+              _v2Meta.secoesTs.resumo[rowKey] = rTs;
+            }
+          });
+          paginas.resumo = Math.max(paginas.resumo || 1, Math.max(1, Math.ceil(lista.length / 64)));
+          alterou = true;
+        } else if (dados.paginas) {
+          paginas.resumo = Math.max(paginas.resumo || 1, parseInt(dados.paginas, 10) || 1);
+        }
 
-      if (lista.length > 0 && !dados.dadosFormulariosResumo) {
-        if (!dadosFormularios.resumo) dadosFormularios.resumo = {};
-        lista.forEach((item, idx) => {
-          const qVal = item.quarteirao || item.q || item.numero || item.id || "";
-          if (!qVal) return;
-          const p = Math.floor(idx / 64);
-          const t = (Math.floor(idx / 32) % 2) + 1;
-          const l = idx % 32;
-          const rowKey = `${p}_${t}_${l}`;
-          dadosFormularios.resumo[rowKey] = {
-            q: formatarIdentificador2Digitos(qVal),
-            r: String(item.R !== undefined ? item.R : (item.r || 0)),
-            c: String(item.C !== undefined ? item.C : (item.c || 0)),
-            tb: String(item.TB !== undefined ? item.TB : (item.tb || 0)),
-            pe: String(item.PE !== undefined ? item.PE : (item.pe || 0)),
-            o: String(item.O !== undefined ? item.O : (item.o || 0))
-          };
-        });
-        paginas.resumo = Math.max(paginas.resumo || 1, Math.max(1, Math.ceil(lista.length / 64)));
-        alterou = true;
-      } else if (dados.paginas) {
-        paginas.resumo = Math.max(paginas.resumo || 1, parseInt(dados.paginas, 10) || 1);
-      }
-
-      if (alterou) {
-        salvarCabecalhos();
-        salvarRodapes();
-        salvarFormularios();
-        salvarPaginas();
-
-        renderizarResumoIntegrado();
-        mostrarAviso("🔄 Resumo sincronizado com o PMCD!");
+        if (alterou) {
+          salvarV2Meta();
+          salvarCabecalhos();
+          salvarRodapes();
+          salvarFormularios();
+          salvarPaginas();
+          renderizarResumoIntegrado();
+          mostrarAviso("🔄 Resumo sincronizado com o PMCD!");
+        }
+      } finally {
+        _v2ApplyingRemote = false;
       }
     } catch (e) {
+      _v2ApplyingRemote = false;
       console.error("Erro ao aplicar dados remotos do PMCD:", e);
     }
   }
@@ -2356,39 +2550,40 @@
     }
     try { if (typeof _unsubPMCDResumo === "function") _unsubPMCDResumo(); } catch (e) {}
 
-    _unsubPMCDResumo = _andamentoBridgeApi.observeModulo("resumo_reconhecimento", (docData) => {
+    _unsubPMCDResumo = _andamentoBridgeApi.observeDocV2("dominios", "relatorios_e_resumo", (docData) => {
       atualizarBadgePMCD(true);
-      const dados = docData && docData.payload ? docData.payload : null;
+      const dados = docData && docData.payload && docData.payload.resumoReconhecimento ? docData.payload.resumoReconhecimento : null;
       if (!dados) return;
-      if (dados.timestamp && dados.timestamp === ultimoTimestampResumoLocal) {
-        return;
-      }
+      const ts = Number(dados.timestamp || dados.atualizadoEmMs || dados._ts) || 0;
+      if (ts && ts === ultimoTimestampResumoLocal) return;
       aplicarDadosRemotosPMCD(dados);
     }, (err) => {
-      console.error("Erro no ouvinte PMCD:", err);
+      console.error("Erro no ouvinte PMCD v2:", err);
       atualizarBadgePMCD(false, "⚡ PMCD Desconectado");
     });
   }
 
-  function sincronizarResumoPMCDAgora() {
+  async function sincronizarResumoPMCDAgora() {
     if (!_andamentoBridgeApi || !firebaseSocketConectado) {
       mostrarAviso("🔑 Conecte sua conta Google para sincronizar com o PMCD.");
       return;
     }
     mostrarAviso("🔄 Sincronizando Resumo com PMCD...");
-    salvarResumoReconhecimentoPMCD();
-    _andamentoBridgeApi.getModuloOnce("resumo_reconhecimento").then((docData) => {
-      const dados = docData && docData.payload ? docData.payload : null;
+    marcarResumoPMCDSujo();
+    await flushAndamentoSyncQueueV2(true);
+    try {
+      const docData = await _andamentoBridgeApi.getDocV2("dominios", "relatorios_e_resumo", true, true);
+      const dados = docData && docData.payload && docData.payload.resumoReconhecimento ? docData.payload.resumoReconhecimento : null;
       if (dados) {
         aplicarDadosRemotosPMCD(dados);
         mostrarAviso("✅ Resumo sincronizado com PMCD em tempo real!");
       } else {
         mostrarAviso("✅ Dados enviados ao PMCD!");
       }
-    }).catch(err => {
+    } catch (err) {
       console.error(err);
       mostrarAviso("⚠️ Erro na sincronização com PMCD");
-    });
+    }
   }
 
   let firebaseSocketConectado = false;
@@ -2403,6 +2598,11 @@
       badge.textContent = textoCustom;
       return;
     }
+    if (_v2CompatBlocked) {
+      badge.className = "badge-nuvem offline";
+      badge.textContent = "⚠️ Atualize o app para sincronizar";
+      return;
+    }
     if (erroPermissaoNuvem) {
       badge.className = "badge-nuvem offline";
       badge.textContent = "🔒 Acesso Google não autorizado";
@@ -2413,17 +2613,19 @@
       badge.textContent = "🔑 Clique para conectar Google (Nuvem)";
       return;
     }
-    const pendente = (function() {
+    const eng = seEngine();
+    const pendQtd = eng && typeof eng.listPendingSyncOps === "function" ? eng.listPendingSyncOps(V2_SYNC_SCOPE).length : 0;
+    const pendente = pendQtd > 0 || (function() {
       try { return localStorage.getItem(STORAGE_PENDENTE_NUVEM) === "1"; } catch (e) { return false; }
     })();
 
     if (online) {
       if (pendente) {
         badge.className = "badge-nuvem pendente";
-        badge.textContent = "⏳ Conectado (Sincronizando...)";
+        badge.textContent = `⏳ Conectado (Sincronizando ${pendQtd || 1}...)`;
       } else {
         badge.className = "badge-nuvem online";
-        badge.textContent = "☁️ Nuvem Conectada (Tempo Real)";
+        badge.textContent = "☁️ Nuvem Conectada (v2 Tempo Real)";
       }
     } else if (navigator.onLine && emHandshakeNuvem) {
       badge.className = "badge-nuvem pendente";
@@ -2431,7 +2633,7 @@
     } else {
       if (pendente) {
         badge.className = "badge-nuvem pendente";
-        badge.textContent = "⚡ Modo Offline (Alterações salvas no aparelho)";
+        badge.textContent = `⚡ Modo Offline (${pendQtd || 1} alteração pendente no aparelho)`;
       } else {
         badge.className = "badge-nuvem offline";
         badge.textContent = "⚡ Modo Offline (Dados salvos no aparelho)";
@@ -2476,7 +2678,7 @@
     try {
       const sems = normalizarArraySemanas(dados.semanas);
       for (const s of sems) {
-        if (!s) continue;
+        if (!s || s._deleted) continue;
         if (s.titulo && String(s.titulo).trim() !== "") return true;
         if (Array.isArray(s.datas) && s.datas.some(d => d && String(d).trim() !== "")) return true;
         if (s.valores && typeof s.valores === "object") {
@@ -2486,13 +2688,14 @@
           }
         }
       }
-      if (dados.statusQuarteiroes && Object.keys(dados.statusQuarteiroes).length > 0) return true;
+      if (dados.statusQuarteiroes && Object.values(dados.statusQuarteiroes).some(v => v === "concluido")) return true;
       const df = dados.dadosFormularios;
       if (df && typeof df === "object") {
         if (df.boletins && df.boletins.porQuarteirao && Object.keys(df.boletins.porQuarteirao).length > 0) {
           for (const qKey of Object.keys(df.boletins.porQuarteirao)) {
             const fq = df.boletins.porQuarteirao[qKey];
-            if (fq && fq.imoveis && Object.keys(fq.imoveis).length > 0) {
+            if (!fq || fq._deleted) continue;
+            if (fq.imoveis && Object.keys(fq.imoveis).length > 0) {
               for (const ik of Object.keys(fq.imoveis)) {
                 const im = fq.imoveis[ik];
                 if (im && Object.values(im).some(v => v && String(v).trim() !== "")) return true;
@@ -2506,6 +2709,7 @@
               const row = df[secao][rk];
               if (row && typeof row === "object") {
                 for (const c of Object.keys(row)) {
+                  if (c === "_ts" || c === "atualizadoEmMs") continue;
                   const v = String(row[c] == null ? "" : row[c]).trim();
                   if (v !== "" && v !== "0" && v !== "00") return true;
                 }
@@ -2530,7 +2734,7 @@
     try {
       const semanas = coletarDados();
       const snapshot = {
-        timestamp: Date.now(),
+        timestamp: agoraSyncMs(),
         semanas: semanas,
         statusQuarteiroes: statusQuarteiroes,
         paginas: paginas,
@@ -2555,314 +2759,594 @@
     return msg.includes("quota") || msg.includes("resource-exhausted") || msg.includes("free daily read units");
   }
 
-  function mesclarDadosAndamentoRemotoELocal(dadosNuvem) {
-    if (!dadosNuvem || typeof dadosNuvem !== "object") return;
-    try {
-      const tsRemoto = Number(dadosNuvem.timestamp) || 0;
-      const tsLocal = Number(ultimoTimestampLocal) || 0;
-      const preferirRemoto = tsRemoto > tsLocal;
-
-      const semanasLocais = normalizarArraySemanas(coletarDados());
-      const semanasRemotas = normalizarArraySemanas(dadosNuvem.semanas);
-      const mapaPorId = new Map();
-
-      const temValorNaoVazio = (val) => val !== undefined && val !== null && String(val).trim() !== "";
-
-      semanasRemotas.forEach((sr) => {
-        if (!sr) return;
-        const idNum = Number(sr.id) || 0;
-        if (idNum > 0) mapaPorId.set(idNum, JSON.parse(JSON.stringify(sr)));
+  // ============ PAYLOAD BUILDERS & MERGERS GRANULARES v2 (META + BUCKETS b0..b3) ============
+  function extrairPayloadMetaLocal(incluirTombstones = true) {
+    const now = agoraSyncMs();
+    const semsAtivas = normalizarArraySemanas(coletarDados());
+    const semsMerged = [...semsAtivas];
+    if (incluirTombstones && _v2Meta.semanasTombstones) {
+      const activeIds = new Set(semsAtivas.map(s => Number(s.id)));
+      Object.keys(_v2Meta.semanasTombstones).forEach(sid => {
+        const numId = Number(sid);
+        if (!activeIds.has(numId) && _v2Meta.semanasTombstones[sid]?._deleted) {
+          semsMerged.push(_v2Meta.semanasTombstones[sid]);
+        }
       });
+    }
 
-      const semanasMescladas = [];
-      const idsJaUsados = new Set();
+    const pagCop = { ...paginas };
+    delete pagCop.boletins;
+    const cabCop = {};
+    const rodCop = {};
+    ["andamento", "concluidos", "resumo", "bases", "basesliraa", "coflagrados", "resumogeral"].forEach(sec => {
+      cabCop[sec] = (cabecalhos && cabecalhos[sec]) || {};
+      rodCop[sec] = (rodapes && rodapes[sec]) || {};
+    });
 
-      semanasLocais.forEach((sl) => {
-        if (!sl) return;
-        const idNum = Number(sl.id) || 0;
-        if (idNum > 0) idsJaUsados.add(idNum);
-        const sr = idNum > 0 ? mapaPorId.get(idNum) : null;
-        if (!sr) {
-          semanasMescladas.push(sl);
+    const selMap = { ...(_v2Meta.liraaSelMap || {}) };
+    quarteiroesLiraaSelecionados.forEach(q => {
+      const qs = String(q);
+      if (!selMap[qs]) selMap[qs] = { sel: true, atualizadoEm: now };
+      else selMap[qs].sel = true;
+    });
+
+    const dadosSecoes = {};
+    ["resumo", "bases", "coflagrados"].forEach(sec => {
+      const secObj = Object.assign({}, (dadosFormularios && dadosFormularios[sec]) || {});
+      secObj._tsMap = Object.assign({}, (_v2Meta.secoesTs && _v2Meta.secoesTs[sec]) || {});
+      dadosSecoes[sec] = secObj;
+    });
+
+    return {
+      semanas: semsMerged,
+      statusQuarteiroes: statusQuarteiroes || {},
+      _statusTs: _v2Meta.statusTs || {},
+      liraaSelecionados: Array.from(quarteiroesLiraaSelecionados),
+      _liraaSelMap: selMap,
+      paginas: pagCop,
+      _paginasTs: _v2Meta.paginasTs || {},
+      cabecalhos: cabCop,
+      _cabecalhosTs: _v2Meta.cabecalhosTs || {},
+      rodapes: rodCop,
+      _rodapesTs: _v2Meta.rodapesTs || {},
+      dadosSecoes,
+      timestamp: Math.max(now, Number(ultimoTimestampLocal) || 0),
+      _ts: Math.max(now, Number(ultimoTimestampLocal) || 0)
+    };
+  }
+
+  function extrairPayloadBucketLocal(bucketIdx) {
+    const eng = seEngine();
+    const porQuarteirao = {};
+    const bData = (dadosFormularios.boletins && dadosFormularios.boletins.porQuarteirao) || {};
+    const cabsB = (cabecalhos.boletins && cabecalhos.boletins.porQuarteirao) || {};
+    const rodsB = (rodapes.boletins && rodapes.boletins.porQuarteirao) || {};
+    let maxTs = 0;
+
+    Object.keys(bData).forEach(qKey => {
+      const idx = eng && typeof eng.bucketIndexForQuarteirao === "function" ? eng.bucketIndexForQuarteirao(qKey) : 0;
+      if (idx !== bucketIdx) return;
+      const f = bData[qKey] || {};
+      const pag = Math.max(1, Number(f.paginas) || 1);
+      const qTs = Number(f._ts) || 0;
+      maxTs = Math.max(maxTs, qTs);
+      porQuarteirao[qKey] = {
+        _ts: qTs,
+        _deleted: Boolean(f._deleted),
+        paginas: pag,
+        paginasExtra: pag,
+        _paginasTs: Number(f._paginasTs) || qTs,
+        imoveis: f.imoveis || {},
+        _imoveisTs: f._imoveisTs || {},
+        resumo: f.resumo || {},
+        _resumoTs: Number(f._resumoTs) || qTs,
+        cabecalho: cabsB[qKey] || {},
+        _cabecalhoTs: Number(f._cabecalhoTs) || qTs,
+        rodape: rodsB[qKey] || {},
+        _rodapeTs: Number(f._rodapeTs) || qTs
+      };
+    });
+
+    const tombs = _v2Meta.boletinsTombstones || {};
+    Object.keys(tombs).forEach(qKey => {
+      const idx = eng && typeof eng.bucketIndexForQuarteirao === "function" ? eng.bucketIndexForQuarteirao(qKey) : 0;
+      if (idx !== bucketIdx) return;
+      if (!porQuarteirao[qKey] && tombs[qKey]?._deleted) {
+        porQuarteirao[qKey] = tombs[qKey];
+        maxTs = Math.max(maxTs, Number(tombs[qKey]._ts || tombs[qKey]._deletedAtMs) || 0);
+      }
+    });
+
+    return {
+      bucket: bucketIdx,
+      porQuarteirao,
+      _ts: maxTs || agoraSyncMs()
+    };
+  }
+
+  function reconstruirLegacyParaUi(metaDoc, bucketsArr) {
+    const porQuarteirao = {};
+    const cabsBoletins = {};
+    const rodsBoletins = {};
+    (bucketsArr || []).forEach(b => {
+      const pq = (b && b.porQuarteirao) || {};
+      Object.keys(pq).forEach(qKey => {
+        const item = pq[qKey];
+        if (!item) return;
+        if (item._deleted) {
+          if (!_v2Meta.boletinsTombstones) _v2Meta.boletinsTombstones = {};
+          _v2Meta.boletinsTombstones[qKey] = item;
+          delete porQuarteirao[qKey];
           return;
         }
-        const vals = Object.assign({}, sr.valores || {});
-        Object.keys(sl.valores || {}).forEach((k) => {
-          const vLoc = sl.valores[k];
-          const vRem = vals[k];
-          if (temValorNaoVazio(vLoc) && (!preferirRemoto || !temValorNaoVazio(vRem))) {
-            vals[k] = vLoc;
-          } else if (!(k in vals)) {
-            vals[k] = vLoc;
-          }
-        });
-        const datas = [];
-        const maxD = Math.max(Array.isArray(sl.datas) ? sl.datas.length : 0, Array.isArray(sr.datas) ? sr.datas.length : 0);
-        for (let i = 0; i < maxD; i++) {
-          const dl = Array.isArray(sl.datas) ? sl.datas[i] : "";
-          const dr = Array.isArray(sr.datas) ? sr.datas[i] : "";
-          datas[i] = preferirRemoto
-            ? (temValorNaoVazio(dr) ? dr : (dl || ""))
-            : (temValorNaoVazio(dl) ? dl : (dr || ""));
-        }
-        const base = preferirRemoto ? Object.assign({}, sl, sr) : Object.assign({}, sr, sl);
-        semanasMescladas.push(Object.assign({}, base, {
-          titulo: preferirRemoto
-            ? (temValorNaoVazio(sr.titulo) ? sr.titulo : (sl.titulo || ""))
-            : (temValorNaoVazio(sl.titulo) ? sl.titulo : (sr.titulo || "")),
-          datas: datas,
-          valores: vals
-        }));
+        if (_v2Meta.boletinsTombstones) delete _v2Meta.boletinsTombstones[qKey];
+        porQuarteirao[qKey] = {
+          paginas: Math.max(1, Number(item.paginasExtra !== undefined ? item.paginasExtra : item.paginas) || 1),
+          paginasExtra: Math.max(1, Number(item.paginasExtra !== undefined ? item.paginasExtra : item.paginas) || 1),
+          _paginasTs: Number(item._paginasTs || item._ts) || 0,
+          imoveis: item.imoveis || {},
+          _imoveisTs: item._imoveisTs || {},
+          resumo: item.resumo || {},
+          _resumoTs: Number(item._resumoTs || item._ts) || 0,
+          _cabecalhoTs: Number(item._cabecalhoTs || item._ts) || 0,
+          _rodapeTs: Number(item._rodapeTs || item._ts) || 0,
+          _ts: Number(item._ts) || 0
+        };
+        if (item.cabecalho) cabsBoletins[qKey] = item.cabecalho;
+        if (item.rodape) rodsBoletins[qKey] = item.rodape;
       });
+    });
 
-      semanasRemotas.forEach((sr) => {
-        if (!sr) return;
-        const idNum = Number(sr.id) || 0;
-        if (idNum > 0 && !idsJaUsados.has(idNum)) {
-          semanasMescladas.push(sr);
-        }
+    const m = metaDoc || {};
+    const secDados = m.dadosSecoes || {};
+    const dfOut = {
+      boletins: { porQuarteirao },
+      resumo: {},
+      bases: {},
+      coflagrados: {}
+    };
+    ["resumo", "bases", "coflagrados"].forEach(sec => {
+      const src = secDados[sec] || {};
+      Object.keys(src).forEach(k => {
+        if (k !== "_tsMap") dfOut[sec][k] = src[k];
       });
+    });
 
-      semanasMescladas.sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+    const cabOut = Object.assign({ andamento: {}, concluidos: {}, boletins: { porQuarteirao: cabsBoletins }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, m.cabecalhos || {});
+    cabOut.boletins = { porQuarteirao: cabsBoletins };
+    const rodOut = Object.assign({ andamento: {}, concluidos: {}, boletins: { porQuarteirao: rodsBoletins }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, m.rodapes || {});
+    rodOut.boletins = { porQuarteirao: rodsBoletins };
 
-      statusQuarteiroes = preferirRemoto
-        ? Object.assign({}, statusQuarteiroes || {}, dadosNuvem.statusQuarteiroes || {})
-        : Object.assign({}, dadosNuvem.statusQuarteiroes || {}, statusQuarteiroes || {});
-      paginas = preferirRemoto
-        ? Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, paginas || {}, dadosNuvem.paginas || {})
-        : Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, dadosNuvem.paginas || {}, paginas || {});
+    return {
+      semanas: (m.semanas || []),
+      statusQuarteiroes: m.statusQuarteiroes || {},
+      _statusTs: m._statusTs || {},
+      paginas: Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, m.paginas || {}),
+      _paginasTs: m._paginasTs || {},
+      cabecalhos: cabOut,
+      _cabecalhosTs: m._cabecalhosTs || {},
+      rodapes: rodOut,
+      _rodapesTs: m._rodapesTs || {},
+      dadosFormularios: dfOut,
+      _secoesTs: {
+        resumo: (secDados.resumo && secDados.resumo._tsMap) || {},
+        bases: (secDados.bases && secDados.bases._tsMap) || {},
+        coflagrados: (secDados.coflagrados && secDados.coflagrados._tsMap) || {}
+      },
+      liraaSelecionados: m.liraaSelecionados || [],
+      _liraaSelMap: m._liraaSelMap || {},
+      timestamp: Number(m.timestamp || m._ts) || 0
+    };
+  }
 
-      ["andamento", "concluidos", "boletins", "resumo", "bases", "basesliraa", "coflagrados", "resumogeral"].forEach((sec) => {
-        cabecalhos[sec] = preferirRemoto
-          ? Object.assign({}, (cabecalhos && cabecalhos[sec]) || {}, (dadosNuvem.cabecalhos && dadosNuvem.cabecalhos[sec]) || {})
-          : Object.assign({}, (dadosNuvem.cabecalhos && dadosNuvem.cabecalhos[sec]) || {}, (cabecalhos && cabecalhos[sec]) || {});
-        rodapes[sec] = preferirRemoto
-          ? Object.assign({}, (rodapes && rodapes[sec]) || {}, (dadosNuvem.rodapes && dadosNuvem.rodapes[sec]) || {})
-          : Object.assign({}, (dadosNuvem.rodapes && dadosNuvem.rodapes[sec]) || {}, (rodapes && rodapes[sec]) || {});
-      });
-
-      const dfRem = dadosNuvem.dadosFormularios || {};
-      if (!dadosFormularios || typeof dadosFormularios !== "object") dadosFormularios = {};
-      if (!dadosFormularios.boletins) dadosFormularios.boletins = { porQuarteirao: {} };
-      if (!dadosFormularios.boletins.porQuarteirao) dadosFormularios.boletins.porQuarteirao = {};
-      const remPorQ = (dfRem.boletins && dfRem.boletins.porQuarteirao) || {};
-      Object.keys(remPorQ).forEach((qKey) => {
-        const remQ = remPorQ[qKey];
-        if (!remQ) return;
-        if (!dadosFormularios.boletins.porQuarteirao[qKey]) {
-          dadosFormularios.boletins.porQuarteirao[qKey] = JSON.parse(JSON.stringify(remQ));
+  function aplicarEstadoConsolidadoNaUi(estadoRemotoMerged) {
+    if (!estadoRemotoMerged) return;
+    _v2ApplyingRemote = true;
+    try {
+      const todasSemanas = normalizarArraySemanas(estadoRemotoMerged.semanas);
+      const semsAtivas = [];
+      const tombsSem = {};
+      const mapDiarioMeta = {};
+      todasSemanas.forEach(s => {
+        if (!s || s.id === undefined) return;
+        if (s._deleted) {
+          tombsSem[String(s.id)] = s;
         } else {
-          const locQ = dadosFormularios.boletins.porQuarteirao[qKey];
-          const imoveisMesclados = preferirRemoto
-            ? Object.assign({}, locQ.imoveis || {}, remQ.imoveis || {})
-            : Object.assign({}, remQ.imoveis || {}, locQ.imoveis || {});
-          const cabMesclado = preferirRemoto
-            ? Object.assign({}, locQ.cabecalho || {}, remQ.cabecalho || {})
-            : Object.assign({}, remQ.cabecalho || {}, locQ.cabecalho || {});
-          const rodMesclado = preferirRemoto
-            ? Object.assign({}, locQ.rodape || {}, remQ.rodape || {})
-            : Object.assign({}, remQ.rodape || {}, locQ.rodape || {});
-          const resMesclado = preferirRemoto
-            ? Object.assign({}, locQ.resumo || {}, remQ.resumo || {})
-            : Object.assign({}, remQ.resumo || {}, locQ.resumo || {});
-          dadosFormularios.boletins.porQuarteirao[qKey] = Object.assign(
-            {},
-            preferirRemoto ? locQ : remQ,
-            preferirRemoto ? remQ : locQ,
-            {
-              imoveis: imoveisMesclados,
-              cabecalho: cabMesclado,
-              rodape: rodMesclado,
-              resumo: resMesclado
-            }
-          );
+          semsAtivas.push(s);
+          mapDiarioMeta[String(s.id)] = {
+            _ts: Number(s._ts) || 0,
+            tituloTs: Number(s.tituloTs || s._ts) || 0,
+            datasTs: Array.isArray(s.datasTs) ? s.datasTs.slice() : [0, 0, 0, 0, 0],
+            valoresTs: Object.assign({}, s.valoresTs || {})
+          };
         }
-      });
-      ["resumo", "bases", "coflagrados"].forEach((sec) => {
-        if (!dadosFormularios[sec]) dadosFormularios[sec] = {};
-        const remSec = dfRem[sec] || {};
-        Object.keys(remSec).forEach((rk) => {
-          dadosFormularios[sec][rk] = preferirRemoto
-            ? Object.assign({}, dadosFormularios[sec][rk] || {}, remSec[rk] || {})
-            : Object.assign({}, remSec[rk] || {}, dadosFormularios[sec][rk] || {});
-        });
       });
 
-      garantirEstruturaBoletins();
-      if (Array.isArray(dadosNuvem.liraaSelecionados)) {
-        if (preferirRemoto) {
-          quarteiroesLiraaSelecionados = new Set(dadosNuvem.liraaSelecionados.map(String));
-        } else {
-          dadosNuvem.liraaSelecionados.forEach((q) => quarteiroesLiraaSelecionados.add(String(q)));
-        }
-        salvarSelecaoLiraa();
+      _v2Meta.semanasTombstones = tombsSem;
+      _v2Meta.diarioSemanaMeta = mapDiarioMeta;
+      if (estadoRemotoMerged._statusTs) _v2Meta.statusTs = estadoRemotoMerged._statusTs;
+      if (estadoRemotoMerged._liraaSelMap) _v2Meta.liraaSelMap = estadoRemotoMerged._liraaSelMap;
+      if (estadoRemotoMerged._paginasTs) _v2Meta.paginasTs = estadoRemotoMerged._paginasTs;
+      if (estadoRemotoMerged._cabecalhosTs) _v2Meta.cabecalhosTs = estadoRemotoMerged._cabecalhosTs;
+      if (estadoRemotoMerged._rodapesTs) _v2Meta.rodapesTs = estadoRemotoMerged._rodapesTs;
+      if (estadoRemotoMerged._secoesTs) _v2Meta.secoesTs = estadoRemotoMerged._secoesTs;
+
+      statusQuarteiroes = estadoRemotoMerged.statusQuarteiroes || {};
+      paginas = Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, estadoRemotoMerged.paginas || {});
+      cabecalhos = Object.assign({ andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, estadoRemotoMerged.cabecalhos || {});
+      rodapes = Object.assign({ andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, estadoRemotoMerged.rodapes || {});
+      dadosFormularios = Object.assign({ boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, coflagrados: {} }, estadoRemotoMerged.dadosFormularios || {});
+
+      if (estadoRemotoMerged._liraaSelMap && Object.keys(estadoRemotoMerged._liraaSelMap).length > 0) {
+        const ativoLiraa = Object.keys(estadoRemotoMerged._liraaSelMap).filter(q => estadoRemotoMerged._liraaSelMap[q]?.sel === true);
+        quarteiroesLiraaSelecionados = new Set(ativoLiraa);
+      } else if (Array.isArray(estadoRemotoMerged.liraaSelecionados)) {
+        quarteiroesLiraaSelecionados = new Set(estadoRemotoMerged.liraaSelecionados.map(String));
       }
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(semanasMescladas));
-      salvarStatus(); salvarPaginas(); salvarCabecalhos(); salvarRodapes(); salvarFormularios();
+      if (estadoRemotoMerged.timestamp) {
+        ultimoTimestampLocal = estadoRemotoMerged.timestamp;
+        try { localStorage.setItem(STORAGE_ULTIMO_TS, String(estadoRemotoMerged.timestamp)); } catch (e) {}
+      }
+
+      garantirEstruturaBoletins();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(semsAtivas));
+      salvarV2Meta();
+      salvarStatus();
+      salvarPaginas();
+      salvarCabecalhos();
+      salvarRodapes();
+      salvarFormularios();
+      salvarSelecaoLiraa();
+
+      const focoId = document.activeElement && document.activeElement.id ? document.activeElement.id : null;
+      const focoVal = document.activeElement && typeof document.activeElement.value === "string" ? document.activeElement.value : null;
 
       document.getElementById("semanas").innerHTML = "";
       semanaCount = 0;
-      if (semanasMescladas.length > 0) {
-        semanasMescladas.forEach(s => criarSemana(s));
+      if (semsAtivas.length > 0) {
+        semsAtivas.forEach(s => criarSemana(s));
       } else {
         criarSemana();
       }
 
-      recalcular(); atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
-      atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
-      renderizarResumoIntegrado(); renderizarBasesIntegrado();
-      renderizarBasesLiraaIntegrado(); renderizarCoflagrados(); renderizarResumoGeral();
+      recalcular();
+      atualizarResumoSemanal();
+      atualizarTotalImoveis();
+      atualizarInformados();
+      atualizarAndamento();
+      atualizarConcluidos();
+      renderizarFormularioBoletins();
+      renderizarResumoIntegrado();
+      renderizarBasesIntegrado();
+      renderizarBasesLiraaIntegrado();
+      renderizarCoflagrados();
+      renderizarResumoGeral();
+
+      if (focoId && !document.getElementById(focoId)?.disabled) {
+        try {
+          const elFoco = document.getElementById(focoId);
+          if (elFoco && elFoco.value === focoVal) elFoco.focus();
+        } catch (e) {}
+      }
+    } finally {
+      _v2ApplyingRemote = false;
+    }
+  }
+
+  function aplicarMetaDocV2(docData) {
+    if (!docData || !docData.payload) return;
+    const eng = seEngine();
+    _v2RemoteMetaSnapshot = docData.payload;
+    if (Number(docData.versao) > 0) {
+      _versaoNuvemModulo = Number(docData.versao);
+      _v2Meta.versoesDoc.meta = Number(docData.versao);
+    }
+    const localMeta = extrairPayloadMetaLocal(true);
+    const mergedMeta = eng && typeof eng.mergeAndamentoMetaPayload === "function"
+      ? eng.mergeAndamentoMetaPayload(localMeta, docData.payload)
+      : docData.payload;
+    const bucketsAct = [_v2RemoteBuckets[0], _v2RemoteBuckets[1], _v2RemoteBuckets[2], _v2RemoteBuckets[3]];
+    // Mantém boletins locais mesclados quando algum bucket remoto ainda não chegou
+    for (let b = 0; b < 4; b++) {
+      const localB = extrairPayloadBucketLocal(b);
+      if (eng && typeof eng.mergeAndamentoBucketPayload === "function") {
+        bucketsAct[b] = eng.mergeAndamentoBucketPayload(localB, bucketsAct[b]);
+      } else if (!bucketsAct[b] || !bucketsAct[b].porQuarteirao) {
+        bucketsAct[b] = localB;
+      }
+    }
+    const consolidado = reconstruirLegacyParaUi(mergedMeta, bucketsAct);
+    aplicarEstadoConsolidadoNaUi(consolidado);
+  }
+
+  function aplicarBucketDocV2(bucketIdx, docData) {
+    if (!docData || !docData.payload) return;
+    const eng = seEngine();
+    _v2RemoteBuckets[bucketIdx] = docData.payload;
+    if (Number(docData.versao) > 0) {
+      _v2Meta.versoesDoc[`b${bucketIdx}`] = Number(docData.versao);
+    }
+    const localB = extrairPayloadBucketLocal(bucketIdx);
+    const mergedB = eng && typeof eng.mergeAndamentoBucketPayload === "function"
+      ? eng.mergeAndamentoBucketPayload(localB, docData.payload)
+      : docData.payload;
+    const bucketsAct = [0, 1, 2, 3].map(i => (i === bucketIdx ? mergedB : extrairPayloadBucketLocal(i)));
+    const localMeta = extrairPayloadMetaLocal(true);
+    const consolidado = reconstruirLegacyParaUi(localMeta, bucketsAct);
+    aplicarEstadoConsolidadoNaUi(consolidado);
+  }
+
+  async function flushAndamentoSyncQueueV2(forcarToast = false) {
+    if (_v2FlushingQueue || _v2CompatBlocked || !_v2EpochChecked) return false;
+    if (!navigator.onLine || !_andamentoBridgeApi || !firebaseSocketConectado || erroPermissaoNuvem) return false;
+    const eng = seEngine();
+    if (!eng || typeof eng.listPendingSyncOps !== "function") return false;
+    const epAtual = Math.max(Number(_v2SyncEpochAtual) || 1, Number(eng?.getDeviceEpoch?.()) || 1);
+    _v2SyncEpochAtual = epAtual;
+    const ops = eng.listPendingSyncOps(V2_SYNC_SCOPE);
+    if (ops.length === 0) {
+      marcarAlteracaoPendente(false);
+      return true;
+    }
+
+    _v2FlushingQueue = true;
+    sincronizandoNuvem = true;
+    try {
+      for (const op of ops) {
+        const subcol = String(op.subcol || "");
+        const docId = String(op.docId || "");
+        const opTs = Number(op.updatedAtMs) || 0;
+        const metaDocId = `${V2_ANDAMENTO_TIPO}_meta`;
+        const bucketPrefix = `${V2_ANDAMENTO_TIPO}_b`;
+
+        if (subcol === "andamentos" && docId === metaDocId) {
+          const localMetaSnap = sanitizarParaFirebase(extrairPayloadMetaLocal(true));
+          const res = await _andamentoBridgeApi.commitDocV2("andamentos", metaDocId, (remDoc) => {
+            const remP = remDoc && remDoc.payload ? remDoc.payload : null;
+            const merged = remP ? eng.mergeAndamentoMetaPayload(localMetaSnap, remP) : localMetaSnap;
+            return { payload: sanitizarParaFirebase(merged), atualizadoEmMs: merged._ts || agoraSyncMs() };
+          }, { baselineEpoch: epAtual, manual: forcarToast });
+          if (res?.versao) _v2Meta.versoesDoc.meta = Number(res.versao);
+          eng.dequeueSyncOpIfUnchanged(op.scope, op.subcol, op.docId, opTs);
+        } else if (subcol === "andamentos" && docId.startsWith(bucketPrefix)) {
+          const bIdx = parseInt(docId.slice(bucketPrefix.length), 10);
+          if (!isNaN(bIdx) && bIdx >= 0 && bIdx < 4) {
+            const localBucketSnap = sanitizarParaFirebase(extrairPayloadBucketLocal(bIdx));
+            const res = await _andamentoBridgeApi.commitDocV2("andamentos", `${bucketPrefix}${bIdx}`, (remDoc) => {
+              const remP = remDoc && remDoc.payload ? remDoc.payload : null;
+              const merged = remP ? eng.mergeAndamentoBucketPayload(localBucketSnap, remP) : localBucketSnap;
+              return { payload: sanitizarParaFirebase(merged), atualizadoEmMs: merged._ts || agoraSyncMs() };
+            }, { baselineEpoch: epAtual, manual: forcarToast });
+            if (res?.versao) _v2Meta.versoesDoc[`b${bIdx}`] = Number(res.versao);
+            eng.dequeueSyncOpIfUnchanged(op.scope, op.subcol, op.docId, opTs);
+          } else {
+            eng.dequeueSyncOpIfUnchanged(op.scope, op.subcol, op.docId, opTs);
+          }
+        } else if (subcol === "dominios" && docId === "relatorios_e_resumo") {
+          const resumoLocal = sanitizarParaFirebase(obterDadosResumoReconhecimento());
+          await _andamentoBridgeApi.commitDocV2("dominios", "relatorios_e_resumo", (remDoc) => {
+            const remP = (remDoc && remDoc.payload) ? remDoc.payload : {};
+            const locPatch = { resumoReconhecimento: resumoLocal, _ts: resumoLocal._ts || agoraSyncMs() };
+            const merged = eng.mergeRelatoriosEResumoPayload(locPatch, remP);
+            return { payload: sanitizarParaFirebase(merged), atualizadoEmMs: merged._ts || agoraSyncMs() };
+          }, { baselineEpoch: epAtual, manual: forcarToast });
+          eng.dequeueSyncOpIfUnchanged(op.scope, op.subcol, op.docId, opTs);
+        } else {
+          // Limpa entradas legadas/inválidas de fila sem travar sincronização
+          eng.dequeueSyncOpIfUnchanged(op.scope, op.subcol, op.docId, opTs);
+        }
+      }
+
+      const restantes = eng.listPendingSyncOps(V2_SYNC_SCOPE);
+      _cotaAndamentoPausadaAte = 0;
+      erroPermissaoNuvem = false;
+      marcarAlteracaoPendente(restantes.length > 0);
+      atualizarBadgeNuvem(true);
+      atualizarBadgePMCD(true);
+      if (forcarToast && restantes.length === 0) {
+        mostrarAviso("☁️ Salvo e sincronizado na nuvem (v2)!");
+      }
+      return restantes.length === 0;
+    } catch (err) {
+      marcarAlteracaoPendente(true);
+      console.warn("Falha ao enviar fila v2:", err);
+      if (isErroCotaFirebase(err)) {
+        _cotaAndamentoPausadaAte = Date.now() + 10 * 60 * 1000;
+        atualizarBadgeNuvem(false, "⏳ Cota diária atingida (salvo no aparelho)");
+        if (forcarToast) mostrarAviso("⏳ Cota gratuita diária atingida. Dados preservados na fila offline.");
+      } else if (isErroPermissaoFirebase(err)) {
+        erroPermissaoNuvem = true;
+        atualizarBadgeNuvem(false);
+        if (forcarToast) mostrarAviso("🔒 Sem permissão de gravação na nuvem para esta conta Google.");
+      } else {
+        atualizarBadgeNuvem(false);
+        if (forcarToast) mostrarAviso("⚠️ Alterações guardadas na fila offline do aparelho.");
+      }
+      return false;
+    } finally {
+      _v2FlushingQueue = false;
+      sincronizandoNuvem = false;
+    }
+  }
+  window.flushAndamentoSyncQueueV2 = flushAndamentoSyncQueueV2;
+
+  async function aplicarEpochNuvemIfNeededAndamento(syncCfg) {
+    const eng = seEngine();
+    if (!eng || typeof eng.checkEpochCompatibility !== "function") return { compatible: true, epochResetRequired: false };
+    const res = eng.checkEpochCompatibility(syncCfg);
+    _v2SyncEpochAtual = res.remoteEpoch || 1;
+    if (!res.compatible) {
+      _v2CompatBlocked = true;
+      atualizarBadgeNuvem(false, "⚠️ Atualize o app para sincronizar");
+      return res;
+    }
+    _v2CompatBlocked = false;
+    if (res.epochResetRequired) {
+      eng.archiveLegacyStorageBeforeEpochReset(res.remoteEpoch, "official_baseline_epoch_andamento");
+      eng.clearPendingSyncOps?.(V2_SYNC_SCOPE);
+      _v2ApplyingRemote = true;
+      try {
+        statusQuarteiroes = {};
+        quarteiroesLiraaSelecionados = new Set();
+        cabecalhos = { andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} };
+        rodapes = { andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} };
+        dadosFormularios = { boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, coflagrados: {} };
+        paginas = { andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 };
+        _v2Meta = {
+          statusTs: {}, liraaSelMap: {}, paginasTs: {}, cabecalhosTs: {}, rodapesTs: {},
+          secoesTs: { resumo: {}, bases: {}, coflagrados: {} }, resumoCabTs: {},
+          semanasTombstones: {}, boletinsTombstones: {}, versoesDoc: {}, diarioSemanaMeta: {}
+        };
+        ultimoTimestampLocal = 0;
+        [STORAGE_KEY, STORAGE_STATUS, STORAGE_PAGINAS, STORAGE_CABECALHOS, STORAGE_RODAPES, STORAGE_FORMULARIOS, STORAGE_SELECAO_BOLETINS, STORAGE_LIRAA_SELECIONADOS, STORAGE_V2_META, STORAGE_PENDENTE_NUVEM, STORAGE_BACKUP_COMPLETO, STORAGE_ULTIMO_TS, "diario_backup_emergencia_v1"].forEach(k => {
+          try { localStorage.removeItem(k); } catch (e) {}
+        });
+        try { localStorage.setItem(SEED_ANDAMENTO_CICLO_FLAG, "remote_epoch_" + res.remoteEpoch); } catch (e) {}
+        const semContainer = document.getElementById("semanas");
+        if (semContainer) semContainer.innerHTML = "";
+        semanaCount = 0;
+        eng.setDeviceEpoch(res.remoteEpoch);
+        _v2EpochChecked = true;
+        await puxarV2CompletoDoServidor(_andamentoBridgeApi, true);
+        mostrarAviso(`☁️ Base Oficial (Época ${res.remoteEpoch}) adotada!`);
+      } finally {
+        _v2ApplyingRemote = false;
+      }
+    } else {
+      _v2EpochChecked = true;
+    }
+    return res;
+  }
+
+  async function puxarV2CompletoDoServidor(api, forcarServidor = false) {
+    if (!api) return false;
+    const [metaDoc, b0, b1, b2, b3, relDoc] = await Promise.all([
+      api.getDocV2("andamentos", `${V2_ANDAMENTO_TIPO}_meta`, forcarServidor, forcarServidor).catch(() => null),
+      api.getDocV2("andamentos", `${V2_ANDAMENTO_TIPO}_b0`, forcarServidor, forcarServidor).catch(() => null),
+      api.getDocV2("andamentos", `${V2_ANDAMENTO_TIPO}_b1`, forcarServidor, forcarServidor).catch(() => null),
+      api.getDocV2("andamentos", `${V2_ANDAMENTO_TIPO}_b2`, forcarServidor, forcarServidor).catch(() => null),
+      api.getDocV2("andamentos", `${V2_ANDAMENTO_TIPO}_b3`, forcarServidor, forcarServidor).catch(() => null),
+      api.getDocV2("dominios", "relatorios_e_resumo", forcarServidor, forcarServidor).catch(() => null)
+    ]);
+
+    _v2RemoteMetaSnapshot = metaDoc && metaDoc.payload ? metaDoc.payload : null;
+    const bArr = [b0, b1, b2, b3];
+    bArr.forEach((docD, i) => {
+      _v2RemoteBuckets[i] = docD && docD.payload ? docD.payload : {};
+    });
+
+    const eng = seEngine();
+    const remTemMeta = Boolean(_v2RemoteMetaSnapshot);
+    const remTemBuckets = _v2RemoteBuckets.some(b => b && b.porQuarteirao && Object.keys(b.porQuarteirao).length > 0);
+
+    if (remTemMeta || remTemBuckets) {
+      const mergedMeta = (eng && typeof eng.mergeAndamentoMetaPayload === "function")
+        ? eng.mergeAndamentoMetaPayload(extrairPayloadMetaLocal(true), _v2RemoteMetaSnapshot)
+        : (_v2RemoteMetaSnapshot || extrairPayloadMetaLocal(true));
+      const mergedBuckets = [0, 1, 2, 3].map(i => (
+        (eng && typeof eng.mergeAndamentoBucketPayload === "function")
+          ? eng.mergeAndamentoBucketPayload(extrairPayloadBucketLocal(i), _v2RemoteBuckets[i])
+          : (_v2RemoteBuckets[i] || {})
+      ));
+      const consolidado = reconstruirLegacyParaUi(mergedMeta, mergedBuckets);
+      aplicarEstadoConsolidadoNaUi(consolidado);
+    } else if (temDadosReaisLocais()) {
+      marcarMetaAndamentoSujo();
+      marcarTodosBucketsSujos();
+      await flushAndamentoSyncQueueV2(forcarServidor);
+    }
+
+    if (relDoc && relDoc.payload && relDoc.payload.resumoReconhecimento) {
+      aplicarDadosRemotosPMCD(relDoc.payload.resumoReconhecimento);
+    }
+    return true;
+  }
+
+  async function runMigrationAndamentoV2IfNeeded(api) {
+    if (_v2MigrationChecked || !api) return;
+    _v2MigrationChecked = true;
+    try {
+      const syncCfg = await api.getSyncConfig(false, false).catch(() => null);
+      const epRes = await aplicarEpochNuvemIfNeededAndamento(syncCfg);
+      if (!epRes.compatible) return;
+
+      const metaDoc = await api.getDocV2("andamentos", `${V2_ANDAMENTO_TIPO}_meta`, false, false).catch(() => null);
+      if (metaDoc && metaDoc.payload) {
+        await puxarV2CompletoDoServidor(api, false);
+        return;
+      }
+
+      // Se não há v2 ainda, verifica módulo legado andamentos_ciclo + estado local
+      const legacyDoc = await api.getModuloOnce("andamento_ciclo").catch(() => null);
+      const legacyPayload = legacyDoc && legacyDoc.payload ? legacyDoc.payload : null;
+      if (legacyPayload && temDadosReais(legacyPayload)) {
+        const eng = seEngine();
+        const bSplit = [{ bucket: 0, porQuarteirao: {}, _ts: legacyPayload.timestamp || agoraSyncMs() },
+                        { bucket: 1, porQuarteirao: {}, _ts: legacyPayload.timestamp || agoraSyncMs() },
+                        { bucket: 2, porQuarteirao: {}, _ts: legacyPayload.timestamp || agoraSyncMs() },
+                        { bucket: 3, porQuarteirao: {}, _ts: legacyPayload.timestamp || agoraSyncMs() }];
+        const pq = (legacyPayload.dadosFormularios && legacyPayload.dadosFormularios.boletins && legacyPayload.dadosFormularios.boletins.porQuarteirao) || {};
+        const cabsB = (legacyPayload.cabecalhos && legacyPayload.cabecalhos.boletins && legacyPayload.cabecalhos.boletins.porQuarteirao) || {};
+        const rodsB = (legacyPayload.rodapes && legacyPayload.rodapes.boletins && legacyPayload.rodapes.boletins.porQuarteirao) || {};
+        Object.keys(pq).forEach(qKey => {
+          const idx = eng ? eng.bucketIndexForQuarteirao(qKey) : 0;
+          const qObj = pq[qKey] || {};
+          bSplit[idx].porQuarteirao[qKey] = {
+            _ts: Number(legacyPayload.timestamp) || agoraSyncMs(),
+            _deleted: false,
+            paginas: qObj.paginas || 1,
+            paginasExtra: qObj.paginas || 1,
+            imoveis: qObj.imoveis || {},
+            resumo: qObj.resumo || {},
+            cabecalho: cabsB[qKey] || {},
+            rodape: rodsB[qKey] || {}
+          };
+        });
+        const mergedCons = reconstruirLegacyParaUi({
+          semanas: normalizarArraySemanas(legacyPayload.semanas),
+          statusQuarteiroes: legacyPayload.statusQuarteiroes || {},
+          paginas: legacyPayload.paginas || {},
+          cabecalhos: legacyPayload.cabecalhos || {},
+          rodapes: legacyPayload.rodapes || {},
+          dadosSecoes: {
+            resumo: (legacyPayload.dadosFormularios && legacyPayload.dadosFormularios.resumo) || {},
+            bases: (legacyPayload.dadosFormularios && legacyPayload.dadosFormularios.bases) || {},
+            coflagrados: (legacyPayload.dadosFormularios && legacyPayload.dadosFormularios.coflagrados) || {}
+          },
+          liraaSelecionados: legacyPayload.liraaSelecionados || [],
+          timestamp: legacyPayload.timestamp || agoraSyncMs()
+        }, bSplit);
+        aplicarEstadoConsolidadoNaUi(mergedCons);
+        marcarMetaAndamentoSujo();
+        marcarTodosBucketsSujos();
+        await flushAndamentoSyncQueueV2(false);
+      } else if (temDadosReaisLocais()) {
+        marcarMetaAndamentoSujo();
+        marcarTodosBucketsSujos();
+        await flushAndamentoSyncQueueV2(false);
+      }
     } catch (e) {
-      console.warn("Aviso ao mesclar andamento:", e);
+      console.warn("Aviso na migração v2 andamento:", e);
     }
   }
 
   function enviarDadosLocaisParaNuvem(forcarToast = false, permitirVazio = false) {
-    if (!nuvemAtiva || !_andamentoBridgeApi || !firebaseSocketConectado || !navigator.onLine || erroPermissaoNuvem) return;
-    if (sincronizandoNuvem) return;
-
-    const semanasCheck = coletarDados();
-    const payloadCheck = {
-      semanas: semanasCheck,
-      statusQuarteiroes: statusQuarteiroes,
-      dadosFormularios: dadosFormularios
-    };
-    if (!permitirVazio && !temDadosReais(payloadCheck)) {
+    if (!permitirVazio && !temDadosReaisLocais()) {
       marcarAlteracaoPendente(false);
       atualizarBadgeNuvem(firebaseSocketConectado && !erroPermissaoNuvem);
       return;
     }
-
-    sincronizandoNuvem = true;
-    try {
-      const agora = Math.max(Date.now(), (Number(ultimoTimestampLocal) || 0) + 1);
-      const payloadBruto = {
-        timestamp: agora,
-        semanas: semanasCheck,
-        statusQuarteiroes: statusQuarteiroes,
-        paginas: paginas,
-        cabecalhos: cabecalhos,
-        rodapes: rodapes,
-        dadosFormularios: dadosFormularios,
-        liraaSelecionados: Array.from(quarteiroesLiraaSelecionados)
-      };
-
-      const payload = sanitizarParaFirebase(payloadBruto);
-
-      _andamentoBridgeApi.saveModulo("andamento_ciclo", payload, agora, forcarToast).then((res) => {
-        _cotaAndamentoPausadaAte = 0;
-        ultimoTimestampLocal = agora;
-        try { localStorage.setItem(STORAGE_ULTIMO_TS, String(agora)); } catch (e) {}
-        if (res && Number(res.versao) > 0) {
-          _versaoNuvemModulo = Number(res.versao);
-        }
-        sincronizandoNuvem = false;
-        erroPermissaoNuvem = false;
-        firebaseSocketConectado = true;
-        emHandshakeNuvem = false;
-        marcarAlteracaoPendente(false);
-        atualizarBadgeNuvem(true);
-        if (forcarToast) {
-          mostrarAviso("☁️ Salvo e sincronizado na nuvem!");
-        }
-      }).catch(err => {
-        sincronizandoNuvem = false;
-        marcarAlteracaoPendente(true);
-        console.warn("Falha no envio de dados locais para o Firestore:", err);
-        if (isErroCotaFirebase(err)) {
-          _cotaAndamentoPausadaAte = Date.now() + 10 * 60 * 1000;
-          atualizarBadgeNuvem(false, "⏳ Cota diária atingida (salvo no aparelho)");
-          if (forcarToast) {
-            mostrarAviso("⏳ Cota gratuita diária da nuvem atingida. Dados salvos com segurança no aparelho.");
-          }
-          return;
-        }
-        if (isErroPermissaoFirebase(err)) {
-          erroPermissaoNuvem = true;
-          atualizarBadgeNuvem(false);
-          if (forcarToast) {
-            mostrarAviso("🔒 Sem permissão de gravação na nuvem para esta conta Google.");
-          }
-          return;
-        }
-        atualizarBadgeNuvem(false);
-        if (forcarToast) {
-          mostrarAviso("⚠️ Não foi possível enviar agora (dados mantidos no aparelho).");
-        }
-      });
-    } catch (e) {
-      sincronizandoNuvem = false;
-      marcarAlteracaoPendente(true);
-      console.error("Erro ao preparar dados para sincronização:", e);
-    }
-  }
-
-  function processarSnapshotAndamento(docData, mostrarToast = false) {
-    erroPermissaoNuvem = false;
-    firebaseSocketConectado = true;
-    emHandshakeNuvem = false;
-
-    if (sincronizandoNuvem) return;
-
-    const dadosNuvem = docData && docData.payload ? docData.payload : null;
-    const versaoRemota = Number(docData?.versao) || 0;
-    const localTemDados = temDadosReaisLocais();
-
-    if (!dadosNuvem) {
-      if (localTemDados) {
-        enviarDadosLocaisParaNuvem(mostrarToast);
-      } else {
-        atualizarBadgeNuvem(true);
-        if (mostrarToast) mostrarAviso("☁️ Nuvem conectada e atualizada!");
-      }
-      return;
-    }
-
-    const remotoTemDados = temDadosReais(dadosNuvem);
-    const tsRemoto = Number(dadosNuvem.timestamp) || 0;
-    const tsLocal = Number(ultimoTimestampLocal) || 0;
-    const pendente = (function() {
-      try { return localStorage.getItem(STORAGE_PENDENTE_NUVEM) === "1"; } catch (e) { return false; }
-    })();
-
-    if (!pendente && versaoRemota > 0 && versaoRemota === _versaoNuvemModulo && tsRemoto === tsLocal) {
-      atualizarBadgeNuvem(true);
-      if (mostrarToast) mostrarAviso("☁️ Tudo sincronizado entre seus aparelhos!");
-      return;
-    }
-
-    if (localTemDados && !remotoTemDados) {
-      enviarDadosLocaisParaNuvem(mostrarToast);
-      return;
-    }
-
-    if (pendente || (tsLocal > tsRemoto && localTemDados)) {
-      if (remotoTemDados && (versaoRemota !== _versaoNuvemModulo || tsRemoto > 0)) {
-        mesclarDadosAndamentoRemotoELocal(dadosNuvem);
-      }
-      if (versaoRemota > 0) _versaoNuvemModulo = versaoRemota;
-      enviarDadosLocaisParaNuvem(mostrarToast);
-      return;
-    }
-
-    if ((versaoRemota > 0 && versaoRemota !== _versaoNuvemModulo) || tsRemoto !== tsLocal) {
-      if (versaoRemota > 0) _versaoNuvemModulo = versaoRemota;
-      aplicarDadosRemotos(dadosNuvem);
-      atualizarBadgeNuvem(true);
-      if (mostrarToast) mostrarAviso("☁️ Tudo sincronizado entre seus aparelhos!");
-      return;
-    }
-
-    atualizarBadgeNuvem(true);
-    if (mostrarToast) mostrarAviso("☁️ Tudo sincronizado entre seus aparelhos!");
+    marcarMetaAndamentoSujo();
+    marcarTodosBucketsSujos();
+    flushAndamentoSyncQueueV2(forcarToast);
   }
 
   async function puxarServidorAndamento(mostrarToast = false) {
     if (!navigator.onLine || !_andamentoBridgeApi || precisaConectarGoogle || erroPermissaoNuvem) return;
     if (_puxandoServidorAndamento || sincronizandoNuvem) return;
     const agora = Date.now();
-    if (!mostrarToast && (agora < _cotaAndamentoPausadaAte || _andamentoBridgeApi.isQuotaPaused?.() || (agora - _ultimoPullServidorAndamentoMs) < 180000)) {
+    if (!mostrarToast && (agora < _cotaAndamentoPausadaAte || _andamentoBridgeApi.isQuotaPaused?.() || (agora - _ultimoPullServidorAndamentoMs) < 120000)) {
       return;
     }
     const st = _andamentoBridgeApi.getState?.();
@@ -2870,26 +3354,23 @@
     _puxandoServidorAndamento = true;
     _ultimoPullServidorAndamentoMs = agora;
     try {
-      const fn = _andamentoBridgeApi.getModuloFromServer || _andamentoBridgeApi.getModuloOnce;
-      if (typeof fn === "function") {
-        const docData = await fn("andamento_ciclo", mostrarToast);
-        _cotaAndamentoPausadaAte = 0;
-        processarSnapshotAndamento(docData, mostrarToast);
-        if (mostrarToast) {
-          const docResumo = await fn("resumo_reconhecimento", true);
-          const dadosResumo = docResumo && docResumo.payload ? docResumo.payload : null;
-          if (dadosResumo && dadosResumo.timestamp !== ultimoTimestampResumoLocal) {
-            aplicarDadosRemotosPMCD(dadosResumo);
-          }
-        }
+      const syncCfg = await _andamentoBridgeApi.getSyncConfig(true, mostrarToast).catch(() => null);
+      const epRes = await aplicarEpochNuvemIfNeededAndamento(syncCfg);
+      if (!epRes.compatible) return;
+      if (!epRes.epochResetRequired) {
+        await flushAndamentoSyncQueueV2(mostrarToast);
+        await puxarV2CompletoDoServidor(_andamentoBridgeApi, mostrarToast);
       }
+      _cotaAndamentoPausadaAte = 0;
+      atualizarBadgeNuvem(true);
+      if (mostrarToast) mostrarAviso("☁️ Tudo sincronizado entre seus aparelhos (v2)!");
     } catch (e) {
       if (isErroCotaFirebase(e)) {
         _cotaAndamentoPausadaAte = Date.now() + 10 * 60 * 1000;
         atualizarBadgeNuvem(false, "⏳ Cota diária atingida (salvo no aparelho)");
         if (mostrarToast) mostrarAviso("⏳ Cota gratuita diária da nuvem atingida. Dados salvos no aparelho.");
       } else {
-        console.warn("Aviso ao puxar andamento do servidor:", e);
+        console.warn("Aviso ao puxar andamento v2 do servidor:", e);
       }
     } finally {
       _puxandoServidorAndamento = false;
@@ -2904,10 +3385,14 @@
   window.sincronizarTudoComNuvem = sincronizarTudoComNuvem;
 
   function limparOuvintesNuvem() {
-    try { if (typeof _unsubAndamentoCiclo === "function") _unsubAndamentoCiclo(); } catch (e) {}
+    try { if (typeof _unsubAndamentoMeta === "function") _unsubAndamentoMeta(); } catch (e) {}
+    _unsubAndamentoBuckets.forEach(u => { try { if (typeof u === "function") u(); } catch (e) {} });
     try { if (typeof _unsubPMCDResumo === "function") _unsubPMCDResumo(); } catch (e) {}
-    _unsubAndamentoCiclo = null;
+    try { if (typeof _unsubSyncConfig === "function") _unsubSyncConfig(); } catch (e) {}
+    _unsubAndamentoMeta = null;
+    _unsubAndamentoBuckets = [null, null, null, null];
     _unsubPMCDResumo = null;
+    _unsubSyncConfig = null;
   }
 
   function iniciarListenersNuvemAtiva() {
@@ -2923,10 +3408,27 @@
     emHandshakeNuvem = false;
     atualizarBadgeNuvem(true);
 
-    _unsubAndamentoCiclo = _andamentoBridgeApi.observeModulo("andamento_ciclo", (docData) => {
-      processarSnapshotAndamento(docData, false);
+    runMigrationAndamentoV2IfNeeded(_andamentoBridgeApi).then(() => {
+      flushAndamentoSyncQueueV2(false);
+    });
+
+    _unsubSyncConfig = _andamentoBridgeApi.observeSyncConfig(async (syncCfg) => {
+      if (!syncCfg) return;
+      await aplicarEpochNuvemIfNeededAndamento(syncCfg);
+    }, () => {});
+
+    _unsubAndamentoMeta = _andamentoBridgeApi.observeDocV2("andamentos", `${V2_ANDAMENTO_TIPO}_meta`, (docData) => {
+      if (!docData || !docData.payload) {
+        if (temDadosReaisLocais()) {
+          marcarMetaAndamentoSujo();
+          flushAndamentoSyncQueueV2(false);
+        }
+        return;
+      }
+      aplicarMetaDocV2(docData);
+      atualizarBadgeNuvem(true);
     }, (err) => {
-      console.warn("Aviso de conexão Firestore:", err);
+      console.warn("Aviso de conexão Firestore (meta v2):", err);
       emHandshakeNuvem = false;
       if (isErroCotaFirebase(err)) {
         _cotaAndamentoPausadaAte = Date.now() + 10 * 60 * 1000;
@@ -2939,6 +3441,13 @@
       }
       atualizarBadgeNuvem(false);
     });
+
+    for (let bIdx = 0; bIdx < 4; bIdx++) {
+      _unsubAndamentoBuckets[bIdx] = _andamentoBridgeApi.observeDocV2("andamentos", `${V2_ANDAMENTO_TIPO}_b${bIdx}`, (docData) => {
+        if (!docData || !docData.payload) return;
+        aplicarBucketDocV2(bIdx, docData);
+      }, () => {});
+    }
 
     iniciarOuvintePMCDResumo();
   }
@@ -3021,7 +3530,7 @@
       firebaseSocketConectado = false;
       emHandshakeNuvem = false;
       atualizarBadgeNuvem(false);
-      mostrarAviso("⚡ Operando offline. Todos os seus lançamentos ficam 100% salvos no aparelho!");
+      mostrarAviso("⚡ Operando offline. Todos os seus lançamentos ficam 100% salvos na fila do aparelho!");
     });
 
     document.addEventListener("visibilitychange", () => {
@@ -3082,61 +3591,6 @@
     }
   }
 
-  function aplicarDadosRemotos(dados) {
-    try {
-      if (!dados) return;
-      if (temDadosReaisLocais() && !temDadosReais(dados)) {
-        console.warn("Proteção ativada: bloqueada sobrescrita de dados locais por snapshot remoto vazio.");
-        return;
-      }
-      const semanasRemotas = normalizarArraySemanas(dados.semanas);
-      if (semanasRemotas.length === 0 && !dados.statusQuarteiroes && !dados.dadosFormularios) return;
-
-      // Salva cópia de segurança local antes de aplicar alteração remota
-      salvarBackupEmergenciaLocal();
-
-      statusQuarteiroes = dados.statusQuarteiroes || {};
-      paginas = Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, dados.paginas);
-      cabecalhos = Object.assign({ andamento: {}, concluidos: {}, boletins: {}, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, dados.cabecalhos);
-      rodapes = Object.assign({ andamento: {}, concluidos: {}, boletins: {}, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, dados.rodapes);
-      dadosFormularios = Object.assign({ boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, coflagrados: {} }, dados.dadosFormularios);
-
-      garantirEstruturaBoletins();
-
-      if (dados.liraaSelecionados && Array.isArray(dados.liraaSelecionados)) {
-        quarteiroesLiraaSelecionados = new Set(dados.liraaSelecionados.map(String));
-        salvarSelecaoLiraa();
-      }
-
-      if (dados.timestamp) {
-        ultimoTimestampLocal = dados.timestamp;
-        try { localStorage.setItem(STORAGE_ULTIMO_TS, String(dados.timestamp)); } catch (e) {}
-      }
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(semanasRemotas));
-      salvarStatus(); salvarPaginas(); salvarCabecalhos(); salvarRodapes(); salvarFormularios();
-      marcarAlteracaoPendente(false);
-
-      document.getElementById("semanas").innerHTML = "";
-      semanaCount = 0;
-      if (semanasRemotas.length > 0) {
-        semanasRemotas.forEach(s => criarSemana(s));
-      } else {
-        criarSemana();
-      }
-
-      recalcular(); atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
-      atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
-      renderizarResumoIntegrado();
-      renderizarBasesIntegrado();
-      renderizarBasesLiraaIntegrado();
-      renderizarCoflagrados();
-      renderizarResumoGeral();
-
-      mostrarAviso("🔄 Sincronizado com a nuvem!");
-    } catch (e) { console.error("Erro na sincronização remota:", e); }
-  }
-
   function trocarAba(nome) {
     if (typeof limparSelecaoCelulas === "function") limparSelecaoCelulas();
     if (typeof desativarModoSelecao === "function") desativarModoSelecao();
@@ -3161,7 +3615,29 @@
   function criarSemana(dadosSemana) {
     semanaCount++;
     const idSemana = dadosSemana ? dadosSemana.id : semanaCount;
-    if (dadosSemana) semanaCount = Math.max(semanaCount, idSemana);
+    if (dadosSemana) {
+      semanaCount = Math.max(semanaCount, idSemana);
+      const idStr = String(idSemana);
+      if (!_v2Meta.diarioSemanaMeta) _v2Meta.diarioSemanaMeta = {};
+      const exist = _v2Meta.diarioSemanaMeta[idStr] || { _ts: 0, tituloTs: 0, datasTs: [0,0,0,0,0], valoresTs: {} };
+      if (Number(dadosSemana._ts) > (exist._ts || 0)) exist._ts = Number(dadosSemana._ts);
+      if (Number(dadosSemana.tituloTs) > (exist.tituloTs || 0)) exist.tituloTs = Number(dadosSemana.tituloTs);
+      if (Array.isArray(dadosSemana.datasTs)) {
+        if (!Array.isArray(exist.datasTs)) exist.datasTs = [0,0,0,0,0];
+        dadosSemana.datasTs.forEach((dt, idx) => {
+          if (Number(dt) > (Number(exist.datasTs[idx]) || 0)) exist.datasTs[idx] = Number(dt);
+        });
+      }
+      if (dadosSemana.valoresTs && typeof dadosSemana.valoresTs === "object") {
+        if (!exist.valoresTs) exist.valoresTs = {};
+        Object.keys(dadosSemana.valoresTs).forEach(vk => {
+          if (Number(dadosSemana.valoresTs[vk]) > (Number(exist.valoresTs[vk]) || 0)) {
+            exist.valoresTs[vk] = Number(dadosSemana.valoresTs[vk]);
+          }
+        });
+      }
+      _v2Meta.diarioSemanaMeta[idStr] = exist;
+    }
 
     const divSemana = document.createElement("div");
     divSemana.className = "semana";
@@ -3214,8 +3690,9 @@
           selectSem.value = digitado.trim();
         } else { selectSem.value = ""; }
       }
+      marcarCarimboDiario(idSemana, "titulo", null, agoraSyncMs());
       verificarBloqueioSemana(divSemana);
-      salvarComAtraso();
+      salvarComAtraso({ scope: "meta" });
     });
 
     header.appendChild(selectSem);
@@ -3247,7 +3724,11 @@
       inputData.title = "Data obrigatória deste dia";
       if (dadosSemana && dadosSemana.datas && dadosSemana.datas[dIdx]) inputData.value = dadosSemana.datas[dIdx];
 
-      inputData.addEventListener("change", () => { verificarBloqueioSemana(divSemana); salvarComAtraso(); });
+      inputData.addEventListener("change", () => {
+        marcarCarimboDiario(idSemana, "data", dIdx, agoraSyncMs());
+        verificarBloqueioSemana(divSemana);
+        salvarComAtraso({ scope: "meta" });
+      });
 
       tituloDia.appendChild(inputData);
       bloco.appendChild(tituloDia);
@@ -3315,22 +3796,25 @@
         if (!semanaValida || !dataValida) {
           if (e.target !== inpD && e.target !== selSem) {
             let autoDefiniu = false;
+            const agoraAuto = agoraSyncMs();
             if (!semanaValida) {
               const numFmt = String(idSemana).padStart(2, "0");
               const defaultSemana = `Semana ${numFmt}`;
               selSem.value = defaultSemana;
+              marcarCarimboDiario(idSemana, "titulo", null, agoraAuto);
               semanaValida = true;
               autoDefiniu = true;
             }
             if (!dataValida) {
               const hoje = new Date().toISOString().slice(0, 10);
               inpD.value = hoje;
+              marcarCarimboDiario(idSemana, "data", dIdx, agoraAuto);
               dataValida = true;
               autoDefiniu = true;
             }
             if (autoDefiniu) {
               verificarBloqueioSemana(divSemana);
-              salvarComAtraso();
+              salvarComAtraso({ scope: "meta" });
               mostrarAviso(`📅 Data e semana definidas. Lançamentos liberados!`);
               if (e.target && e.target.tagName === 'INPUT' && !e.target.disabled) {
                 e.target.focus();
@@ -4536,8 +5020,10 @@
     } else {
       quarteiroesLiraaSelecionados.delete(qStr);
     }
+    if (!_v2Meta.liraaSelMap) _v2Meta.liraaSelMap = {};
+    _v2Meta.liraaSelMap[qStr] = { sel: Boolean(novoEstado), atualizadoEm: agoraSyncMs() };
     salvarSelecaoLiraa();
-    salvar();
+    salvar(false, { scope: "meta" });
 
     renderizarBasesLiraaIntegrado();
   }
@@ -4548,9 +5034,19 @@
       return;
     }
     if (!confirm(`Deseja desmarcar todos os ${quarteiroesLiraaSelecionados.size} quarteirões selecionados para o LIRAa?`)) return;
+    const agoraL = agoraSyncMs();
+    if (!_v2Meta.liraaSelMap) _v2Meta.liraaSelMap = {};
+    quarteiroesLiraaSelecionados.forEach(qStr => {
+      _v2Meta.liraaSelMap[String(qStr)] = { sel: false, atualizadoEm: agoraL };
+    });
+    Object.keys(_v2Meta.liraaSelMap).forEach(qStr => {
+      if (_v2Meta.liraaSelMap[qStr]) {
+        _v2Meta.liraaSelMap[qStr] = { sel: false, atualizadoEm: agoraL };
+      }
+    });
     quarteiroesLiraaSelecionados.clear();
     salvarSelecaoLiraa();
-    salvar();
+    salvar(true, { scope: "meta" });
     renderizarBasesLiraaIntegrado();
     mostrarAviso("🧹 Todos os quarteirões foram desmarcados do LIRAa.");
   }
@@ -6017,12 +6513,18 @@
           if (!f.imoveis) f.imoveis = {};
           if (!f.imoveis[k]) f.imoveis[k] = {};
           f.imoveis[k][campo] = inp.value;
+          if (!f._imoveisTs) f._imoveisTs = {};
+          const agoraIm = agoraSyncMs();
+          f._imoveisTs[k] = agoraIm;
+          f._resumoTs = agoraIm;
+          f._ts = agoraIm;
+          if (_v2Meta.boletinsTombstones) delete _v2Meta.boletinsTombstones[q];
 
           recalcularResumoBoletins(q, pg);
           atualizarTotaisQuarteirao(q);
 
           salvarFormularios();
-          salvarComAtraso();
+          salvarComAtraso({ scope: "bucket", qKey: q, resumo: true });
           atualizarContadorBoletins();
         });
       } else {
@@ -6033,8 +6535,13 @@
           if (!f.imoveis) f.imoveis = {};
           if (!f.imoveis[k]) f.imoveis[k] = {};
           f.imoveis[k][campo] = inp.value;
+          if (!f._imoveisTs) f._imoveisTs = {};
+          const agoraIm = agoraSyncMs();
+          f._imoveisTs[k] = agoraIm;
+          f._ts = agoraIm;
+          if (_v2Meta.boletinsTombstones) delete _v2Meta.boletinsTombstones[q];
           salvarFormularios();
-          salvarComAtraso();
+          salvarComAtraso({ scope: "bucket", qKey: q, resumo: true });
           atualizarContadorBoletins();
         });
 
@@ -6049,8 +6556,12 @@
                 const f = dadosFormularios.boletins.porQuarteirao[q];
                 if (f && f.imoveis && f.imoveis[k]) {
                   f.imoveis[k].seq = fmt;
+                  if (!f._imoveisTs) f._imoveisTs = {};
+                  const agoraIm = agoraSyncMs();
+                  f._imoveisTs[k] = agoraIm;
+                  f._ts = agoraIm;
                   salvarFormularios();
-                  salvarComAtraso();
+                  salvarComAtraso({ scope: "bucket", qKey: q, resumo: true });
                 }
               }
             }
@@ -6106,9 +6617,13 @@
   function adicionarPaginaQuarteirao(qKey) {
     const form = dadosFormularios.boletins.porQuarteirao[qKey];
     if (!form) return;
+    const agoraPg = agoraSyncMs();
     form.paginas = (form.paginas || 1) + 1;
+    form.paginasExtra = form.paginas;
+    form._paginasTs = agoraPg;
+    form._ts = agoraPg;
     salvarFormularios();
-    salvarComAtraso();
+    salvarComAtraso({ scope: "bucket", qKey, resumo: true });
     renderizarFormularioBoletins();
     mostrarAviso(`➕ Página adicionada ao quarteirão ${qKey === "_legacy" ? "(legado)" : qKey}`);
   }
@@ -6119,15 +6634,25 @@
     if ((form.paginas || 1) <= 1) return;
     if (!confirm(`Remover a última página do quarteirão ${qKey === "_legacy" ? "(legado)" : qKey}? Os dados dessa página serão PERDIDOS.`)) return;
 
+    const agoraPg = agoraSyncMs(Math.max(Number(form._ts) || 0, ultimoTimestampLocal));
     const ultimaPagina = form.paginas - 1;
+    if (!form._imoveisTs) form._imoveisTs = {};
     Object.keys(form.imoveis || {}).forEach(k => {
-      if (k.startsWith(`${ultimaPagina}_`)) delete form.imoveis[k];
+      if (k.startsWith(`${ultimaPagina}_`)) {
+        form.imoveis[k] = { rua: "", numero: "", comp: "", seq: "", tipo: "", _clearedAtMs: agoraPg };
+        form._imoveisTs[k] = agoraPg;
+      }
     });
     if (form.resumo) delete form.resumo[ultimaPagina];
 
     form.paginas = ultimaPagina;
+    form.paginasExtra = ultimaPagina;
+    form._paginasTs = agoraPg;
+    form._resumoTs = agoraPg;
+    form._ts = agoraPg;
     salvarFormularios();
-    salvarComAtraso();
+    clearTimeout(timeoutSalvar);
+    salvar(true, { scope: "bucket", qKey, resumo: true });
     renderizarFormularioBoletins();
     mostrarAviso(`🗑️ Página removida do quarteirão ${qKey === "_legacy" ? "(legado)" : qKey}`);
   }
@@ -6141,8 +6666,14 @@
         if (!cabecalhos.boletins.porQuarteirao) cabecalhos.boletins.porQuarteirao = {};
         if (!cabecalhos.boletins.porQuarteirao[q]) cabecalhos.boletins.porQuarteirao[q] = {};
         cabecalhos.boletins.porQuarteirao[q][campo] = inp.value;
+        const f = dadosFormularios.boletins?.porQuarteirao?.[q];
+        if (f) {
+          const agoraC = agoraSyncMs();
+          f._cabecalhoTs = agoraC;
+          f._ts = agoraC;
+        }
         salvarCabecalhos();
-        salvarComAtraso();
+        salvarComAtraso({ scope: "bucket", qKey: q });
       };
     });
     document.querySelectorAll('#tabelaBoletins .rodape-pagina input').forEach(inp => {
@@ -6153,8 +6684,14 @@
         if (!rodapes.boletins.porQuarteirao) rodapes.boletins.porQuarteirao = {};
         if (!rodapes.boletins.porQuarteirao[q]) rodapes.boletins.porQuarteirao[q] = {};
         rodapes.boletins.porQuarteirao[q][campo] = inp.value;
+        const f = dadosFormularios.boletins?.porQuarteirao?.[q];
+        if (f) {
+          const agoraR = agoraSyncMs();
+          f._rodapeTs = agoraR;
+          f._ts = agoraR;
+        }
         salvarRodapes();
-        salvarComAtraso();
+        salvarComAtraso({ scope: "bucket", qKey: q });
       };
     });
   }
@@ -6205,6 +6742,8 @@
 
     let linhasPreenchidas = 0;
     let celulasPreenchidas = 0;
+    const agoraCol = agoraSyncMs();
+    if (!form._imoveisTs) form._imoveisTs = {};
 
     for (let r = 0; r < matriz.length; r++) {
       const linhaDados = matriz[r];
@@ -6235,6 +6774,7 @@
         }
 
         form.imoveis[rowKey][campo] = valor;
+        form._imoveisTs[rowKey] = agoraCol;
         celulasPreenchidas++;
         linhaTemDados = true;
       }
@@ -6249,10 +6789,15 @@
 
     if (paginasACriar > 0) {
       form.paginas = paginasNecessarias;
+      form.paginasExtra = paginasNecessarias;
+      form._paginasTs = agoraCol;
     }
+    form._resumoTs = agoraCol;
+    form._ts = agoraCol;
+    if (_v2Meta.boletinsTombstones) delete _v2Meta.boletinsTombstones[qKey];
 
     salvarFormularios();
-    salvarComAtraso();
+    salvarComAtraso({ scope: "bucket", qKey, resumo: true });
 
     const scrollY = window.scrollY;
     renderizarFormularioBoletins();
@@ -6326,6 +6871,9 @@
 
     let linhasPreenchidas = 0;
     let celulasPreenchidas = 0;
+    const agoraCof = agoraSyncMs();
+    if (!_v2Meta.secoesTs) _v2Meta.secoesTs = { resumo: {}, bases: {}, coflagrados: {} };
+    if (!_v2Meta.secoesTs.coflagrados) _v2Meta.secoesTs.coflagrados = {};
 
     for (let r = 0; r < matriz.length; r++) {
       const linhaDados = matriz[r];
@@ -6356,6 +6904,8 @@
         }
 
         dadosFormularios.coflagrados[rowKey][campo] = valor;
+        dadosFormularios.coflagrados[rowKey]._ts = agoraCof;
+        _v2Meta.secoesTs.coflagrados[rowKey] = agoraCof;
         celulasPreenchidas++;
         linhaTemDados = true;
       }
@@ -6370,11 +6920,13 @@
 
     if (paginasACriar > 0) {
       paginas.coflagrados = paginasNecessarias;
+      _v2Meta.paginasTs.coflagrados = agoraCof;
       salvarPaginas();
     }
 
+    salvarV2Meta();
     salvarFormularios();
-    salvarComAtraso();
+    salvarComAtraso({ scope: "meta" });
 
     const scrollY = window.scrollY;
     renderizarCoflagrados();
@@ -6423,6 +6975,7 @@
     const diaBloco = target.closest(".dia");
 
     // Desbloqueia automaticamente a semana e a data se estiverem pendentes
+    const agoraDiarioCol = agoraSyncMs();
     if (semanaDiv && diaBloco) {
       const selSem = semanaDiv.querySelector(".select-semana");
       const inpD = diaBloco.querySelector('input[type="date"]');
@@ -6431,9 +6984,11 @@
       if (!semanaValida || !dataValida) {
         if (!semanaValida) {
           selSem.value = `Semana ${String(idSemana).padStart(2, "0")}`;
+          marcarCarimboDiario(idSemana, "titulo", null, agoraDiarioCol);
         }
         if (!dataValida) {
           inpD.value = new Date().toISOString().slice(0, 10);
+          marcarCarimboDiario(idSemana, "data", dIdx, agoraDiarioCol);
         }
         verificarBloqueioSemana(semanaDiv);
       }
@@ -6510,6 +7065,7 @@
           }
         }
 
+        marcarCarimboDiario(idSemana, "valor", inputId, agoraDiarioCol);
         celulasPreenchidas++;
         linhaTeveDado = true;
       }
@@ -6522,7 +7078,7 @@
       atualizarResumoSemanal();
       atualizarTotalImoveis();
       atualizarInformados();
-      salvarComAtraso();
+      salvarComAtraso({ scope: "meta" });
       mostrarAviso(`✅ Colado no Diário: ${linhasPreenchidas} linha(s), ${celulasPreenchidas} célula(s)`);
     } else {
       mostrarAviso("⚠️ Nenhuma célula editável encontrada no intervalo de colagem.");
@@ -6674,11 +7230,25 @@
         const t = inp.dataset.tipo;
         const k = inp.dataset.key;
         const c = inp.dataset.campo;
+        const agoraM = agoraSyncMs();
         if (!dadosFormularios[t]) dadosFormularios[t] = {};
         if (!dadosFormularios[t][k]) dadosFormularios[t][k] = {};
-        dadosFormularios[t][k][c] = inp.value;
+        const rowObj = dadosFormularios[t][k];
+        rowObj[c] = inp.value;
+        rowObj._ts = agoraM;
+        const rowVazia = !String(rowObj.q || "").trim() &&
+          ["r", "c", "tb", "pe", "o"].every(f => {
+            const v = String(rowObj[f] == null ? "" : rowObj[f]).trim();
+            return v === "" || v === "0" || v === "00";
+          });
+        if (rowVazia) rowObj._clearedAtMs = agoraM;
+        else delete rowObj._clearedAtMs;
+        if (!_v2Meta.secoesTs) _v2Meta.secoesTs = { resumo: {}, bases: {}, coflagrados: {} };
+        if (!_v2Meta.secoesTs[t]) _v2Meta.secoesTs[t] = {};
+        _v2Meta.secoesTs[t][k] = agoraM;
+        salvarV2Meta();
         salvarFormularios();
-        salvarComAtraso();
+        salvarComAtraso({ scope: "meta", resumo: t === "resumo" });
         if (t === "resumo") salvarResumoReconhecimentoPMCDComAtraso();
       });
     });
@@ -6692,11 +7262,19 @@
         const tipoInp = inp.dataset.tipo;
         const paginaInp = parseInt(inp.dataset.pagina);
         const campoInp = inp.dataset.campo;
+        const agoraC = agoraSyncMs();
         if (!cabecalhos[tipoInp]) cabecalhos[tipoInp] = {};
         if (!cabecalhos[tipoInp][paginaInp]) cabecalhos[tipoInp][paginaInp] = {};
         cabecalhos[tipoInp][paginaInp][campoInp] = inp.value;
+        if (!_v2Meta.cabecalhosTs) _v2Meta.cabecalhosTs = {};
+        _v2Meta.cabecalhosTs[tipoInp] = agoraC;
+        if (tipoInp === "resumo") {
+          if (!_v2Meta.resumoCabTs) _v2Meta.resumoCabTs = {};
+          _v2Meta.resumoCabTs[campoInp] = agoraC;
+        }
+        salvarV2Meta();
         salvarCabecalhos();
-        salvarComAtraso();
+        salvarComAtraso({ scope: "meta", resumo: tipoInp === "resumo" });
         if (tipoInp === "resumo") salvarResumoReconhecimentoPMCDComAtraso();
       };
     });
@@ -6706,11 +7284,15 @@
         const tipoInp = inp.dataset.tipo;
         const paginaInp = parseInt(inp.dataset.pagina);
         const campoInp = inp.dataset.campo;
+        const agoraR = agoraSyncMs();
         if (!rodapes[tipoInp]) rodapes[tipoInp] = {};
         if (!rodapes[tipoInp][paginaInp]) rodapes[tipoInp][paginaInp] = {};
         rodapes[tipoInp][paginaInp][campoInp] = inp.value;
+        if (!_v2Meta.rodapesTs) _v2Meta.rodapesTs = {};
+        _v2Meta.rodapesTs[tipoInp] = agoraR;
+        salvarV2Meta();
         salvarRodapes();
-        salvarComAtraso();
+        salvarComAtraso({ scope: "meta", resumo: tipoInp === "resumo" });
         if (tipoInp === "resumo") salvarResumoReconhecimentoPMCDComAtraso();
       };
     });
@@ -6736,8 +7318,11 @@
     if (tipo === "boletins") return;
     if (!paginas[tipo]) paginas[tipo] = 1;
     paginas[tipo]++;
+    if (!_v2Meta.paginasTs) _v2Meta.paginasTs = {};
+    _v2Meta.paginasTs[tipo] = agoraSyncMs();
+    salvarV2Meta();
     salvarPaginas();
-    salvar();
+    salvar(false, { scope: "meta", resumo: tipo === "resumo" });
     if (tipo === "andamento") atualizarAndamento();
     else if (tipo === "concluidos") atualizarConcluidos();
     else if (tipo === "resumo") renderizarResumoIntegrado();
@@ -6784,14 +7369,20 @@
     if (concluir) {
       if (confirm(`Marcar "${quart}" como CONCLUÍDO?`)) {
         statusQuarteiroes[quart] = "concluido";
-        salvarStatus(); salvar(); atualizarAndamento(); atualizarConcluidos();
+        if (!_v2Meta.statusTs) _v2Meta.statusTs = {};
+        _v2Meta.statusTs[quart] = agoraSyncMs();
+        salvarV2Meta();
+        salvarStatus(); salvar(false, { scope: "meta" }); atualizarAndamento(); atualizarConcluidos();
         if (typeof popularSelectQuarteiroes === "function") popularSelectQuarteiroes();
       }
     } else {
       if (statusQuarteiroes[quart] === "concluido") {
         if (confirm(`Voltar "${quart}" para EM ANDAMENTO?`)) {
-          delete statusQuarteiroes[quart];
-          salvarStatus(); salvar(); atualizarAndamento(); atualizarConcluidos();
+          statusQuarteiroes[quart] = "";
+          if (!_v2Meta.statusTs) _v2Meta.statusTs = {};
+          _v2Meta.statusTs[quart] = agoraSyncMs();
+          salvarV2Meta();
+          salvarStatus(); salvar(true, { scope: "meta" }); atualizarAndamento(); atualizarConcluidos();
           if (typeof popularSelectQuarteiroes === "function") popularSelectQuarteiroes();
         }
       } else { mostrarAviso(`"${quart}" permanece em andamento`); }
@@ -6810,6 +7401,8 @@
     const semanas = [];
     document.querySelectorAll("#semanas .semana").forEach(semana => {
       const idSemana = parseInt(semana.dataset.semana);
+      const idStr = String(idSemana);
+      const sm = (_v2Meta.diarioSemanaMeta && _v2Meta.diarioSemanaMeta[idStr]) || {};
       const selSem = semana.querySelector(".select-semana");
       const titulo = selSem ? selSem.value : "";
       const datas = [];
@@ -6833,15 +7426,46 @@
           }
         });
       });
-      semanas.push({ id: idSemana, titulo, datas, valores });
+      semanas.push({
+        id: idSemana,
+        titulo,
+        tituloTs: Number(sm.tituloTs) || 0,
+        datas,
+        datasTs: Array.isArray(sm.datasTs) ? sm.datasTs.slice(0, 5) : [0,0,0,0,0],
+        valores,
+        valoresTs: Object.assign({}, sm.valoresTs || {}),
+        _ts: Number(sm._ts) || 0,
+        _deleted: false
+      });
     });
     return semanas;
   }
 
-  function salvar(permitirVazio = false) {
+  let _salvarScopePendente = { meta: false, buckets: new Set(), allBuckets: false, resumo: false };
+
+  function acumularEscopoSalvar(opcoes) {
+    if (!opcoes || opcoes.scope === "all") {
+      _salvarScopePendente.meta = true;
+      _salvarScopePendente.allBuckets = true;
+      _salvarScopePendente.resumo = true;
+      return;
+    }
+    if (opcoes.scope === "meta" || opcoes.meta) _salvarScopePendente.meta = true;
+    if (opcoes.scope === "resumo" || opcoes.resumo) _salvarScopePendente.resumo = true;
+    if (opcoes.scope === "bucket" && opcoes.qKey) _salvarScopePendente.buckets.add(String(opcoes.qKey));
+    if (Array.isArray(opcoes.qKeys)) opcoes.qKeys.forEach(q => _salvarScopePendente.buckets.add(String(q)));
+  }
+
+  function salvar(permitirVazio = false, opcoes = null) {
+    if (_v2ApplyingRemote) return;
     try {
+      if (opcoes) acumularEscopoSalvar(opcoes);
+      const escopo = Object.assign({}, _salvarScopePendente, { buckets: Array.from(_salvarScopePendente.buckets) });
+      _salvarScopePendente = { meta: false, buckets: new Set(), allBuckets: false, resumo: false };
+
       const semanas = coletarDados();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(semanas));
+      salvarV2Meta();
       salvarStatus();
       salvarPaginas();
       salvarCabecalhos();
@@ -6849,7 +7473,7 @@
       salvarFormularios();
       salvarSelecaoLiraa();
 
-      const agora = Date.now();
+      const agora = agoraSyncMs();
       ultimoTimestampLocal = agora;
       try { localStorage.setItem(STORAGE_ULTIMO_TS, String(agora)); } catch (e) {}
 
@@ -6869,26 +7493,45 @@
         }
       } catch (e) {}
 
+      const temAlteracaoExplicita = escopo.meta || escopo.allBuckets || escopo.buckets.length > 0 || escopo.resumo;
+      if (!permitirVazio && !temDadosReaisLocais() && !temAlteracaoExplicita) {
+        return;
+      }
+
+      if (!temAlteracaoExplicita) {
+        marcarMetaAndamentoSujo();
+        marcarTodosBucketsSujos();
+        marcarResumoPMCDSujo();
+      } else {
+        if (escopo.meta) marcarMetaAndamentoSujo();
+        if (escopo.allBuckets) marcarTodosBucketsSujos();
+        else escopo.buckets.forEach(q => marcarBucketAndamentoSujo(q));
+        if (escopo.resumo) marcarResumoPMCDSujo();
+      }
+
       marcarAlteracaoPendente(true);
 
-      if (navigator.onLine && nuvemAtiva && firebaseSocketConectado && !erroPermissaoNuvem) {
-        enviarDadosLocaisParaNuvem(true, permitirVazio);
+      if (navigator.onLine && nuvemAtiva && firebaseSocketConectado && !erroPermissaoNuvem && !_v2CompatBlocked) {
+        flushAndamentoSyncQueueV2(false);
       } else {
         atualizarBadgeNuvem(false);
-        mostrarAviso("💾 Salvo no aparelho (offline)");
+        mostrarAviso("💾 Salvo na fila do aparelho (offline)");
       }
-      salvarResumoReconhecimentoPMCD();
+      if (escopo.resumo || !temAlteracaoExplicita) {
+        salvarResumoReconhecimentoPMCD(permitirVazio);
+      }
     } catch (e) {
       console.error("Erro ao salvar:", e);
       mostrarAviso("⚠️ Erro ao salvar");
     }
   }
 
-  function salvarComAtraso() {
+  function salvarComAtraso(opcoes = null) {
+    if (_v2ApplyingRemote) return;
+    if (opcoes) acumularEscopoSalvar(opcoes);
     clearTimeout(timeoutSalvar);
     timeoutSalvar = setTimeout(() => {
-      salvar();
-      salvarResumoReconhecimentoPMCD();
+      salvar(true);
       if (!document.getElementById("painel-semanal").classList.contains("oculto")) atualizarResumoSemanal();
       if (!document.getElementById("painel-total").classList.contains("oculto")) atualizarTotalImoveis();
       if (!document.getElementById("painel-informados").classList.contains("oculto")) atualizarInformados();
@@ -7110,6 +7753,181 @@
 
   function dispararImportacaoJSON() { document.getElementById("inputBackupJSON").click(); }
 
+  function aplicarBackupAndamentoCiclo(dados, opcoes = {}) {
+    const { fonte = "manual_importacao", enfileirarNuvem = true } = opcoes;
+    if (!dados || (!dados.semanas && !Array.isArray(dados))) {
+      throw new Error("Arquivo não reconhecido como backup válido.");
+    }
+    const agoraImp = agoraSyncMs();
+    _v2Meta.diarioSemanaMeta = {};
+    const semanas = normalizarArraySemanas(dados.semanas || dados).map(s => {
+      const sId = String(s.id);
+      const vTs = {};
+      Object.keys(s.valores || {}).forEach(vk => { vTs[vk] = agoraImp; });
+      const dTs = (s.datas || []).map(d => (d ? agoraImp : 0));
+      while (dTs.length < 5) dTs.push(0);
+      _v2Meta.diarioSemanaMeta[sId] = {
+        _ts: agoraImp,
+        tituloTs: s.titulo ? agoraImp : 0,
+        datasTs: dTs,
+        valoresTs: vTs
+      };
+      return Object.assign({}, s, { _ts: agoraImp, tituloTs: s.titulo ? agoraImp : 0, datasTs: dTs, valoresTs: vTs, _deleted: false });
+    });
+
+    statusQuarteiroes = Object.assign({}, dados.statusQuarteiroes || {});
+    _v2Meta.statusTs = {};
+    Object.keys(statusQuarteiroes).forEach(qk => { _v2Meta.statusTs[qk] = agoraImp; });
+
+    paginas = Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, dados.paginas || {});
+    _v2Meta.paginasTs = {};
+    Object.keys(paginas).forEach(pk => { _v2Meta.paginasTs[pk] = agoraImp; });
+
+    cabecalhos = Object.assign({ andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, dados.cabecalhos || {});
+    rodapes = Object.assign({ andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, dados.rodapes || {});
+    _v2Meta.cabecalhosTs = {};
+    _v2Meta.rodapesTs = {};
+    ["andamento", "concluidos", "resumo", "bases", "basesliraa", "coflagrados", "resumogeral"].forEach(sec => {
+      _v2Meta.cabecalhosTs[sec] = agoraImp;
+      _v2Meta.rodapesTs[sec] = agoraImp;
+    });
+
+    dadosFormularios = Object.assign({ boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, coflagrados: {} }, dados.dadosFormularios || {});
+    if (!dadosFormularios.boletins) dadosFormularios.boletins = { porQuarteirao: {} };
+    if (!dadosFormularios.boletins.porQuarteirao) dadosFormularios.boletins.porQuarteirao = {};
+    if (!dadosFormularios.coflagrados) dadosFormularios.coflagrados = {};
+
+    Object.keys(dadosFormularios.boletins.porQuarteirao || {}).forEach(qKey => {
+      const fq = dadosFormularios.boletins.porQuarteirao[qKey];
+      if (!fq) return;
+      fq._ts = agoraImp;
+      fq._paginasTs = agoraImp;
+      fq._resumoTs = agoraImp;
+      fq._cabecalhoTs = agoraImp;
+      fq._rodapeTs = agoraImp;
+      fq._imoveisTs = {};
+      Object.keys(fq.imoveis || {}).forEach(ik => { fq._imoveisTs[ik] = agoraImp; });
+    });
+
+    _v2Meta.boletinsTombstones = {};
+    _v2Meta.semanasTombstones = {};
+    _v2Meta.secoesTs = { resumo: {}, bases: {}, coflagrados: {} };
+    ["resumo", "bases", "coflagrados"].forEach(sec => {
+      Object.keys(dadosFormularios[sec] || {}).forEach(rk => {
+        _v2Meta.secoesTs[sec][rk] = agoraImp;
+        if (dadosFormularios[sec][rk] && typeof dadosFormularios[sec][rk] === "object") {
+          dadosFormularios[sec][rk]._ts = agoraImp;
+        }
+      });
+    });
+
+    if (dados.liraaSelecionados && Array.isArray(dados.liraaSelecionados)) {
+      quarteiroesLiraaSelecionados = new Set(dados.liraaSelecionados.map(String));
+    } else {
+      quarteiroesLiraaSelecionados = new Set();
+    }
+    _v2Meta.liraaSelMap = {};
+    quarteiroesLiraaSelecionados.forEach(q => {
+      _v2Meta.liraaSelMap[String(q)] = { sel: true, atualizadoEm: agoraImp };
+    });
+
+    garantirEstruturaBoletins();
+
+    ultimoTimestampLocal = agoraImp;
+    try { localStorage.setItem(STORAGE_ULTIMO_TS, String(agoraImp)); } catch (e) {}
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(semanas));
+    salvarV2Meta();
+    salvarStatus(); salvarPaginas(); salvarCabecalhos(); salvarRodapes(); salvarFormularios(); salvarSelecaoLiraa();
+    try {
+      localStorage.setItem(STORAGE_BACKUP_COMPLETO, JSON.stringify({
+        timestamp: agoraImp,
+        semanas,
+        statusQuarteiroes,
+        paginas,
+        cabecalhos,
+        rodapes,
+        dadosFormularios,
+        liraaSelecionados: Array.from(quarteiroesLiraaSelecionados)
+      }));
+      localStorage.setItem(SEED_ANDAMENTO_CICLO_FLAG, fonte);
+    } catch (e) {}
+
+    document.getElementById("semanas").innerHTML = "";
+    semanaCount = 0;
+    if (semanas.length > 0) {
+      semanas.forEach(s => criarSemana(s));
+    } else {
+      criarSemana();
+    }
+    aplicarFormatacaoInicialNosInputsNumericos(document);
+
+    recalcular(); atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
+    atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
+    renderizarResumoIntegrado();
+    renderizarBasesIntegrado();
+    renderizarBasesLiraaIntegrado();
+    renderizarCoflagrados();
+    renderizarResumoGeral();
+
+    if (enfileirarNuvem) {
+      salvar(true, { scope: "all" });
+    }
+    try {
+      if (window.parent && window.parent !== window && typeof window.parent.atualizarEstatisticasEscolhaAtividade === "function") {
+        window.parent.atualizarEstatisticasEscolhaAtividade();
+      }
+    } catch (e) {}
+    return {
+      semanas: semanas.length,
+      concluidos: Object.values(statusQuarteiroes).filter(v => v === "concluido").length,
+      boletins: Object.keys(dadosFormularios.boletins.porQuarteirao || {}).length,
+      coflagrados: Object.keys(dadosFormularios.coflagrados || {}).length
+    };
+  }
+
+  async function carregarSeedAndamentoCicloEnviado(opcoes = {}) {
+    const { silencioso = false, enfileirarNuvem = true, confirmarSubstituicao = false } = opcoes;
+    if (confirmarSubstituicao && temDadosReaisLocais()) {
+      const qtdSem = coletarDados().length;
+      const qtdQ = Object.keys(dadosFormularios?.boletins?.porQuarteirao || {}).length;
+      if (!confirm(`📥 Carregar o JSON de Andamento dos Quarteirões do Ciclo (19/11/2026)?\n\nIsso substituirá os dados locais atuais (${qtdSem} semana(s) e ${qtdQ} quarteirão(ões)) pelo backup completo enviado (SE 40–46, 59 quarteirões nos boletins, 53 concluídos, 40 linhas no resumo e 39 coflagrados). Continuar?`)) {
+        return false;
+      }
+    }
+    try {
+      const resp = await fetch(SEED_ANDAMENTO_CICLO_URL, { cache: "no-store" });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} ao carregar JSON de Andamento`);
+      const dados = await resp.json();
+      const resumo = aplicarBackupAndamentoCiclo(dados, {
+        fonte: silencioso ? "auto_seed_andamento_ciclo_20261119" : "manual_seed_andamento_ciclo_20261119",
+        enfileirarNuvem
+      });
+      if (!silencioso) {
+        mostrarAviso(`✅ JSON carregado: ${resumo.semanas} semanas, ${resumo.boletins} quarteirões nos boletins e ${resumo.concluidos} concluídos!`);
+      }
+      return true;
+    } catch (err) {
+      console.warn("[Andamento Seed Ciclo]", err);
+      if (!silencioso) alert("❌ Erro ao carregar JSON do Andamento Ciclo: " + (err?.message || err));
+      return false;
+    }
+  }
+
+  function dispararSeedAndamentoCiclo() {
+    carregarSeedAndamentoCicloEnviado({ silencioso: false, enfileirarNuvem: true, confirmarSubstituicao: true });
+  }
+
+  function autoCarregarSeedAndamentoCicloSeNecessario() {
+    try {
+      const jaAplicou = localStorage.getItem(SEED_ANDAMENTO_CICLO_FLAG);
+      const eng = seEngine();
+      const epLocal = eng && typeof eng.getDeviceEpoch === "function" ? eng.getDeviceEpoch() : 0;
+      if (!jaAplicou && epLocal <= 1 && !temDadosReaisLocais()) {
+        carregarSeedAndamentoCicloEnviado({ silencioso: true, enfileirarNuvem: false, confirmarSubstituicao: false });
+      }
+    } catch (e) {}
+  }
+
   function importarBackupJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -7117,41 +7935,7 @@
     reader.onload = (e) => {
       try {
         const dados = JSON.parse(e.target.result);
-        if (!dados || (!dados.semanas && !Array.isArray(dados))) throw new Error("Arquivo não reconhecido como backup válido.");
-        const semanas = normalizarArraySemanas(dados.semanas || dados);
-        statusQuarteiroes = dados.statusQuarteiroes || {};
-        paginas = Object.assign({ andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 }, dados.paginas);
-        cabecalhos = Object.assign({ andamento: {}, concluidos: {}, boletins: {}, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, dados.cabecalhos);
-        rodapes = Object.assign({ andamento: {}, concluidos: {}, boletins: {}, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} }, dados.rodapes);
-        dadosFormularios = Object.assign({ boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, coflagrados: {} }, dados.dadosFormularios);
-        if (!dadosFormularios.boletins) dadosFormularios.boletins = { porQuarteirao: {} };
-        if (!dadosFormularios.coflagrados) dadosFormularios.coflagrados = {};
-
-        if (dados.liraaSelecionados && Array.isArray(dados.liraaSelecionados)) {
-          quarteiroesLiraaSelecionados = new Set(dados.liraaSelecionados.map(String));
-        } else {
-          quarteiroesLiraaSelecionados = new Set();
-        }
-        salvarSelecaoLiraa();
-
-        garantirEstruturaBoletins();
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(semanas));
-        salvarStatus(); salvarPaginas(); salvarCabecalhos(); salvarRodapes(); salvarFormularios();
-
-        document.getElementById("semanas").innerHTML = "";
-        semanaCount = 0;
-        semanas.forEach(s => criarSemana(s));
-
-        recalcular(); atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
-        atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
-        renderizarResumoIntegrado();
-        renderizarBasesIntegrado();
-        renderizarBasesLiraaIntegrado();
-        renderizarCoflagrados();
-        renderizarResumoGeral();
-
-        salvar();
+        aplicarBackupAndamentoCiclo(dados, { fonte: "manual_importar_json", enfileirarNuvem: true });
         mostrarAviso("✅ Backup restaurado e sincronizado!");
       } catch (err) {
         console.error(err);
@@ -7283,11 +8067,16 @@
       if (semEl && diaEl) {
         const selSem = semEl.querySelector(".select-semana");
         const inpD = diaEl.querySelector('input[type="date"]');
+        const idSemNum = parseInt(semEl.dataset.semana, 10) || 1;
+        const dIdxNum = parseInt(diaEl.dataset.diaIndex, 10) || 0;
+        const agoraAuto = agoraSyncMs();
         if (selSem && !selSem.value.trim()) {
-          selSem.value = `Semana ${String(semEl.dataset.semana || 1).padStart(2, "0")}`;
+          selSem.value = `Semana ${String(idSemNum).padStart(2, "0")}`;
+          marcarCarimboDiario(idSemNum, "titulo", null, agoraAuto);
         }
         if (inpD && !inpD.value.trim()) {
           inpD.value = new Date().toISOString().slice(0, 10);
+          marcarCarimboDiario(idSemNum, "data", dIdxNum, agoraAuto);
         }
         verificarBloqueioSemana(semEl);
       }
@@ -7627,7 +8416,10 @@
 
     const quarteiroesAfetadosBoletins = new Set();
     let alterouDiario = false;
+    let alterouSecoesMeta = false;
     let alterouCoflagrados = false;
+    let alterouResumo = false;
+    const agoraLimp = agoraSyncMs(ultimoTimestampLocal);
 
     celulasSelecionadas.forEach(td => {
       const inp = td.querySelector("input");
@@ -7643,6 +8435,8 @@
       }
 
       if (inp.id && (inp.id.startsWith("ag-") || inp.id.startsWith("q-") || inp.classList.contains("num"))) {
+        const mDia = inp.id.match(/^(?:ag|q|r|c|tb|pe|o)-(\d+)-\d+-\d+$/);
+        if (mDia) marcarCarimboDiario(mDia[1], "valor", inp.id, agoraLimp);
         alterouDiario = true;
       }
 
@@ -7654,17 +8448,41 @@
           const formQ = dadosFormularios.boletins.porQuarteirao[q];
           if (formQ.imoveis && formQ.imoveis[k]) {
             formQ.imoveis[k][campo] = "";
+            const im = formQ.imoveis[k];
+            const imVazio = !String(im.rua || "").trim() && !String(im.numero || "").trim() && !String(im.comp || "").trim() && !String(im.seq || "").trim() && !String(im.tipo || "").trim();
+            if (imVazio) im._clearedAtMs = agoraLimp;
+            else delete im._clearedAtMs;
+            if (!formQ._imoveisTs) formQ._imoveisTs = {};
+            formQ._imoveisTs[k] = agoraLimp;
+            formQ._resumoTs = agoraLimp;
+            formQ._ts = agoraLimp;
             quarteiroesAfetadosBoletins.add(q);
           }
         }
       }
 
-      if (inp.dataset.tipo === "coflagrados") {
+      const tipoSec = inp.dataset.tipo;
+      if (tipoSec === "coflagrados" || tipoSec === "resumo" || tipoSec === "bases") {
         const k = inp.dataset.key;
         const campo = inp.dataset.campo;
-        if (dadosFormularios.coflagrados && dadosFormularios.coflagrados[k]) {
-          dadosFormularios.coflagrados[k][campo] = inp.classList.contains("num") ? "0" : "";
-          alterouCoflagrados = true;
+        if (dadosFormularios[tipoSec]) {
+          if (!dadosFormularios[tipoSec][k]) dadosFormularios[tipoSec][k] = {};
+          const rowObj = dadosFormularios[tipoSec][k];
+          rowObj[campo] = inp.classList.contains("num") ? "" : "";
+          rowObj._ts = agoraLimp;
+          const rowVazia = !String(rowObj.q || "").trim() &&
+            ["r", "c", "tb", "pe", "o"].every(f => {
+              const v = String(rowObj[f] == null ? "" : rowObj[f]).trim();
+              return v === "" || v === "0" || v === "00";
+            });
+          if (rowVazia) rowObj._clearedAtMs = agoraLimp;
+          else delete rowObj._clearedAtMs;
+          if (!_v2Meta.secoesTs) _v2Meta.secoesTs = { resumo: {}, bases: {}, coflagrados: {} };
+          if (!_v2Meta.secoesTs[tipoSec]) _v2Meta.secoesTs[tipoSec] = {};
+          _v2Meta.secoesTs[tipoSec][k] = agoraLimp;
+          alterouSecoesMeta = true;
+          if (tipoSec === "coflagrados") alterouCoflagrados = true;
+          if (tipoSec === "resumo") alterouResumo = true;
         }
       }
     });
@@ -7674,7 +8492,6 @@
       atualizarResumoSemanal();
       atualizarTotalImoveis();
       atualizarInformados();
-      salvarComAtraso();
     }
 
     if (quarteiroesAfetadosBoletins.size > 0) {
@@ -7687,13 +8504,24 @@
         atualizarTotaisQuarteirao(q);
       });
       salvarFormularios();
-      salvarComAtraso();
     }
 
-    if (alterouCoflagrados) {
+    if (alterouSecoesMeta) {
+      salvarV2Meta();
       salvarFormularios();
-      renderizarCoflagrados();
-      salvarComAtraso();
+      if (alterouCoflagrados) renderizarCoflagrados();
+      if (alterouResumo) renderizarResumoIntegrado();
+    }
+
+    if (alterouDiario || quarteiroesAfetadosBoletins.size > 0 || alterouSecoesMeta) {
+      clearTimeout(timeoutSalvar);
+      const qList = Array.from(quarteiroesAfetadosBoletins);
+      salvar(true, {
+        scope: alterouDiario || alterouSecoesMeta ? "meta" : "bucket",
+        meta: alterouDiario || alterouSecoesMeta,
+        qKeys: qList,
+        resumo: qList.length > 0 || alterouResumo
+      });
     }
 
     if (!silencioso) {
@@ -7717,6 +8545,7 @@
     const quarteiroesAfetadosBoletins = new Set();
     let alterouDiario = false;
     let alterouCoflagrados = false;
+    const agoraPre = agoraSyncMs();
 
     celulasSelecionadas.forEach(td => {
       const inp = td.querySelector("input");
@@ -7756,6 +8585,8 @@
       }
 
       if (inp.id && (inp.id.startsWith("ag-") || inp.id.startsWith("q-") || inp.classList.contains("num"))) {
+        const mDia = inp.id.match(/^(?:ag|q|r|c|tb|pe|o)-(\d+)-\d+-\d+$/);
+        if (mDia) marcarCarimboDiario(mDia[1], "valor", inp.id, agoraPre);
         alterouDiario = true;
       }
 
@@ -7767,6 +8598,10 @@
           const formQ = dadosFormularios.boletins.porQuarteirao[q];
           if (formQ.imoveis && formQ.imoveis[k]) {
             formQ.imoveis[k][campo] = inp.value;
+            if (!formQ._imoveisTs) formQ._imoveisTs = {};
+            formQ._imoveisTs[k] = agoraPre;
+            formQ._resumoTs = agoraPre;
+            formQ._ts = agoraPre;
             quarteiroesAfetadosBoletins.add(q);
           }
         }
@@ -7775,8 +8610,13 @@
       if (inp.dataset.tipo === "coflagrados") {
         const k = inp.dataset.key;
         const campo = inp.dataset.campo;
-        if (dadosFormularios.coflagrados && dadosFormularios.coflagrados[k]) {
+        if (dadosFormularios.coflagrados) {
+          if (!dadosFormularios.coflagrados[k]) dadosFormularios.coflagrados[k] = {};
           dadosFormularios.coflagrados[k][campo] = inp.value;
+          dadosFormularios.coflagrados[k]._ts = agoraPre;
+          if (!_v2Meta.secoesTs) _v2Meta.secoesTs = { resumo: {}, bases: {}, coflagrados: {} };
+          if (!_v2Meta.secoesTs.coflagrados) _v2Meta.secoesTs.coflagrados = {};
+          _v2Meta.secoesTs.coflagrados[k] = agoraPre;
           alterouCoflagrados = true;
         }
       }
@@ -7784,7 +8624,7 @@
 
     if (alterouDiario) {
       recalcular();
-      salvarComAtraso();
+      salvarComAtraso({ scope: "meta" });
     }
 
     if (quarteiroesAfetadosBoletins.size > 0) {
@@ -7797,13 +8637,14 @@
         atualizarTotaisQuarteirao(q);
       });
       salvarFormularios();
-      salvarComAtraso();
+      salvarComAtraso({ scope: "bucket", qKeys: Array.from(quarteiroesAfetadosBoletins), resumo: true });
     }
 
     if (alterouCoflagrados) {
+      salvarV2Meta();
       salvarFormularios();
       renderizarCoflagrados();
-      salvarComAtraso();
+      salvarComAtraso({ scope: "meta" });
     }
 
     mostrarAviso(`✏️ ${count} célula(s) preenchida(s) com "${valTrim}"!`);
@@ -8368,16 +9209,22 @@
           if (n === 0) e.target.dataset.usuarioDigitou = "1"; else delete e.target.dataset.usuarioDigitou;
         } else { e.target.value = "00"; e.target.dataset.realVazio = "1"; e.target.classList.add("vazio-visual"); }
       }
+      const mDia = (e.target.id || "").match(/^(?:r|c|tb|pe|o)-(\d+)-\d+-\d+$/);
+      if (mDia) {
+        marcarCarimboDiario(mDia[1], "valor", e.target.id, agoraSyncMs());
+        salvarComAtraso({ scope: "meta" });
+      }
       recalcular();
-      salvarComAtraso();
     } else if (e.target.id && e.target.id.startsWith("q-")) {
       const raw = e.target.value.trim();
       if (/^\d+$/.test(raw)) {
         const formatado = raw.padStart(2, "0");
         if (e.target.value !== formatado) {
           e.target.value = formatado;
+          const mDiaQ = e.target.id.match(/^q-(\d+)-\d+-\d+$/);
+          if (mDiaQ) marcarCarimboDiario(mDiaQ[1], "valor", e.target.id, agoraSyncMs());
           recalcular();
-          salvarComAtraso();
+          salvarComAtraso({ scope: "meta" });
         }
       }
     } else if (e.target.dataset && e.target.dataset.campo === "q") {
@@ -8389,9 +9236,15 @@
           const t = e.target.dataset.tipo;
           const k = e.target.dataset.key;
           if (dadosFormularios[t] && dadosFormularios[t][k]) {
+            const agoraFQ = agoraSyncMs();
             dadosFormularios[t][k].q = formatado;
+            dadosFormularios[t][k]._ts = agoraFQ;
+            if (!_v2Meta.secoesTs) _v2Meta.secoesTs = { resumo: {}, bases: {}, coflagrados: {} };
+            if (!_v2Meta.secoesTs[t]) _v2Meta.secoesTs[t] = {};
+            _v2Meta.secoesTs[t][k] = agoraFQ;
+            salvarV2Meta();
             salvarFormularios();
-            salvarComAtraso();
+            salvarComAtraso({ scope: "meta", resumo: t === "resumo" });
           }
         }
       }
@@ -8406,15 +9259,65 @@
         delete e.target.dataset.realVazio; e.target.classList.remove("vazio-visual");
       }
       if (e.target.value !== "") e.target.dataset.usuarioDigitou = "1";
+      const mDia = (e.target.id || "").match(/^(?:r|c|tb|pe|o)-(\d+)-\d+-\d+$/);
+      if (mDia) marcarCarimboDiario(mDia[1], "valor", e.target.id, agoraSyncMs());
       recalcular();
-      salvarComAtraso();
+      salvarComAtraso({ scope: "meta" });
     } else if (e.target.type === "date" || e.target.id?.startsWith("ag-") || e.target.id?.startsWith("q-")) {
-      salvarComAtraso();
+      const mId = (e.target.id || "").match(/^(?:data-(\d+)-(\d+)|(?:ag|q)-(\d+)-\d+-\d+)$/);
+      if (mId) {
+        if (mId[1] !== undefined) marcarCarimboDiario(mId[1], "data", mId[2], agoraSyncMs());
+        else if (mId[3] !== undefined) marcarCarimboDiario(mId[3], "valor", e.target.id, agoraSyncMs());
+      }
+      salvarComAtraso({ scope: "meta" });
     }
   });
 
   function limparTudo() {
     if (!confirm("Tem certeza que deseja apagar TODAS as semanas?\n\n⚠️ Isso também apagará os dados na nuvem e em todos os aparelhos.")) return;
+    const agoraL = agoraSyncMs(ultimoTimestampLocal);
+    const semsAtuais = normalizarArraySemanas(coletarDados());
+    if (!_v2Meta.semanasTombstones) _v2Meta.semanasTombstones = {};
+    semsAtuais.forEach(s => {
+      if (s && s.id !== undefined) {
+        _v2Meta.semanasTombstones[String(s.id)] = { id: Number(s.id), _deleted: true, _deletedAtMs: agoraL, _ts: agoraL };
+      }
+    });
+    const pqAtuais = (dadosFormularios.boletins && dadosFormularios.boletins.porQuarteirao) || {};
+    if (!_v2Meta.boletinsTombstones) _v2Meta.boletinsTombstones = {};
+    Object.keys(pqAtuais).forEach(qk => {
+      _v2Meta.boletinsTombstones[qk] = { _ts: agoraL, _deleted: true, _deletedAtMs: agoraL, imoveis: {}, _imoveisTs: {} };
+    });
+    const statusT = {};
+    Object.keys(statusQuarteiroes || {}).forEach(qk => {
+      statusQuarteiroes[qk] = "";
+      statusT[qk] = agoraL;
+    });
+    _v2Meta.statusTs = Object.assign(_v2Meta.statusTs || {}, statusT);
+    const selT = {};
+    quarteiroesLiraaSelecionados.forEach(q => { selT[String(q)] = { sel: false, atualizadoEm: agoraL }; });
+    Object.keys(_v2Meta.liraaSelMap || {}).forEach(q => { selT[q] = { sel: false, atualizadoEm: agoraL }; });
+    _v2Meta.liraaSelMap = selT;
+    _v2Meta.diarioSemanaMeta = {};
+    ["andamento", "concluidos", "resumo", "bases", "basesliraa", "coflagrados", "resumogeral"].forEach(sec => {
+      _v2Meta.paginasTs[sec] = agoraL;
+      _v2Meta.cabecalhosTs[sec] = agoraL;
+      _v2Meta.rodapesTs[sec] = agoraL;
+    });
+
+    const secoesLimpas = { resumo: {}, bases: {}, coflagrados: {} };
+    const secoesTsLimpos = { resumo: {}, bases: {}, coflagrados: {} };
+    ["resumo", "bases", "coflagrados"].forEach(sec => {
+      const regSec = dadosFormularios[sec] || {};
+      Object.keys(regSec).forEach(rk => {
+        if (rk === "_tsMap") return;
+        secoesLimpas[sec][rk] = { q: "", r: "", c: "", tb: "", pe: "", o: "", _ts: agoraL, _clearedAtMs: agoraL };
+        secoesTsLimpos[sec][rk] = agoraL;
+      });
+    });
+    _v2Meta.secoesTs = secoesTsLimpos;
+    _v2Meta.resumoCabTs = {};
+
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_STATUS);
     localStorage.removeItem(STORAGE_PAGINAS);
@@ -8423,17 +9326,22 @@
     localStorage.removeItem(STORAGE_FORMULARIOS);
     localStorage.removeItem(STORAGE_SELECAO_BOLETINS);
     localStorage.removeItem(STORAGE_LIRAA_SELECIONADOS);
+    localStorage.removeItem(STORAGE_BACKUP_COMPLETO);
+    localStorage.removeItem("diario_backup_emergencia_v1");
     statusQuarteiroes = {};
+    Object.keys(_v2Meta.statusTs).forEach(qk => { statusQuarteiroes[qk] = ""; });
     quarteiroesLiraaSelecionados = new Set();
     cabecalhos = { andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} };
     rodapes = { andamento: {}, concluidos: {}, boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, basesliraa: {}, coflagrados: {}, resumogeral: {} };
-    dadosFormularios = { boletins: { porQuarteirao: {} }, resumo: {}, bases: {}, coflagrados: {} };
+    dadosFormularios = { boletins: { porQuarteirao: {} }, resumo: secoesLimpas.resumo, bases: secoesLimpas.bases, coflagrados: secoesLimpas.coflagrados };
     paginas = { andamento: 1, concluidos: 1, boletins: 1, resumo: 1, bases: 1, basesliraa: 1, coflagrados: 1, resumogeral: 1 };
     quarteiraoBoletinsSelecionado = null;
+    salvarV2Meta();
     document.getElementById("semanas").innerHTML = "";
     semanaCount = 0;
     criarSemana();
-    salvar(true);
+    clearTimeout(timeoutSalvar);
+    salvar(true, { scope: "all" });
     atualizarResumoSemanal(); atualizarTotalImoveis(); atualizarInformados();
     atualizarAndamento(); atualizarConcluidos(); renderizarFormularioBoletins();
     renderizarResumoIntegrado();
@@ -8739,6 +9647,27 @@
     }
   });
 
+  function flushPendenteAoSairAndamento() {
+    try {
+      if (timeoutSalvar) {
+        clearTimeout(timeoutSalvar);
+        timeoutSalvar = null;
+        salvar(true);
+      } else {
+        const eng = seEngine();
+        if (eng && eng.listPendingSyncOps && eng.listPendingSyncOps(V2_SYNC_SCOPE).length > 0) {
+          flushAndamentoSyncQueueV2(false);
+        }
+      }
+    } catch (e) {}
+  }
+  window.addEventListener("pagehide", flushPendenteAoSairAndamento);
+  window.addEventListener("beforeunload", flushPendenteAoSairAndamento);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushPendenteAoSairAndamento();
+  });
+
+  autoCarregarSeedAndamentoCicloSeNecessario();
   monitorarConexaoNuvem();
   iniciarOuvintePMCDResumo();
 </script>

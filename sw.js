@@ -1,13 +1,17 @@
-const CACHE_NAME = 'pmcd-sugarbo-v49';
+const CACHE_NAME = 'pmcd-sugarbo-v53';
 const ARQUIVOS = [
   './',
   './index.html',
   './andamento-quarteiroes.html',
   './andamento-quarteiroes-liraa.html',
+  './pmcd-sync-engine.js',
   './pmcd-firebase-bridge.js',
   './public/andamento-quarteiroes.html',
   './public/andamento-quarteiroes-liraa.html',
+  './public/pmcd-sync-engine.js',
   './public/pmcd-firebase-bridge.js',
+  './assets/aistudio/backup_lancamentos_campo_2026-11-19__2__ad7d204c.json',
+  './assets/aistudio/backup_andamento_quarteiroes_2026-11-19_43bee3f0.json',
   './firebase-applet-config.json',
   './manifest.json',
   './icon-192.png',
@@ -57,6 +61,7 @@ self.addEventListener('fetch', (e) => {
     e.request.destination === 'document' ||
     e.request.url.includes('index.html') ||
     e.request.url.includes('andamento-quarteiroes') ||
+    e.request.url.includes('pmcd-sync-engine.js') ||
     e.request.url.includes('pmcd-firebase-bridge.js')
   ) {
     e.respondWith(

@@ -1,4 +1,4 @@
-// Phase 0 Security Test Specification for PMCD Firestore Rules
+// Phase 0 Security Test Specification for PMCD Firestore Rules (Sync v2)
 // Verifies that all Dirty Dozen adversarial payloads are rejected with PERMISSION_DENIED.
 
 export const DIRTY_DOZEN_CASES = [
@@ -13,17 +13,17 @@ export const DIRTY_DOZEN_CASES = [
   },
   {
     id: 2,
-    name: 'Shadow update with ghost field on modulo document',
-    path: 'equipes/pmcd_principal/modulos/pmcd_principal',
+    name: 'Shadow update with ghost field on dominio document',
+    path: 'equipes/pmcd_principal/dominios/config_geral',
     auth: { uid: 'member_1', email: 'agente@gmail.com', email_verified: true },
     op: 'update',
-    payload: { payload: {}, versao: 2, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'member_1', isAdmin: true, updatedAt: 'SERVER_TIME' },
+    payload: { payload: {}, versao: 2, syncProtocolVersion: 2, baselineEpoch: 1, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'member_1', isAdmin: true, updatedAt: 'SERVER_TIME' },
     expected: 'PERMISSION_DENIED'
   },
   {
     id: 3,
     name: 'Email spoofing with email_verified = false',
-    path: 'equipes/pmcd_principal/modulos/pmcd_principal',
+    path: 'equipes/pmcd_principal/dominios/config_geral',
     auth: { uid: 'attacker', email: 'ricardosoares2607@gmail.com', email_verified: false },
     op: 'get',
     payload: null,
@@ -40,11 +40,11 @@ export const DIRTY_DOZEN_CASES = [
   },
   {
     id: 5,
-    name: 'Identity spoofing via atualizadoPorUid mismatch',
-    path: 'equipes/pmcd_principal/modulos/andamento_ciclo',
+    name: 'Identity spoofing via atualizadoPorUid mismatch in semana document',
+    path: 'equipes/pmcd_principal/semanas/ciclo_2026_45',
     auth: { uid: 'member_1', email: 'agente@gmail.com', email_verified: true },
     op: 'update',
-    payload: { payload: {}, versao: 2, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'admin_uid', updatedAt: 'SERVER_TIME' },
+    payload: { payload: {}, versao: 2, syncProtocolVersion: 2, baselineEpoch: 1, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'admin_uid', updatedAt: 'SERVER_TIME' },
     expected: 'PERMISSION_DENIED'
   },
   {
@@ -67,20 +67,20 @@ export const DIRTY_DOZEN_CASES = [
   },
   {
     id: 8,
-    name: 'Arbitrary moduloId outside enum allowlist',
-    path: 'equipes/pmcd_principal/modulos/modulo_falso',
+    name: 'Arbitrary andamentoId outside enum allowlist',
+    path: 'equipes/pmcd_principal/andamentos/andamento_falso',
     auth: { uid: 'ricardo_uid', email: 'ricardosoares2607@gmail.com', email_verified: true },
     op: 'create',
-    payload: { equipeId: 'pmcd_principal', moduloId: 'modulo_falso', payload: {}, versao: 1, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'ricardo_uid', createdAt: 'SERVER_TIME', updatedAt: 'SERVER_TIME' },
+    payload: { equipeId: 'pmcd_principal', andamentoId: 'andamento_falso', payload: {}, versao: 1, syncProtocolVersion: 2, baselineEpoch: 1, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'ricardo_uid', createdAt: 'SERVER_TIME', updatedAt: 'SERVER_TIME' },
     expected: 'PERMISSION_DENIED'
   },
   {
     id: 9,
-    name: 'ID poisoning with invalid characters or length > 128',
-    path: `equipes/${'a'.repeat(140)}`,
+    name: 'ID poisoning with invalid length > 128 on semana',
+    path: `equipes/pmcd_principal/semanas/${'a'.repeat(140)}`,
     auth: { uid: 'ricardo_uid', email: 'ricardosoares2607@gmail.com', email_verified: true },
     op: 'create',
-    payload: { nome: 'Equipe Poison', ownerId: 'ricardo_uid', ownerEmail: 'ricardosoares2607@gmail.com', createdAt: 'SERVER_TIME', updatedAt: 'SERVER_TIME' },
+    payload: { equipeId: 'pmcd_principal', semanaId: 'a'.repeat(140), payload: {}, versao: 1, syncProtocolVersion: 2, baselineEpoch: 1, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'ricardo_uid', createdAt: 'SERVER_TIME', updatedAt: 'SERVER_TIME' },
     expected: 'PERMISSION_DENIED'
   },
   {
@@ -94,20 +94,21 @@ export const DIRTY_DOZEN_CASES = [
   },
   {
     id: 11,
-    name: 'Uninvited member self-registration',
-    path: 'equipes/pmcd_principal/membros/intruso_uid',
-    auth: { uid: 'intruso_uid', email: 'intruso@gmail.com', email_verified: true },
-    op: 'create',
-    payload: { uid: 'intruso_uid', equipeId: 'pmcd_principal', email: 'intruso@gmail.com', nome: 'Intruso', role: 'editor', ativo: true, createdAt: 'SERVER_TIME', updatedAt: 'SERVER_TIME' },
+    name: 'OCC violation: stale or non-sequential versao increment on semana update',
+    path: 'equipes/pmcd_principal/semanas/ciclo_2026_45',
+    auth: { uid: 'member_1', email: 'agente@gmail.com', email_verified: true },
+    op: 'update',
+    existing: { versao: 5 },
+    payload: { payload: {}, versao: 5, syncProtocolVersion: 2, baselineEpoch: 1, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'member_1', updatedAt: 'SERVER_TIME' },
     expected: 'PERMISSION_DENIED'
   },
   {
     id: 12,
-    name: 'Unauthorized collection list attempt on members',
-    path: 'equipes/pmcd_principal/membros',
-    auth: { uid: 'intruso_uid', email: 'intruso@gmail.com', email_verified: true },
-    op: 'list',
-    payload: null,
+    name: 'Non-admin attempting to alter sync_config minClientVersion or baselineEpoch',
+    path: 'equipes/pmcd_principal/meta/sync_config',
+    auth: { uid: 'member_1', email: 'agente@gmail.com', email_verified: true },
+    op: 'update',
+    payload: { minClientVersion: 1, baselineEpoch: 99, versao: 2, atualizadoEmMs: 1700000000000, atualizadoPorUid: 'member_1', updatedAt: 'SERVER_TIME' },
     expected: 'PERMISSION_DENIED'
   }
 ];

@@ -182,7 +182,7 @@
     },
     "PmcdModuloDados": {
       "title": "PmcdModuloDados",
-      "description": "Documento estruturado de sincronização por módulo do sistema PMCD.",
+      "description": "Documento legado de sincronização por módulo do sistema PMCD.",
       "type": "object",
       "properties": {
         "equipeId": {
@@ -240,6 +240,268 @@
         "createdAt",
         "updatedAt"
       ]
+    },
+    "PmcdSyncMeta": {
+      "title": "PmcdSyncMeta",
+      "description": "Controle de protocolo de sincronização, época oficial e migração v2.",
+      "type": "object",
+      "properties": {
+        "equipeId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "metaId": {
+          "type": "string",
+          "enum": ["sync_config", "migracao_v2"],
+          "maxLength": 64
+        },
+        "minClientVersion": {
+          "type": "integer"
+        },
+        "baselineEpoch": {
+          "type": "integer"
+        },
+        "migratedFromLegacyV1": {
+          "type": "boolean"
+        },
+        "sourceChecksum": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "versao": {
+          "type": "integer"
+        },
+        "atualizadoEmMs": {
+          "type": "number"
+        },
+        "atualizadoPorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "atualizadoPorEmail": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "equipeId",
+        "metaId",
+        "minClientVersion",
+        "baselineEpoch",
+        "versao",
+        "atualizadoEmMs",
+        "atualizadoPorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PmcdDominioDados": {
+      "title": "PmcdDominioDados",
+      "description": "Documento granular v2 por domínio (config_geral ou relatorios_e_resumo).",
+      "type": "object",
+      "properties": {
+        "equipeId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "dominioId": {
+          "type": "string",
+          "enum": ["config_geral", "relatorios_e_resumo"],
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object"
+        },
+        "versao": {
+          "type": "integer"
+        },
+        "syncProtocolVersion": {
+          "type": "integer"
+        },
+        "baselineEpoch": {
+          "type": "integer"
+        },
+        "atualizadoEmMs": {
+          "type": "number"
+        },
+        "atualizadoPorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "atualizadoPorEmail": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "equipeId",
+        "dominioId",
+        "payload",
+        "versao",
+        "syncProtocolVersion",
+        "baselineEpoch",
+        "atualizadoEmMs",
+        "atualizadoPorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PmcdSemanaDados": {
+      "title": "PmcdSemanaDados",
+      "description": "Documento granular v2 por semana epidemiológica (Ciclo ou LIRAa).",
+      "type": "object",
+      "properties": {
+        "equipeId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "semanaId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object"
+        },
+        "versao": {
+          "type": "integer"
+        },
+        "syncProtocolVersion": {
+          "type": "integer"
+        },
+        "baselineEpoch": {
+          "type": "integer"
+        },
+        "atualizadoEmMs": {
+          "type": "number"
+        },
+        "atualizadoPorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "atualizadoPorEmail": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "equipeId",
+        "semanaId",
+        "payload",
+        "versao",
+        "syncProtocolVersion",
+        "baselineEpoch",
+        "atualizadoEmMs",
+        "atualizadoPorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PmcdAndamentoDados": {
+      "title": "PmcdAndamentoDados",
+      "description": "Documento granular v2 por meta ou balde determinístico de boletins (Ciclo e LIRAa).",
+      "type": "object",
+      "properties": {
+        "equipeId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "andamentoId": {
+          "type": "string",
+          "enum": [
+            "ciclo_meta",
+            "ciclo_b0",
+            "ciclo_b1",
+            "ciclo_b2",
+            "ciclo_b3",
+            "liraa_meta",
+            "liraa_b0",
+            "liraa_b1",
+            "liraa_b2",
+            "liraa_b3"
+          ],
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object"
+        },
+        "versao": {
+          "type": "integer"
+        },
+        "syncProtocolVersion": {
+          "type": "integer"
+        },
+        "baselineEpoch": {
+          "type": "integer"
+        },
+        "atualizadoEmMs": {
+          "type": "number"
+        },
+        "atualizadoPorUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "atualizadoPorEmail": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "equipeId",
+        "andamentoId",
+        "payload",
+        "versao",
+        "syncProtocolVersion",
+        "baselineEpoch",
+        "atualizadoEmMs",
+        "atualizadoPorUid",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -265,7 +527,23 @@
     },
     "/equipes/{equipeId}/modulos/{moduloId}": {
       "schema": { "$ref": "#/entities/PmcdModuloDados" },
-      "description": "Dados sincronizados em tempo real para cada módulo (Ciclo/LIRAa/Andamento/Reconhecimento)."
+      "description": "Coleção legada preservada para compatibilidade e rollback."
+    },
+    "/equipes/{equipeId}/meta/{metaId}": {
+      "schema": { "$ref": "#/entities/PmcdSyncMeta" },
+      "description": "Metadados de controle de versão mínima, época oficial e migração v2."
+    },
+    "/equipes/{equipeId}/dominios/{dominioId}": {
+      "schema": { "$ref": "#/entities/PmcdDominioDados" },
+      "description": "Configuração geral, programações, índices/tabela LIRAa e relatórios/resumo com OCC."
+    },
+    "/equipes/{equipeId}/semanas/{semanaId}": {
+      "schema": { "$ref": "#/entities/PmcdSemanaDados" },
+      "description": "Lançamentos diários isolados por semana epidemiológica (Ciclo/LIRAa) com OCC e tombstones."
+    },
+    "/equipes/{equipeId}/andamentos/{andamentoId}": {
+      "schema": { "$ref": "#/entities/PmcdAndamentoDados" },
+      "description": "Andamento e boletins dos quarteirões particionados em buckets com OCC."
     }
   }
 }

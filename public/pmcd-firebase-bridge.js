@@ -9,6 +9,9 @@ import {
   onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   getFirestore,
   doc,
   getDoc,
@@ -20,12 +23,13 @@ import {
   getDocs,
   onSnapshot,
   runTransaction,
-  increment,
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
 export const ADMIN_BOOTSTRAP_EMAIL = 'ricardosoares2607@gmail.com';
 export const EQUIPE_PADRAO_ID = 'pmcd_principal';
+export const SYNC_PROTOCOL_VERSION = 2;
+const CLOCK_OFFSET_STORAGE_KEY = 'pmcd_clock_offset_ms_v2';
 
 export const OperationType = {
   CREATE: 'create',
@@ -46,8 +50,53 @@ let _accessInfo = { autorizado: false, role: 'none', motivo: 'nao_autenticado', 
 const _authListeners = new Set();
 const _accessInFlight = new Map();
 const _moduloVersoes = new Map();
+const _docV2Versoes = new Map();
 const _profileEnsuredUids = new Set();
 let _quotaBloqueadaAte = 0;
+let _serverClockOffsetMs = 0;
+
+try {
+  const savedOffset = Number(localStorage.getItem(CLOCK_OFFSET_STORAGE_KEY));
+  if (Number.isFinite(savedOffset) && Math.abs(savedOffset) < 7 * 24 * 60 * 60 * 1000) {
+    _serverClockOffsetMs = Math.round(savedOffset);
+  }
+} catch (e) {}
+
+function updateServerClockOffsetFromCommit(clientMidMs, serverTsValue) {
+  try {
+    if (!serverTsValue || typeof serverTsValue.toMillis !== 'function') return;
+    const srvMs = serverTsValue.toMillis();
+    if (!Number.isFinite(srvMs) || !Number.isFinite(clientMidMs)) return;
+    const sample = Math.round(srvMs - clientMidMs);
+    if (Math.abs(sample) > 7 * 24 * 60 * 60 * 1000) return;
+    _serverClockOffsetMs = _serverClockOffsetMs === 0 ? sample : Math.round(_serverClockOffsetMs * 0.4 + sample * 0.6);
+    try {
+      localStorage.setItem(CLOCK_OFFSET_STORAGE_KEY, String(_serverClockOffsetMs));
+    } catch (e) {}
+  } catch (e) {}
+}
+
+export function getServerNowMs() {
+  return Math.round(Date.now() + _serverClockOffsetMs);
+}
+
+function recordRemoteDocClockSample(docData, fromCache, readMidMs = null) {
+  try {
+    if (!docData || typeof docData !== 'object') return;
+    if (!fromCache && docData.updatedAt && typeof docData.updatedAt.toMillis === 'function') {
+      const refMs = Number(readMidMs) || Date.now();
+      updateServerClockOffsetFromCommit(refMs, docData.updatedAt);
+    }
+    const maxDocTs = Math.max(
+      Number(docData.atualizadoEmMs) || 0,
+      Number(docData.payload?._ts) || 0,
+      Number(docData.payload?.timestamp) || 0
+    );
+    if (maxDocTs > 0 && typeof window !== 'undefined' && window.PmcdSyncEngine?.observeRemoteTs) {
+      window.PmcdSyncEngine.observeRemoteTs(maxDocTs);
+    }
+  } catch (e) {}
+}
 
 function buildAuthInfo(user) {
   return {
@@ -330,7 +379,6 @@ async function _runEnsureWorkspaceAndAccess(user) {
     return { autorizado: true, role: 'admin', motivo: 'ok', email, uid: user.uid, nome: displayName };
   }
 
-  // Usuário não-admin: verifica se já é membro ativo ou possui convite ativo por e-mail
   let memSnap = null;
   try {
     memSnap = await getDoc(membroRef);
@@ -422,6 +470,14 @@ function getStateSnapshot() {
   };
 }
 
+function getDocIdFieldForSubcol(subcol) {
+  if (subcol === 'dominios') return 'dominioId';
+  if (subcol === 'semanas') return 'semanaId';
+  if (subcol === 'andamentos') return 'andamentoId';
+  if (subcol === 'meta') return 'metaId';
+  return 'moduloId';
+}
+
 async function init() {
   if (_db && _auth) return buildApi();
 
@@ -443,10 +499,18 @@ async function init() {
   }
   _config = loadedConfig;
   _app = initializeApp(_config);
-  _db = getFirestore(_app, _config.firestoreDatabaseId);
+  try {
+    _db = initializeFirestore(
+      _app,
+      { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) },
+      _config.firestoreDatabaseId
+    );
+  } catch (cacheErr) {
+    console.warn('[PMCD Firestore] Fallback para cache em memória:', cacheErr);
+    _db = getFirestore(_app, _config.firestoreDatabaseId);
+  }
   _auth = getAuth(_app);
 
-  // Processa retorno caso este aparelho tenha usado fallback por redirect
   getRedirectResult(_auth).catch((err) => {
     console.warn('[PMCD Redirect Auth]', err);
   });
@@ -488,9 +552,236 @@ async function init() {
 function buildApi() {
   const readyPromise = Promise.resolve(true);
 
+  const observeDocGeneric = (subcol, docId, onData, onError) => {
+    const cacheKey = `${subcol}/${docId}`;
+    const path = `equipes/${EQUIPE_PADRAO_ID}/${cacheKey}`;
+    if (!_currentUser || !_accessInfo.autorizado) {
+      return () => {};
+    }
+    const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, subcol, docId);
+    let serverConfirmado = false;
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        if (!snap.metadata?.fromCache) {
+          serverConfirmado = true;
+        }
+        if (!snap.exists()) {
+          if (snap.metadata?.fromCache && !serverConfirmado) {
+            if (Date.now() < _quotaBloqueadaAte) {
+              if (typeof onError === 'function') {
+                onError(new Error('Quota exceeded: cota diária de leitura atingida temporariamente.'));
+              }
+              return;
+            }
+            getDocFromServer(ref)
+              .then((srvSnap) => {
+                serverConfirmado = true;
+                if (srvSnap.exists()) {
+                  const sd = srvSnap.data() || {};
+                  if (Number(sd.versao) > 0) {
+                    if (subcol === 'modulos') _moduloVersoes.set(docId, Number(sd.versao));
+                    else _docV2Versoes.set(cacheKey, Number(sd.versao));
+                  }
+                  onData(sd, srvSnap);
+                } else {
+                  if (subcol === 'modulos') _moduloVersoes.delete(docId);
+                  else _docV2Versoes.delete(cacheKey);
+                  onData(null, srvSnap);
+                }
+              })
+              .catch((err) => {
+                registerQuotaErrorIfAny(err);
+                if ((isQuotaError(err) || isPermissionError(err)) && typeof onError === 'function') {
+                  onError(err);
+                }
+              });
+            return;
+          }
+          if (!snap.metadata?.fromCache) {
+            if (subcol === 'modulos') _moduloVersoes.delete(docId);
+            else _docV2Versoes.delete(cacheKey);
+          }
+          onData(null, snap);
+          return;
+        }
+        const d = snap.data() || {};
+        recordRemoteDocClockSample(d, Boolean(snap.metadata?.fromCache), Date.now());
+        if (Number(d.versao) > 0) {
+          if (subcol === 'modulos') _moduloVersoes.set(docId, Number(d.versao));
+          else _docV2Versoes.set(cacheKey, Number(d.versao));
+        }
+        onData(d, snap);
+      },
+      (error) => {
+        registerQuotaErrorIfAny(error);
+        try {
+          handleFirestoreError(error, OperationType.GET, path);
+        } catch (wrapped) {
+          if (typeof onError === 'function') onError(wrapped, error);
+        }
+      }
+    );
+    return unsub;
+  };
+
+  const getDocGeneric = async (subcol, docId, preferServer = false, manual = false) => {
+    const cacheKey = `${subcol}/${docId}`;
+    const path = `equipes/${EQUIPE_PADRAO_ID}/${cacheKey}`;
+    if (!_currentUser || !_accessInfo.autorizado) return null;
+    if (preferServer && !manual && Date.now() < _quotaBloqueadaAte) {
+      throw new Error('Quota exceeded: cota diária de leitura atingida temporariamente.');
+    }
+    const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, subcol, docId);
+    try {
+      const readStartMs = Date.now();
+      let snap = null;
+      if (preferServer && Date.now() >= _quotaBloqueadaAte) {
+        snap = await getDocFromServer(ref);
+        _quotaBloqueadaAte = 0;
+      } else {
+        snap = await getDoc(ref);
+        if (!snap.exists() && Date.now() >= _quotaBloqueadaAte) {
+          try {
+            snap = await getDocFromServer(ref);
+            _quotaBloqueadaAte = 0;
+          } catch (srvErr) {
+            registerQuotaErrorIfAny(srvErr);
+          }
+        }
+      }
+      if (snap && snap.exists()) {
+        const d = snap.data() || {};
+        recordRemoteDocClockSample(d, Boolean(snap.metadata?.fromCache), Math.round((readStartMs + Date.now()) / 2));
+        if (Number(d.versao) > 0) {
+          if (subcol === 'modulos') _moduloVersoes.set(docId, Number(d.versao));
+          else _docV2Versoes.set(cacheKey, Number(d.versao));
+        }
+        return d;
+      }
+      if (snap && !snap.metadata?.fromCache) {
+        if (subcol === 'modulos') _moduloVersoes.delete(docId);
+        else _docV2Versoes.delete(cacheKey);
+      }
+      return null;
+    } catch (error) {
+      registerQuotaErrorIfAny(error);
+      if (preferServer) {
+        try {
+          const cached = await getDoc(ref);
+          if (cached.exists()) return cached.data();
+        } catch (e) {}
+      }
+      handleFirestoreError(error, OperationType.GET, path);
+    }
+  };
+
+  // Gravação transacional com OCC estrito e reconciliação automática dentro da transação
+  const commitDocV2 = async (subcol, docId, buildPayloadFn, options = {}) => {
+    const cacheKey = `${subcol}/${docId}`;
+    const path = `equipes/${EQUIPE_PADRAO_ID}/${cacheKey}`;
+    if (!_currentUser || !_accessInfo.autorizado) {
+      throw new Error('Usuário Google não autenticado ou sem acesso à equipe.');
+    }
+    const manual = Boolean(options.manual);
+    if (!manual && Date.now() < _quotaBloqueadaAte) {
+      throw new Error('Quota exceeded: envio pausado temporariamente após atingir a cota diária do Firestore.');
+    }
+
+    const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, subcol, docId);
+    const idField = getDocIdFieldForSubcol(subcol);
+    const emailAtual = String(_currentUser.email || '').toLowerCase().slice(0, 200);
+    const baselineEpoch = Math.max(0, Math.trunc(Number(options.baselineEpoch) || 1));
+
+    const tStart = Date.now();
+    let result = null;
+    try {
+      result = await runTransaction(_db, async (tx) => {
+        const snap = await tx.get(ref);
+        const remoteDoc = snap.exists() ? (snap.data() || null) : null;
+        const remoteVersao = remoteDoc ? (Number(remoteDoc.versao) || 1) : 0;
+
+        const decision = typeof buildPayloadFn === 'function'
+          ? buildPayloadFn(remoteDoc, remoteVersao)
+          : { payload: buildPayloadFn };
+
+        if (!decision || decision.skip) {
+          return {
+            skipped: true,
+            reason: decision?.reason || 'noop',
+            versao: remoteVersao,
+            remoteDoc
+          };
+        }
+
+        const payloadLimpo = sanitizeForFirestore(decision.payload) || {};
+        const approxBytes = new Blob([JSON.stringify(payloadLimpo)]).size;
+        if (approxBytes > 950000) {
+          throw new Error(`Tamanho dos dados (${Math.round(approxBytes / 1024)} KB) excede o limite de 950 KB por documento.`);
+        }
+
+        const tsMs = Number(decision.atualizadoEmMs) || getServerNowMs();
+
+        if (!snap.exists()) {
+          const novoDoc = {
+            equipeId: EQUIPE_PADRAO_ID,
+            [idField]: docId,
+            payload: payloadLimpo,
+            versao: 1,
+            syncProtocolVersion: SYNC_PROTOCOL_VERSION,
+            baselineEpoch,
+            atualizadoEmMs: tsMs,
+            atualizadoPorUid: _currentUser.uid,
+            atualizadoPorEmail: emailAtual,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+          tx.set(ref, novoDoc);
+          return { skipped: false, versao: 1, atualizadoEmMs: tsMs, payload: payloadLimpo };
+        } else {
+          const novaVersao = remoteVersao + 1;
+          tx.update(ref, {
+            payload: payloadLimpo,
+            versao: novaVersao,
+            syncProtocolVersion: SYNC_PROTOCOL_VERSION,
+            baselineEpoch,
+            atualizadoEmMs: tsMs,
+            atualizadoPorUid: _currentUser.uid,
+            atualizadoPorEmail: emailAtual,
+            updatedAt: serverTimestamp()
+          });
+          return { skipped: false, versao: novaVersao, atualizadoEmMs: tsMs, payload: payloadLimpo };
+        }
+      });
+
+      const tEnd = Date.now();
+      _quotaBloqueadaAte = 0;
+
+      if (result && !result.skipped) {
+        if (result.versao) _docV2Versoes.set(cacheKey, Number(result.versao));
+        // Amostra o carimbo do servidor sem fazer leitura extra online (usa cache local pós-commit)
+        getDoc(ref).then((postSnap) => {
+          if (postSnap.exists() && !postSnap.metadata?.hasPendingWrites) {
+            updateServerClockOffsetFromCommit(Math.round((tStart + tEnd) / 2), postSnap.data()?.updatedAt);
+          }
+        }).catch(() => {});
+      } else if (result?.remoteDoc?.updatedAt) {
+        updateServerClockOffsetFromCommit(Math.round((tStart + tEnd) / 2), result.remoteDoc.updatedAt);
+      }
+
+      return result;
+    } catch (error) {
+      registerQuotaErrorIfAny(error);
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  };
+
   return {
     ready: () => readyPromise,
     getState: () => getStateSnapshot(),
+    getSyncProtocolVersion: () => SYNC_PROTOCOL_VERSION,
+    getServerNowMs: () => getServerNowMs(),
+    getClockOffsetMs: () => _serverClockOffsetMs,
     onAuthChange: (cb) => {
       if (typeof cb !== 'function') return () => {};
       _authListeners.add(cb);
@@ -513,12 +804,8 @@ function buildApi() {
       } catch (err) {
         const code = String(err?.code || '');
         if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
-          try {
-            await signInWithRedirect(_auth, provider);
-            return { ...getStateSnapshot(), redirecting: true };
-          } catch (redirErr) {
-            throw redirErr;
-          }
+          await signInWithRedirect(_auth, provider);
+          return { ...getStateSnapshot(), redirecting: true };
         }
         throw err;
       }
@@ -562,117 +849,130 @@ function buildApi() {
       const dbid = _config?.firestoreDatabaseId || 'ai-studio-pmcdsistemaacela-40647833-ee8c-4a9c-8e9e-b08c8d3db22c';
       return `https://console.firebase.google.com/project/${pid}/firestore/databases/${dbid}/data?openUpgradeDialog=true`;
     },
-    observeModulo: (moduloId, onData, onError) => {
-      const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
-      if (!_currentUser || !_accessInfo.autorizado) {
-        return () => {};
+
+    // ============ API GRANULAR v2 (OCC + Clock Skew + Época) ============
+    observeDocV2: observeDocGeneric,
+    getDocV2: getDocGeneric,
+    commitDocV2,
+    getSyncConfig: (preferServer = false, manual = false) =>
+      getDocGeneric('meta', 'sync_config', preferServer, manual),
+    observeSyncConfig: (onData, onError) =>
+      observeDocGeneric('meta', 'sync_config', onData, onError),
+    getMigrationMeta: () => getDocGeneric('meta', 'migracao_v2', false, false),
+    publishBaselineEpoch: async ({ checksum = '', minClientVersion = SYNC_PROTOCOL_VERSION, nextEpoch = null } = {}) => {
+      const path = `equipes/${EQUIPE_PADRAO_ID}/meta/sync_config`;
+      if (!_currentUser || _accessInfo.role !== 'admin') {
+        throw new Error('Somente o administrador da equipe pode publicar uma Base Oficial.');
       }
-      const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
-      let serverConfirmado = false;
-      const unsub = onSnapshot(
-        ref,
-        (snap) => {
-          if (!snap.metadata?.fromCache) {
-            serverConfirmado = true;
-          }
+      const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'meta', 'sync_config');
+      const emailAtual = String(_currentUser.email || '').toLowerCase().slice(0, 200);
+      const tsMs = getServerNowMs();
+      try {
+        const res = await runTransaction(_db, async (tx) => {
+          const snap = await tx.get(ref);
           if (!snap.exists()) {
-            // Nunca trata ausência em cache frio como banco vazio antes de confirmar no servidor
-            if (snap.metadata?.fromCache && !serverConfirmado) {
-              if (Date.now() < _quotaBloqueadaAte) {
-                if (typeof onError === 'function') {
-                  onError(new Error('Quota exceeded: cota diária de leitura atingida temporariamente.'));
-                }
-                return;
-              }
-              getDocFromServer(ref)
-                .then((srvSnap) => {
-                  serverConfirmado = true;
-                  if (srvSnap.exists()) {
-                    const sd = srvSnap.data() || {};
-                    if (Number(sd.versao) > 0) _moduloVersoes.set(moduloId, Number(sd.versao));
-                    onData(sd, srvSnap);
-                  } else {
-                    _moduloVersoes.delete(moduloId);
-                    onData(null, srvSnap);
-                  }
-                })
-                .catch((err) => {
-                  registerQuotaErrorIfAny(err);
-                  if ((isQuotaError(err) || isPermissionError(err)) && typeof onError === 'function') {
-                    onError(err);
-                  }
-                });
-              return;
-            }
-            if (!snap.metadata?.fromCache) _moduloVersoes.delete(moduloId);
-            onData(null, snap);
-            return;
+            const ep = nextEpoch && Number(nextEpoch) >= 1 ? Math.trunc(Number(nextEpoch)) : Math.max(2, Math.trunc(tsMs / 1000));
+            tx.set(ref, {
+              equipeId: EQUIPE_PADRAO_ID,
+              metaId: 'sync_config',
+              minClientVersion: Math.max(SYNC_PROTOCOL_VERSION, Math.trunc(Number(minClientVersion) || SYNC_PROTOCOL_VERSION)),
+              baselineEpoch: ep,
+              migratedFromLegacyV1: true,
+              sourceChecksum: String(checksum || '').slice(0, 128),
+              versao: 1,
+              atualizadoEmMs: tsMs,
+              atualizadoPorUid: _currentUser.uid,
+              atualizadoPorEmail: emailAtual,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+            return { baselineEpoch: ep, versao: 1 };
+          } else {
+            const prev = snap.data() || {};
+            const prevEp = Number(prev.baselineEpoch) || 1;
+            const ep = nextEpoch && Number(nextEpoch) > prevEp
+              ? Math.trunc(Number(nextEpoch))
+              : Math.max(prevEp + 1, Math.trunc(tsMs / 1000));
+            const novaVersao = (Number(prev.versao) || 1) + 1;
+            tx.update(ref, {
+              minClientVersion: Math.max(SYNC_PROTOCOL_VERSION, Math.trunc(Number(minClientVersion) || SYNC_PROTOCOL_VERSION)),
+              baselineEpoch: ep,
+              migratedFromLegacyV1: true,
+              sourceChecksum: String(checksum || prev.sourceChecksum || '').slice(0, 128),
+              versao: novaVersao,
+              atualizadoEmMs: tsMs,
+              atualizadoPorUid: _currentUser.uid,
+              atualizadoPorEmail: emailAtual,
+              updatedAt: serverTimestamp()
+            });
+            return { baselineEpoch: ep, versao: novaVersao };
           }
-          const d = snap.data() || {};
-          if (Number(d.versao) > 0) _moduloVersoes.set(moduloId, Number(d.versao));
-          onData(d, snap);
-        },
-        (error) => {
-          registerQuotaErrorIfAny(error);
-          try {
-            handleFirestoreError(error, OperationType.GET, path);
-          } catch (wrapped) {
-            if (typeof onError === 'function') onError(wrapped, error);
-          }
-        }
-      );
-      return unsub;
-    },
-    getModuloOnce: async (moduloId) => {
-      const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
-      if (!_currentUser || !_accessInfo.autorizado) return null;
-      const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
-      try {
-        if (Date.now() < _quotaBloqueadaAte) {
-          const cached = await getDoc(ref);
-          return cached.exists() ? cached.data() : null;
-        }
-        const srvSnap = await getDocFromServer(ref);
-        if (srvSnap.exists()) {
-          const d = srvSnap.data() || {};
-          if (Number(d.versao) > 0) _moduloVersoes.set(moduloId, Number(d.versao));
-          return d;
-        }
-        return null;
-      } catch (srvErr) {
-        registerQuotaErrorIfAny(srvErr);
-        try {
-          const snap = await getDoc(ref);
-          return snap.exists() ? snap.data() : null;
-        } catch (error) {
-          registerQuotaErrorIfAny(error);
-          handleFirestoreError(error, OperationType.GET, path);
-        }
-      }
-    },
-    getModuloFromServer: async (moduloId, manual = false) => {
-      const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
-      if (!_currentUser || !_accessInfo.autorizado) return null;
-      if (!manual && Date.now() < _quotaBloqueadaAte) {
-        throw new Error('Quota exceeded: cota diária de leitura atingida temporariamente.');
-      }
-      const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
-      try {
-        const snap = await getDocFromServer(ref);
+        });
         _quotaBloqueadaAte = 0;
-        if (snap.exists()) {
-          const d = snap.data() || {};
-          if (Number(d.versao) > 0) _moduloVersoes.set(moduloId, Number(d.versao));
-          return d;
-        }
-        _moduloVersoes.delete(moduloId);
-        return null;
+        return res;
       } catch (error) {
         registerQuotaErrorIfAny(error);
-        handleFirestoreError(error, OperationType.GET, path);
+        handleFirestoreError(error, OperationType.WRITE, path);
       }
     },
-    saveModulo: async (moduloId, payloadBruto, atualizadoEmMs = Date.now(), manual = false) => {
+    markMigrationCompleted: async (checksum = '', baselineEpoch = 1) => {
+      const path = `equipes/${EQUIPE_PADRAO_ID}/meta/migracao_v2`;
+      if (!_currentUser || _accessInfo.role !== 'admin') return null;
+      const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'meta', 'migracao_v2');
+      const emailAtual = String(_currentUser.email || '').toLowerCase().slice(0, 200);
+      const tsMs = getServerNowMs();
+      try {
+        return await runTransaction(_db, async (tx) => {
+          const snap = await tx.get(ref);
+          if (!snap.exists()) {
+            tx.set(ref, {
+              equipeId: EQUIPE_PADRAO_ID,
+              metaId: 'migracao_v2',
+              minClientVersion: SYNC_PROTOCOL_VERSION,
+              baselineEpoch: Math.max(1, Math.trunc(Number(baselineEpoch) || 1)),
+              migratedFromLegacyV1: true,
+              sourceChecksum: String(checksum || '').slice(0, 128),
+              versao: 1,
+              atualizadoEmMs: tsMs,
+              atualizadoPorUid: _currentUser.uid,
+              atualizadoPorEmail: emailAtual,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+            return { versao: 1, migratedFromLegacyV1: true };
+          }
+          const prev = snap.data() || {};
+          if (prev.migratedFromLegacyV1 && prev.sourceChecksum === String(checksum || '').slice(0, 128)) {
+            return prev;
+          }
+          const novaVersao = (Number(prev.versao) || 1) + 1;
+          tx.update(ref, {
+            minClientVersion: SYNC_PROTOCOL_VERSION,
+            baselineEpoch: Math.max(1, Math.trunc(Number(baselineEpoch) || 1)),
+            migratedFromLegacyV1: true,
+            sourceChecksum: String(checksum || '').slice(0, 128),
+            versao: novaVersao,
+            atualizadoEmMs: tsMs,
+            atualizadoPorUid: _currentUser.uid,
+            atualizadoPorEmail: emailAtual,
+            updatedAt: serverTimestamp()
+          });
+          return { versao: novaVersao, migratedFromLegacyV1: true };
+        });
+      } catch (error) {
+        registerQuotaErrorIfAny(error);
+        handleFirestoreError(error, OperationType.WRITE, path);
+      }
+    },
+
+    // ============ API LEGADA PROTEGIDA POR TRANSAÇÃO OCC ============
+    observeModulo: (moduloId, onData, onError) =>
+      observeDocGeneric('modulos', moduloId, onData, onError),
+    getModuloOnce: (moduloId) =>
+      getDocGeneric('modulos', moduloId, false, false),
+    getModuloFromServer: (moduloId, manual = false) =>
+      getDocGeneric('modulos', moduloId, true, manual),
+    saveModulo: async (moduloId, payloadBruto, atualizadoEmMs = null, manual = false, mergeOnConflictFn = null) => {
       const path = `equipes/${EQUIPE_PADRAO_ID}/modulos/${moduloId}`;
       if (!_currentUser || !_accessInfo.autorizado) {
         throw new Error('Usuário Google não autenticado ou sem acesso à equipe.');
@@ -680,46 +980,29 @@ function buildApi() {
       if (!manual && Date.now() < _quotaBloqueadaAte) {
         throw new Error('Quota exceeded: envio pausado temporariamente após atingir a cota diária do Firestore.');
       }
-      const payloadLimpo = sanitizeForFirestore(payloadBruto) || {};
-      const approxBytes = new Blob([JSON.stringify(payloadLimpo)]).size;
-      if (approxBytes > 950000) {
-        throw new Error(`Tamanho dos dados (${Math.round(approxBytes / 1024)} KB) excede o limite de 950 KB por documento.`);
-      }
 
       const ref = doc(_db, 'equipes', EQUIPE_PADRAO_ID, 'modulos', moduloId);
       const emailAtual = String(_currentUser.email || '').toLowerCase().slice(0, 200);
-      const tsMs = Number(atualizadoEmMs) || Date.now();
-      const versaoAtual = _moduloVersoes.get(moduloId) || 0;
+      const tStart = Date.now();
 
-      // Caminho rápido com ZERO leituras: updateDoc com increment(1) quando o documento já existe
-      if (versaoAtual >= 1) {
-        try {
-          await updateDoc(ref, {
-            payload: payloadLimpo,
-            versao: increment(1),
-            atualizadoEmMs: tsMs,
-            atualizadoPorUid: _currentUser.uid,
-            atualizadoPorEmail: emailAtual,
-            updatedAt: serverTimestamp()
-          });
-          _quotaBloqueadaAte = 0;
-          const novaVersao = versaoAtual + 1;
-          _moduloVersoes.set(moduloId, novaVersao);
-          return { versao: novaVersao, atualizadoEmMs: tsMs };
-        } catch (updErr) {
-          const code = String(updErr?.code || '').toLowerCase();
-          if (code !== 'not-found' && !String(updErr?.message || '').toLowerCase().includes('no document to update')) {
-            registerQuotaErrorIfAny(updErr);
-            handleFirestoreError(updErr, OperationType.WRITE, path);
-          }
-          _moduloVersoes.delete(moduloId);
-        }
-      }
-
-      // Primeira criação ou documento ainda sem versão conhecida
       try {
         const res = await runTransaction(_db, async (tx) => {
           const snap = await tx.get(ref);
+          const remoteDoc = snap.exists() ? (snap.data() || null) : null;
+          let finalPayload = payloadBruto;
+          if (remoteDoc && typeof mergeOnConflictFn === 'function') {
+            finalPayload = mergeOnConflictFn(payloadBruto, remoteDoc);
+            if (finalPayload && finalPayload.__skipWrite) {
+              return { skipped: true, versao: Number(remoteDoc.versao) || 1 };
+            }
+          }
+          const payloadLimpo = sanitizeForFirestore(finalPayload) || {};
+          const approxBytes = new Blob([JSON.stringify(payloadLimpo)]).size;
+          if (approxBytes > 950000) {
+            throw new Error(`Tamanho dos dados (${Math.round(approxBytes / 1024)} KB) excede o limite de 950 KB por documento.`);
+          }
+          const tsMs = Number(atualizadoEmMs) || getServerNowMs();
+
           if (!snap.exists()) {
             tx.set(ref, {
               equipeId: EQUIPE_PADRAO_ID,
@@ -734,7 +1017,7 @@ function buildApi() {
             });
             return { versao: 1, atualizadoEmMs: tsMs };
           } else {
-            const prevVersao = Number(snap.data()?.versao) || 1;
+            const prevVersao = Number(remoteDoc?.versao) || 1;
             const novaVersao = prevVersao + 1;
             tx.update(ref, {
               payload: payloadLimpo,
@@ -747,14 +1030,21 @@ function buildApi() {
             return { versao: novaVersao, atualizadoEmMs: tsMs };
           }
         });
+        const tEnd = Date.now();
         _quotaBloqueadaAte = 0;
         if (res?.versao) _moduloVersoes.set(moduloId, Number(res.versao));
+        getDoc(ref).then((postSnap) => {
+          if (postSnap.exists() && !postSnap.metadata?.hasPendingWrites) {
+            updateServerClockOffsetFromCommit(Math.round((tStart + tEnd) / 2), postSnap.data()?.updatedAt);
+          }
+        }).catch(() => {});
         return res;
       } catch (error) {
         registerQuotaErrorIfAny(error);
         handleFirestoreError(error, OperationType.WRITE, path);
       }
     },
+
     listarConvitesGoogle: async () => {
       const path = `equipes/${EQUIPE_PADRAO_ID}/convites`;
       if (!_currentUser || _accessInfo.role !== 'admin') return [];
