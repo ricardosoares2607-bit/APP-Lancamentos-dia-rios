@@ -702,7 +702,11 @@
       "ciclo": "1",
       "dataTermino": "2026-02-06",
       "mes": "Janeiro",
-      "atividade": "ciclo"
+      "atividade": "ciclo",
+      "_deleted": true,
+      "_pinnedTombstone": true,
+      "_deletedAtMs": 1795100000000,
+      "atualizadoEm": 1795100000000
     }
   ],
   "resumoReconhecimento": {

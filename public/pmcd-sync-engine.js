@@ -76,6 +76,12 @@
     return String(v).trim() !== '';
   }
 
+  function effectiveFieldTs(val, explicitTs, fallbackObjTs) {
+    const exp = toMs(explicitTs, 0);
+    if (exp > 0) return exp;
+    return hasNonEmptyValue(val) ? toMs(fallbackObjTs, 0) : 0;
+  }
+
   function boletimImovelTemDados(im) {
     if (!im || typeof im !== 'object') return false;
     return hasNonEmptyValue(im.rua) || hasNonEmptyValue(im.numero) || hasNonEmptyValue(im.comp) ||
@@ -453,15 +459,14 @@
     const locCab = localSem.cabecalho || {};
     const locCabTs = localSem._cabTs || {};
     Object.keys(locCab).forEach((k) => {
-      const tL = toMs(locCabTs[k], (k in locCab) ? locBaseTs : 0);
-      const hasR = (k in res.cabecalho) || res._cabTs[k] !== undefined;
-      const tR = hasR ? toMs(res._cabTs[k], remBaseTs) : 0;
+      const tL = effectiveFieldTs(locCab[k], locCabTs[k], (k in locCab) ? locBaseTs : 0);
+      const tR = effectiveFieldTs(res.cabecalho[k], res._cabTs[k], remBaseTs);
       const temL = hasNonEmptyValue(locCab[k]);
       const temR = hasNonEmptyValue(res.cabecalho[k]);
       if (tL > tR || (tL === tR && temL && !temR)) {
         res.cabecalho[k] = locCab[k];
         res._cabTs[k] = tL;
-      } else if (hasR) {
+      } else if (tR > 0) {
         res._cabTs[k] = tR;
       }
     });
@@ -472,15 +477,14 @@
     const locRod = localSem.rodape || {};
     const locRodTs = localSem._rodTs || {};
     Object.keys(locRod).forEach((k) => {
-      const tL = toMs(locRodTs[k], (k in locRod) ? locBaseTs : 0);
-      const hasR = (k in res.rodape) || res._rodTs[k] !== undefined;
-      const tR = hasR ? toMs(res._rodTs[k], remBaseTs) : 0;
+      const tL = effectiveFieldTs(locRod[k], locRodTs[k], (k in locRod) ? locBaseTs : 0);
+      const tR = effectiveFieldTs(res.rodape[k], res._rodTs[k], remBaseTs);
       const temL = hasNonEmptyValue(locRod[k]);
       const temR = hasNonEmptyValue(res.rodape[k]);
       if (tL > tR || (tL === tR && temL && !temR)) {
         res.rodape[k] = locRod[k];
         res._rodTs[k] = tL;
-      } else if (hasR) {
+      } else if (tR > 0) {
         res._rodTs[k] = tR;
       }
     });
@@ -617,12 +621,13 @@
         eqR._fieldTs = { ...(eqR._fieldTs || {}) };
         ['bairro', 'estrato', 'equipe', 'supervisor', 'responsavel'].forEach((fk) => {
           if (eqL[fk] === undefined) return;
-          const fL = toMs(eqL._fieldTs?.[fk], eqLTs);
-          const hasR = (fk in eqR) || eqR._fieldTs?.[fk] !== undefined;
-          const fR = hasR ? toMs(eqR._fieldTs?.[fk], eqRTs) : 0;
+          const fL = effectiveFieldTs(eqL[fk], eqL._fieldTs?.[fk], eqLTs);
+          const fR = effectiveFieldTs(eqR[fk], eqR._fieldTs?.[fk], eqRTs);
           if (fL > fR || (fL === fR && hasNonEmptyValue(eqL[fk]) && !hasNonEmptyValue(eqR[fk]))) {
             eqR[fk] = eqL[fk];
-            eqR._fieldTs[fk] = fL;
+            if (fL > 0) eqR._fieldTs[fk] = fL;
+          } else if (fR > 0) {
+            eqR._fieldTs[fk] = fR;
           }
         });
         eqR.agentes = mergeArrayByIdWithTombstones(eqL.agentes, eqR.agentes, {
@@ -646,12 +651,13 @@
         esR._fieldTs = { ...(esR._fieldTs || {}) };
         Object.keys(esL).forEach((fk) => {
           if (fk === '_ts' || fk === '_fieldTs') return;
-          const fL = toMs(esL._fieldTs?.[fk], esLTs);
-          const hasR = (fk in esR) || esR._fieldTs?.[fk] !== undefined;
-          const fR = hasR ? toMs(esR._fieldTs?.[fk], esRTs) : 0;
+          const fL = effectiveFieldTs(esL[fk], esL._fieldTs?.[fk], esLTs);
+          const fR = effectiveFieldTs(esR[fk], esR._fieldTs?.[fk], esRTs);
           if (fL > fR || (fL === fR && hasNonEmptyValue(esL[fk]) && !hasNonEmptyValue(esR[fk]))) {
             esR[fk] = esL[fk];
-            esR._fieldTs[fk] = fL;
+            if (fL > 0) esR._fieldTs[fk] = fL;
+          } else if (fR > 0) {
+            esR._fieldTs[fk] = fR;
           }
         });
         esR._ts = Math.max(esLTs, esRTs);

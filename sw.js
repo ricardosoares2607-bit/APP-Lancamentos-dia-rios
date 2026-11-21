@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pmcd-sugarbo-v53';
+const CACHE_NAME = 'pmcd-sugarbo-v56';
 const ARQUIVOS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ARQUIVOS = [
   './public/pmcd-sync-engine.js',
   './public/pmcd-firebase-bridge.js',
   './assets/aistudio/backup_lancamentos_campo_2026-11-19__2__ad7d204c.json',
+  './assets/aistudio/backup_lancamentos_campo_LIRAA_2026-11-20_88b92b6c.json',
   './assets/aistudio/backup_andamento_quarteiroes_2026-11-19_43bee3f0.json',
   './firebase-applet-config.json',
   './manifest.json',
