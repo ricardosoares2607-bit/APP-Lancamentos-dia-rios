@@ -2604,6 +2604,600 @@
         color: #000;
       }
       #aba-quarteiroes-liraa .vazio { color: #64748b; font-style: italic; padding: 14px; background: #f8fafc; }
+
+      /* ============ RESPONSIVIDADE MOBILE E TABLET (TODAS AS TELAS) ============ */
+      html { -webkit-text-size-adjust: 100%; }
+      body:not(.autenticacao-pendente):not(.atividade-pendente):not(.modo-andamento-quarteiroes) {
+        overflow-x: clip;
+      }
+
+      @media screen and (max-width: 980px) {
+        .dash-duas-colunas {
+          grid-template-columns: 1fr;
+        }
+        #aba-resumo .area-impressao:not(.capturando-pdf) .cabecalho-campos,
+        #aba-resumo .area-impressao:not(.capturando-pdf) .cabecalho-campos.primeira-linha-cinco,
+        #aba-resumo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha,
+        #aba-resumo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha-quatro,
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos,
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos.primeira-linha-cinco,
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha,
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha-quatro {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px 12px;
+        }
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha > .campo[style*="grid-column"] {
+          grid-column: 1 / -1 !important;
+        }
+      }
+
+      @media screen and (max-width: 860px) {
+        #aba-quarteiroes-liraa {
+          padding: 10px;
+          overflow-x: visible;
+        }
+        #aba-quarteiroes-liraa .topo h1 {
+          font-size: 17px;
+        }
+        #aba-quarteiroes-liraa .topo p {
+          font-size: 12.5px;
+        }
+        #aba-quarteiroes-liraa .barra-acoes {
+          gap: 6px;
+        }
+        #aba-quarteiroes-liraa .btn {
+          min-height: 40px;
+          padding: 8px 12px;
+          font-size: 12.5px;
+        }
+        #aba-quarteiroes-liraa #conteudo-pdf {
+          width: 100%;
+        }
+        #aba-quarteiroes-liraa .folha-a4 {
+          width: 100%;
+          height: auto;
+          padding: 12px;
+          margin-bottom: 16px;
+          gap: 12px;
+        }
+        #aba-quarteiroes-liraa .grid-duplo {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        #aba-quarteiroes-liraa .coluna-tabela,
+        #aba-quarteiroes-liraa .ql-tabela-scroll {
+          display: block;
+          width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+        }
+        #aba-quarteiroes-liraa .coluna-espaco {
+          display: none;
+        }
+        #aba-quarteiroes-liraa table.tabela-dados,
+        #aba-quarteiroes-liraa table#tabela-liraa {
+          min-width: 500px;
+        }
+        #aba-quarteiroes-liraa table.tabela-dados thead th,
+        #aba-quarteiroes-liraa table#tabela-liraa thead th {
+          font-size: 10.5px;
+          padding: 6px 3px;
+        }
+        #aba-quarteiroes-liraa table.tabela-dados td,
+        #aba-quarteiroes-liraa table#tabela-liraa td {
+          font-size: 11px;
+          padding: 6px 3px;
+        }
+        #aba-quarteiroes-liraa td.liraa-calc {
+          font-size: 11.5px;
+        }
+        #aba-quarteiroes-liraa .rodape-pagina1 {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 12px;
+        }
+        #aba-quarteiroes-liraa .tabela-resumo,
+        #aba-quarteiroes-liraa .bloco-assinatura {
+          width: 100%;
+          font-size: 10px;
+        }
+        #aba-quarteiroes-liraa .tabela-resumo th,
+        #aba-quarteiroes-liraa .tabela-resumo td {
+          font-size: 10.5px;
+          padding: 5px 8px;
+        }
+        #aba-quarteiroes-liraa .rodape-pagina2 {
+          font-size: 10px;
+        }
+        #aba-quarteiroes-liraa .rodape-pagina2 > div[style*="justify-content: space-between"] {
+          flex-wrap: wrap;
+          gap: 6px 12px;
+          font-size: 10px !important;
+        }
+      }
+
+      @media screen and (max-width: 768px) {
+        header {
+          padding: 10px 14px;
+          gap: 8px;
+        }
+        header h1 {
+          font-size: 1.08rem;
+        }
+        .acoes-backup {
+          width: 100%;
+          gap: 6px;
+        }
+        .btn-backup {
+          min-height: 38px;
+          padding: 6px 10px;
+          font-size: 0.78rem;
+        }
+        .seletor-fonte-box select {
+          min-height: 32px;
+          font-size: 0.8rem;
+        }
+        nav.barra-abas-horizontal {
+          padding: 6px 8px 0;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
+        }
+        .btn-aba-nav {
+          min-height: 40px;
+          padding: 8px 12px;
+          font-size: 0.82rem;
+        }
+        .banner-modo-leitura {
+          padding: 8px 12px;
+          z-index: 95;
+          font-size: 0.78rem;
+        }
+        .btn-banner-login,
+        .btn-banner-info {
+          min-height: 36px;
+          padding: 6px 10px;
+          font-size: 0.76rem;
+        }
+        #telaAndamentoQuarteiroes .andamento-topbar {
+          padding: 8px 12px;
+          gap: 8px;
+        }
+        #telaAndamentoQuarteiroes .andamento-topbar .escolha-marca {
+          white-space: normal;
+          font-size: 0.9rem;
+        }
+        #telaAndamentoQuarteiroes .andamento-topbar .escolha-acoes-topo {
+          width: 100%;
+          gap: 6px;
+        }
+        #telaAndamentoQuarteiroes .andamento-topbar .escolha-btn-topo {
+          min-height: 38px;
+          padding: 6px 10px;
+          font-size: 0.78rem;
+        }
+        main {
+          padding: 10px 10px 24px;
+        }
+        .conteudo-aba h2 {
+          font-size: 1.08rem;
+        }
+        .faixa-programacao,
+        .barra-semanas,
+        .barra-lancamento-dia {
+          padding: 8px 10px;
+          gap: 8px;
+        }
+        .btn,
+        .btn-semana {
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+        }
+        .abas-dias {
+          -webkit-overflow-scrolling: touch;
+          gap: 6px;
+        }
+        .aba-dia {
+          min-height: 40px;
+          min-width: 82px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .bloco-tabela {
+          -webkit-overflow-scrolling: touch;
+        }
+        .cabecalho-agente {
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .cabecalho-agente .acoes button {
+          min-height: 34px;
+          padding: 5px 10px;
+          font-size: 0.76rem;
+        }
+        .bloco-tabela td.celula-input input,
+        .bloco-tabela td.celula-input select {
+          min-height: 28px;
+          font-size: 0.78rem;
+        }
+        .resumo-wrapper,
+        .dash-svg-wrap,
+        .tabela-agentes-config-wrap {
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+        }
+        #aba-sugarbo .tabela-programacao {
+          min-width: 580px;
+        }
+        #aba-sugarbo .chip-semana-ciclo {
+          min-height: 30px;
+          padding: 4px 8px;
+          font-size: 0.76rem;
+        }
+        #aba-sugarbo #btnInativarManualSE,
+        #aba-sugarbo #btnReativarManualSE {
+          min-height: 38px;
+          padding: 6px 12px !important;
+        }
+        #aba-sugarbo .form-prog-linha input,
+        #aba-sugarbo .form-prog-linha select {
+          min-height: 38px;
+          font-size: 14px;
+        }
+        #aba-resumo-reconhecimento #areaResumoReconhecimento:not(.capturando-pdf) .reconhecimento-tabelas-wrap {
+          flex-direction: column;
+          gap: 14px;
+        }
+        #aba-resumo-reconhecimento .reconhecimento-tabela-bloco {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        #aba-resumo-reconhecimento .reconhecimento-tabela {
+          min-width: 340px;
+          font-size: 0.8rem;
+        }
+        #aba-resumo-reconhecimento .reconhecimento-tabela input {
+          min-height: 30px;
+          font-size: 0.84rem;
+        }
+        #aba-resumo-reconhecimento .reconhecimento-cabecalho-grid .rc-item input {
+          min-height: 38px;
+          font-size: 14px;
+        }
+        #aba-relatorio-campo .rc-campo input,
+        #aba-relatorio-campo .rc-campo select,
+        #aba-relatorio-campo .rc-textarea {
+          min-height: 40px;
+          font-size: 14.5px;
+        }
+        #aba-relatorio-campo .rc-checkboxes label {
+          min-height: 36px;
+          font-size: 0.86rem;
+        }
+        #aba-relatorio-campo .rc-checkboxes input[type="checkbox"] {
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
+        }
+        .qd-checkbox {
+          width: 24px;
+          height: 24px;
+        }
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .btn-adicionar,
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .btn-remover {
+          min-height: 36px;
+          padding: 6px 12px;
+        }
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .cabecalho-identificacao .campo-cab input,
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .cabecalho-identificacao .campo-cab select {
+          min-height: 34px;
+          font-size: 13px;
+        }
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .tabela-imoveis .input-numero,
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .tabela-depositos .input-numero-dep,
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .tabela-depositos .input-numero-dep-nao-inspec,
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .tabela-depositos .input-numero-dep-inspec {
+          max-width: 44px;
+          min-height: 26px;
+          font-size: 10.5px;
+        }
+      }
+
+      @media screen and (max-width: 600px) {
+        #aba-lancamentos .barra-semanas .nav-semana {
+          width: 100%;
+          justify-content: space-between;
+        }
+        #aba-lancamentos .barra-semanas > div:last-child {
+          width: 100%;
+        }
+        .label-semana {
+          min-width: 0;
+          flex: 1;
+        }
+        #aba-lancamentos #blocoProgCicloVisita {
+          width: 100%;
+        }
+        #aba-lancamentos #blocoProgCicloVisita .grupo-data {
+          flex: 1 1 calc(50% - 4px);
+          min-width: 135px;
+        }
+        #aba-lancamentos #blocoProgCicloVisita .grupo-data input,
+        #aba-lancamentos #blocoProgCicloVisita .grupo-data select {
+          width: 100% !important;
+          min-height: 36px;
+          font-size: 14px;
+        }
+        .barra-lancamento-dia .grupo-campos {
+          width: 100%;
+        }
+        .barra-lancamento-dia .grupo-data {
+          flex: 1 1 100%;
+        }
+        #programadosDia {
+          width: 90px !important;
+          min-height: 36px;
+          font-size: 14px;
+        }
+        #btnAdicionarAgente {
+          width: 100%;
+          min-height: 42px;
+        }
+        .area-impressao:not(.capturando-pdf),
+        #aba-resumo .area-impressao:not(.capturando-pdf),
+        #aba-ciclo .area-impressao:not(.capturando-pdf) {
+          padding: 12px 10px !important;
+        }
+        .faixa-periodo-semana {
+          gap: 10px 14px;
+          padding: 10px 12px;
+        }
+        .faixa-periodo-semana .campo input {
+          min-height: 34px;
+        }
+        .rodape-resumo,
+        #aba-resumo .rodape-resumo {
+          flex-direction: column;
+          gap: 12px;
+        }
+        .campo-rodape,
+        #aba-resumo .campo-rodape {
+          max-width: 100%;
+          width: 100%;
+          flex-wrap: wrap;
+        }
+        .font-assinatura-select {
+          margin-left: 0;
+          max-width: 100%;
+          min-height: 36px;
+        }
+        #aba-config-equipe .config-card {
+          padding: 14px 12px;
+        }
+        #aba-config-equipe .form-cadastro-agente input {
+          min-width: 0;
+          width: 100%;
+          min-height: 42px;
+          font-size: 15px;
+        }
+        #aba-config-equipe .btn-cadastrar-agente {
+          width: 100%;
+          min-height: 42px;
+        }
+        #aba-config-equipe .config-grupo input,
+        #aba-config-estrato .config-grupo input {
+          min-height: 40px;
+          font-size: 15px;
+        }
+        #aba-config-equipe .btn-acao-cfg {
+          min-height: 36px;
+          padding: 6px 10px;
+        }
+        #aba-config-estrato #areaConfigEstrato:not(.capturando-pdf) {
+          padding: 12px 10px !important;
+        }
+        #aba-config-estrato input[type="text"],
+        #aba-config-estrato input[type="date"],
+        #aba-config-estrato textarea {
+          font-size: 15px;
+          min-height: 38px;
+        }
+        #aba-relatorio-campo .rc-campo-largo {
+          grid-column: auto !important;
+        }
+        #aba-quarteiroes-designados .qd-total-card {
+          gap: 10px 14px;
+          padding: 12px;
+        }
+        #aba-quarteiroes-designados .qd-total-card .qd-total-item {
+          min-width: calc(50% - 8px);
+        }
+        .dash-grid {
+          grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+          gap: 10px;
+        }
+        .dash-card {
+          padding: 12px;
+        }
+        .dash-card .dash-valor {
+          font-size: 1.4rem;
+        }
+        .dash-painel {
+          padding: 12px;
+        }
+        .dash-filtros {
+          width: 100%;
+        }
+        .dash-filtros input,
+        .dash-filtros select {
+          min-height: 38px;
+          font-size: 14px;
+        }
+        .legenda-item-2d {
+          min-width: min(160px, 100%);
+          max-width: 100%;
+        }
+        .modal-overlay,
+        .modal {
+          padding: 8px;
+        }
+        .modal-conteudo {
+          padding: 14px 12px;
+          max-height: 92vh;
+          border-radius: 10px;
+        }
+        .btn-fechar-modal {
+          min-width: 40px;
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+        }
+        .modal-conteudo input,
+        .modal-conteudo select {
+          min-height: 38px;
+          font-size: 14.5px;
+        }
+        #modalSincronizarAndamento [style*="grid-template-columns: 1fr 1fr"] {
+          grid-template-columns: 1fr !important;
+        }
+      }
+
+      @media screen and (max-width: 520px) {
+        #aba-resumo .area-impressao:not(.capturando-pdf) .cabecalho-campos,
+        #aba-resumo .area-impressao:not(.capturando-pdf) .cabecalho-campos.primeira-linha-cinco,
+        #aba-resumo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha,
+        #aba-resumo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha-quatro,
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos,
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos.primeira-linha-cinco,
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha,
+        #aba-ciclo .area-impressao:not(.capturando-pdf) .cabecalho-campos.segunda-linha-quatro {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 8px;
+        }
+        .campo input,
+        #aba-resumo .campo input {
+          font-size: 0.9rem;
+          min-height: 34px;
+          padding: 4px 6px;
+        }
+        #aba-quarteiroes-liraa .tabela-identificacao tr {
+          display: grid;
+          grid-template-columns: 44% 56%;
+        }
+        #aba-quarteiroes-liraa .tabela-identificacao td {
+          width: auto !important;
+          min-height: 32px;
+          display: flex;
+          align-items: center;
+          font-size: 11px;
+        }
+        #aba-quarteiroes-liraa .tabela-identificacao td.campo-label {
+          white-space: normal;
+          font-size: 10px;
+        }
+        #aba-config-estrato [style*="minmax(280px, 1fr)"] {
+          grid-template-columns: 1fr !important;
+        }
+        #telaEscolhaAtividade .escolha-topo {
+          padding: 10px 12px;
+          gap: 8px;
+        }
+        #telaEscolhaAtividade .escolha-marca {
+          white-space: normal;
+          font-size: 0.9rem;
+        }
+        #telaEscolhaAtividade .escolha-corpo {
+          padding: 18px 12px 28px;
+        }
+        #telaEscolhaAtividade .escolha-card {
+          padding: 16px 14px;
+          gap: 14px;
+        }
+        #telaEscolhaAtividade .escolha-cta {
+          min-height: 44px;
+        }
+        #cardSeedCicloEscolha button,
+        #cardSeedAndamentoCicloEscolha button,
+        #cardSeedLiraaEscolha button {
+          width: 100%;
+          white-space: normal !important;
+          min-height: 42px;
+        }
+        #telaLoginSistema {
+          padding: 10px;
+        }
+        #telaLoginSistema .login-topo {
+          padding: 18px 14px 16px;
+        }
+        #telaLoginSistema .login-corpo {
+          padding: 18px 14px 20px;
+          gap: 14px;
+        }
+        #telaLoginSistema .login-input-wrap input {
+          font-size: 16px;
+          min-height: 44px;
+        }
+        #telaLoginSistema .btn-olho-senha {
+          min-width: 40px;
+          min-height: 40px;
+        }
+        #telaAberturaAnimada {
+          padding: 16px;
+        }
+        #telaAberturaAnimada .abertura-emblema-wrap {
+          width: 96px;
+          height: 96px;
+          margin-bottom: 16px;
+        }
+        #telaAberturaAnimada .abertura-svg-escudo {
+          width: 88px;
+          height: 88px;
+        }
+        #telaAberturaAnimada .btn-pular-abertura {
+          right: 14px;
+          bottom: 14px;
+          min-height: 44px;
+          padding: 10px 16px;
+        }
+        #modalCompartilharAcesso [style*="display: flex; gap: 8px"] {
+          flex-wrap: wrap;
+        }
+        #modalCompartilharAcesso #inputLinkLeitura,
+        #modalCompartilharAcesso #inputLinkAdmin {
+          min-width: 100%;
+        }
+        #modalCompartilharAcesso #btnCopiarLinkLeitura,
+        #modalCompartilharAcesso #btnCopiarLinkAdmin {
+          width: 100%;
+        }
+        #modalGerenciarUsuarios #novoEmailGoogleAutorizado,
+        #modalGerenciarUsuarios #novoNomeGoogleAutorizado,
+        #modalGerenciarUsuarios #btnAdicionarEmailGoogle {
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+      }
+
+      @media screen and (max-width: 420px) {
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .ocorrencias {
+          grid-template-columns: 1fr;
+          font-size: 11.5px;
+        }
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .ocorrencias-item {
+          min-height: 30px;
+        }
+        #aba-indices-liraa #formularioDiario:not(.capturando-pdf) .ocorrencias-item input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+        }
+      }
     </style>
   </head>
   <body class="fonte-merriweather autenticacao-pendente atividade-pendente">
@@ -2999,7 +3593,7 @@
             <span style="font-size:0.8rem; font-weight:700; color:#334155;" id="tituloTabelaProgramacoes">📋 Programações Cadastradas (clique em uma semana SE para <strong>Inativar</strong> ou <strong>Reativar</strong>):</span>
             <span style="font-size:0.74rem; color:#64748b;">✅ Verde = Ativa na Atividade &nbsp;|&nbsp; 🚫 Vermelha = Inativa</span>
           </div>
-          <div style="max-height: 420px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; margin-top:8px;">
+          <div style="max-height: 420px; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #cbd5e1; border-radius: 8px; margin-top:8px;">
             <table class="tabela-programacao">
               <thead><tr><th>Ano</th><th>Atividade</th><th id="thProgCiclo">Ciclo</th><th>Período e Semanas Programadas</th><th>Ações</th></tr></thead>
               <tbody id="corpoTabelaProg"></tbody>
@@ -4286,6 +4880,7 @@
                 </tr>
               </table>
 
+              <div class="ql-tabela-scroll">
               <table id="tabela-liraa">
                 <colgroup>
                   <col style="width:6%"><col style="width:9%"><col style="width:17%"><col style="width:7%"><col style="width:7%">
@@ -4299,6 +4894,7 @@
                 </thead>
                 <tbody></tbody>
               </table>
+              </div>
             </div>
           </div>
 
