@@ -989,6 +989,7 @@
     }
 
     /* Empilhamento vertical das duplas de tabelas (ocupam 100% da largura útil) */
+    #painel-andamento .dupla-tabelas,
     #painel-concluidos .dupla-tabelas,
     #painel-boletins .dupla-tabelas,
     #painel-resumo .dupla-tabelas,
@@ -1002,6 +1003,7 @@
     }
 
     /* Cada tabela ganha seu próprio contêiner com rolagem horizontal independente */
+    #painel-andamento .tabela-dupla,
     #painel-concluidos .tabela-dupla,
     #painel-boletins .tabela-dupla,
     #painel-resumo .tabela-dupla,
@@ -1018,9 +1020,16 @@
       background: #fff;
       padding: 1px;
       box-sizing: border-box;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    #painel-andamento .tabela-dupla table {
+      min-width: 480px;
+      width: 100%;
     }
 
     /* Reduzir o padding da página A4 no mobile para não desperdiçar espaço lateral */
+    #painel-andamento .pagina-a4,
     #painel-concluidos .pagina-a4,
     #painel-boletins .pagina-a4,
     #painel-resumo .pagina-a4,
@@ -1037,6 +1046,7 @@
     }
 
     /* Células e linhas mais altas para toque confortável em smartphones */
+    #painel-andamento .tabela-dupla th,
     #painel-concluidos .tabela-dupla th,
     #painel-boletins .tabela-dupla th,
     #painel-resumo .tabela-dupla th,
@@ -1049,6 +1059,7 @@
       padding: 6px 3px !important;
       font-size: 11px !important;
     }
+    #painel-andamento .tabela-dupla td,
     #painel-concluidos .tabela-dupla td,
     #painel-boletins .tabela-dupla td,
     #painel-resumo .tabela-dupla td,
@@ -1062,6 +1073,7 @@
       font-size: 11.5px !important;
     }
 
+    #painel-andamento .tabela-dupla td input,
     #painel-concluidos .tabela-dupla td input,
     #painel-boletins .tabela-dupla td input,
     #painel-resumo .tabela-dupla td input,
@@ -1073,6 +1085,7 @@
     }
 
     /* Otimização de colunas específicas para não espremer textos */
+    #painel-andamento .tabela-dupla .col-num-linha,
     #painel-concluidos .tabela-dupla .col-num-linha,
     #painel-resumo .tabela-dupla .col-num-linha,
     #painel-bases .tabela-dupla .col-num-linha,
@@ -1081,6 +1094,7 @@
       width: 46px !important;
       min-width: 46px !important;
     }
+    #painel-andamento .tabela-dupla .col-q,
     #painel-concluidos .tabela-dupla .col-q,
     #painel-resumo .tabela-dupla .col-q,
     #painel-bases .tabela-dupla .col-q,
@@ -1089,15 +1103,18 @@
       min-width: 105px !important;
       font-size: 11.5px !important;
     }
+    #painel-andamento .btn-sim,
+    #painel-andamento .btn-nao,
     #painel-concluidos .btn-voltar {
-      padding: 3px 8px !important;
+      padding: 4px 8px !important;
       font-size: 11px !important;
       border-radius: 4px !important;
-      margin-left: 6px !important;
+      margin: 1px 3px !important;
       display: inline-block !important;
       vertical-align: middle !important;
       cursor: pointer !important;
     }
+    #painel-andamento .tabela-dupla .col-n,
     #painel-concluidos .tabela-dupla .col-n,
     #painel-resumo .tabela-dupla .col-n,
     #painel-bases .tabela-dupla .col-n,
@@ -1107,6 +1124,7 @@
       width: 38px !important;
       font-size: 11px !important;
     }
+    #painel-andamento .tabela-dupla .col-t,
     #painel-concluidos .tabela-dupla .col-t,
     #painel-resumo .tabela-dupla .col-t,
     #painel-bases .tabela-dupla .col-t,
@@ -1174,6 +1192,7 @@
     }
 
     /* Cabeçalhos de formulário em 2 colunas nos celulares */
+    #painel-andamento .cabecalho-tabelas,
     #painel-concluidos .cabecalho-tabelas,
     #painel-boletins .cabecalho-tabelas,
     #painel-resumo .cabecalho-tabelas,
@@ -1185,6 +1204,7 @@
       gap: 6px 10px !important;
       padding: 8px !important;
     }
+    #painel-andamento .cabecalho-tabelas .campo-total,
     #painel-concluidos .cabecalho-tabelas .campo-total,
     #painel-boletins .cabecalho-tabelas .campo-total,
     #painel-resumo .cabecalho-tabelas .campo-total,
@@ -1196,6 +1216,7 @@
     }
 
     /* Rodapés de página no mobile */
+    #painel-andamento .rodape-pagina,
     #painel-concluidos .rodape-pagina,
     #painel-boletins .rodape-pagina,
     #painel-resumo .rodape-pagina,
@@ -1206,6 +1227,7 @@
       gap: 10px !important;
       margin-top: 10px !important;
     }
+    #painel-andamento .rodape-pagina .campo-rodape,
     #painel-concluidos .rodape-pagina .campo-rodape,
     #painel-boletins .rodape-pagina .campo-rodape,
     #painel-resumo .rodape-pagina .campo-rodape,
@@ -1214,6 +1236,59 @@
     #painel-coflagrados .rodape-pagina .campo-rodape,
     #painel-resumogeral .rodape-pagina .campo-rodape {
       flex: 1 1 100% !important;
+    }
+
+    /* Rolagem horizontal nas tabelas Semanal, Total e Informados */
+    .tabela-semanal,
+    .tabela-total,
+    .tabela-informados {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      border-radius: 6px;
+    }
+    .tabela-semanal table { min-width: 540px; }
+    .tabela-total table { min-width: 680px; }
+    .tabela-informados table { min-width: 720px; }
+
+    /* Diário de quarteirões e botões no mobile */
+    .abas {
+      gap: 4px;
+    }
+    .aba {
+      padding: 9px 11px;
+      min-height: 40px;
+      font-size: 11.5px;
+    }
+    button.acao,
+    .btn-vis-liraa {
+      min-height: 40px;
+      padding: 9px 12px;
+      font-size: 12.5px;
+    }
+    .container {
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      gap: 10px;
+    }
+    .dia {
+      min-width: min(330px, calc(100vw - 44px));
+      scroll-snap-align: start;
+    }
+    .dia h3 {
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 13px;
+    }
+    .dia input {
+      min-height: 28px;
+      font-size: 13px;
+    }
+    .card-resumo-liraa,
+    .titulo-secao-liraa {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
     }
 
     /* Barra de seleção de quarteirão nos Boletins no mobile */
@@ -1287,7 +1362,47 @@
     }
   }
 
+  @media screen and (max-width: 640px) {
+    body {
+      margin: 8px;
+    }
+    h1 {
+      font-size: 17px !important;
+    }
+    .painel {
+      padding: 8px;
+    }
+    .barra-topo,
+    .barra-botoes-tabelas {
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .semana {
+      padding: 8px;
+      margin-bottom: 16px;
+    }
+    .semana-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      text-align: center;
+    }
+    .barra-flutuante-selecao {
+      bottom: 10px;
+      border-radius: 16px;
+      padding: 8px 10px;
+      width: calc(100vw - 16px);
+      gap: 6px;
+    }
+    .barra-flutuante-selecao button {
+      min-height: 36px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+    }
+  }
+
   @media screen and (max-width: 480px) {
+    #painel-andamento .cabecalho-tabelas,
     #painel-concluidos .cabecalho-tabelas,
     #painel-boletins .cabecalho-tabelas,
     #painel-resumo .cabecalho-tabelas,
@@ -1297,6 +1412,7 @@
     #painel-resumogeral .cabecalho-tabelas {
       grid-template-columns: 1fr !important;
     }
+    #painel-andamento .cabecalho-tabelas .campo-total,
     #painel-concluidos .cabecalho-tabelas .campo-total,
     #painel-boletins .cabecalho-tabelas .campo-total,
     #painel-resumo .cabecalho-tabelas .campo-total,
@@ -1305,6 +1421,20 @@
     #painel-coflagrados .cabecalho-tabelas .campo-total,
     #painel-resumogeral .cabecalho-tabelas .campo-total {
       grid-column: span 1 !important;
+    }
+    .barra-filtro {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .barra-filtro input {
+      width: 100%;
+      min-height: 40px;
+      font-size: 15px;
+    }
+    .barra-topo button.acao,
+    .barra-botoes-tabelas button.acao {
+      flex: 1 1 calc(50% - 6px);
     }
   }
 

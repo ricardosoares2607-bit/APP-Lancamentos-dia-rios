@@ -3064,6 +3064,10 @@
           min-height: 38px;
           font-size: 14.5px;
         }
+        .modal-conteudo code {
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
         #modalSincronizarAndamento [style*="grid-template-columns: 1fr 1fr"] {
           grid-template-columns: 1fr !important;
         }
@@ -3513,15 +3517,15 @@
           <div class="dash-duas-colunas">
             <div class="dash-painel">
               <div class="dash-painel-header">
-                <h3>📊 Produção de Imóveis por Semana</h3>
-                <span class="dash-painel-badge verde">Visitas / Ciclo</span>
+                <h3 id="dashPanel1Titulo">📊 Produção de Imóveis por Semana</h3>
+                <span id="dashPanel1Badge" class="dash-painel-badge verde">Visitas / Ciclo</span>
               </div>
               <div class="dash-svg-wrap" id="dashGraficoSemanas"></div>
             </div>
             <div class="dash-painel">
               <div class="dash-painel-header">
-                <h3>📉 Evolução das Pendências por Semana</h3>
-                <span class="dash-painel-badge vermelho">Pendências / Ciclo</span>
+                <h3 id="dashPanel2Titulo">📉 Evolução das Pendências por Semana</h3>
+                <span id="dashPanel2Badge" class="dash-painel-badge vermelho">Pendências / Ciclo</span>
               </div>
               <div class="dash-svg-wrap" id="dashGraficoPendencias"></div>
             </div>
@@ -3531,15 +3535,15 @@
           <div class="dash-duas-colunas">
             <div class="dash-painel">
               <div class="dash-painel-header">
-                <h3>🏠 Situação dos Imóveis</h3>
-                <span class="dash-painel-badge azul">Informados vs Restantes</span>
+                <h3 id="dashPanel3Titulo">🏠 Situação dos Imóveis</h3>
+                <span id="dashPanel3Badge" class="dash-painel-badge azul">Informados vs Restantes</span>
               </div>
               <div class="dash-pizza-container" id="dashGraficoPizzaImoveis"></div>
             </div>
             <div class="dash-painel">
               <div class="dash-painel-header">
-                <h3>🧱 Situação dos Quarteirões</h3>
-                <span class="dash-painel-badge ambar">Designados vs Restantes</span>
+                <h3 id="dashPanel4Titulo">🧱 Situação dos Quarteirões</h3>
+                <span id="dashPanel4Badge" class="dash-painel-badge ambar">Designados vs Restantes</span>
               </div>
               <div class="dash-pizza-container" id="dashGraficoPizzaQuarteiroes"></div>
             </div>
@@ -3548,8 +3552,8 @@
           <!-- Tabela Resumo por Semana com Quarteirões Concluídos -->
           <div class="dash-painel">
             <div class="dash-painel-header">
-              <h3>📅 Resumo por semana</h3>
-              <span class="dash-painel-badge verde">Quarteirões Concluídos & Indicadores</span>
+              <h3 id="dashPanel5Titulo">📅 Resumo por semana</h3>
+              <span id="dashPanel5Badge" class="dash-painel-badge verde">Quarteirões Concluídos & Indicadores</span>
             </div>
             <div class="tabela-agentes-config-wrap">
               <table class="dash-tabela" id="dashTabelaSemanas"></table>
@@ -4440,11 +4444,11 @@
         </div>
       </section>
       <section id="aba-config-estrato" class="conteudo-aba">
-        <h2>🗺️ Configuração do Estrato</h2>
+        <h2 id="tituloAbaConfigEstrato">🗺️ Configuração do Estrato</h2>
         <div class="estrato-container">
           <div class="barra-semanas" style="margin-bottom: 0;">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span style="font-weight: 700; color: #166534;">📍 Território & Quarteirões</span>
+              <span id="subtituloBarraEstrato" style="font-weight: 700; color: #166534;">📍 Território & Quarteirões</span>
               <span id="badgeEstratoStatus" class="badge-aviso-atividade ciclo" style="font-size: 0.78rem;">💾 Salvo automaticamente</span>
             </div>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -4457,14 +4461,14 @@
           <div class="area-impressao" id="areaConfigEstrato" style="padding: 22px 24px;">
             <div class="cabecalho-resumo" style="margin-bottom: 16px; padding-bottom: 14px;">
               <div class="titulo-doc">PROGRAMA MUNICIPAL DE CONTROLE DA DENGUE - PMCD</div>
-              <div class="subtitulo-doc">CONFIGURAÇÃO E CARACTERIZAÇÃO DO ESTRATO</div>
-              <p style="font-size: 0.8rem; color: #475569; text-align: center; margin-top: 4px;">Levantamento territorial, controle de quarteirões e segurança operacional para equipes de campo.</p>
+              <div class="subtitulo-doc" id="subtituloConfigEstratoDoc">CONFIGURAÇÃO E CARACTERIZAÇÃO DO ESTRATO</div>
+              <p id="descConfigEstratoDoc" style="font-size: 0.8rem; color: #475569; text-align: center; margin-top: 4px;">Levantamento territorial, controle de quarteirões e segurança operacional para equipes de campo.</p>
             </div>
 
             <div class="config-card" style="margin-bottom: 16px; border: 1.5px solid #cbd5e1;">
               <div class="config-card-header">
-                <h3>🏛️ Localização e Identificação do Estrato</h3>
-                <p>Identificação do município, distrito sanitário, bairro e número do estrato.</p>
+                <h3 id="tituloLocEstrato">🏛️ Localização e Identificação do Estrato</h3>
+                <p id="descLocEstrato">Identificação do município, distrito sanitário, bairro e número do estrato.</p>
               </div>
               <div class="config-grid-campos" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                 <div class="config-grupo">
@@ -4490,8 +4494,8 @@
               <div class="config-card-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                   <div>
-                    <h3>🧱 Quarteirões do Estrato</h3>
-                    <p>Total de quarteirões, classificação de segurança e imóveis estimados por categoria.</p>
+                    <h3 id="tituloQuartEstrato">🧱 Quarteirões do Estrato</h3>
+                    <p id="descQuartEstrato">Total de quarteirões, classificação de segurança e imóveis estimados por categoria.</p>
                   </div>
                   <div id="badgeValidaQuart" class="badge-contagem-agentes" style="font-size: 0.8rem;">—</div>
                 </div>
@@ -4500,7 +4504,7 @@
               <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                   <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <label for="estratoQuartTotal" style="font-weight: 800; color: #14532d; font-size: 0.95rem;">🧱 Quarteirões Total:</label>
+                    <label id="labelEstratoQuartTotal" for="estratoQuartTotal" style="font-weight: 800; color: #14532d; font-size: 0.95rem;">🧱 Quarteirões Total:</label>
                     <input type="text" inputmode="numeric" id="estratoQuartTotal" data-estrato="quarteiroesTotal" placeholder="0" style="width: 100px; padding: 6px 10px; border: 2px solid #16a34a; border-radius: 6px; font-weight: 800; font-size: 1rem; color: #14532d; text-align: center;" />
                     <button type="button" class="btn btn-mini" id="btnAutoSomarQuart" style="padding: 6px 12px; font-size: 0.78rem;">⚡ Somar Categorias para o Total</button>
                   </div>
@@ -4510,7 +4514,7 @@
                   </div>
                   <div style="font-size: 0.8rem; color: #475569;" id="txtSomaCategorias">Soma das categorias: 0</div>
                 </div>
-                <div style="margin-top: 12px;">
+                <div id="estratoDistribuicaoWrap" style="margin-top: 12px;">
                   <div style="display: flex; justify-content: space-between; font-size: 0.74rem; font-weight: 700; color: #475569; margin-bottom: 4px;">
                     <span>Distribuição de Acesso:</span>
                     <span id="txtDistribuicaoPct">0% Livres • 0% Parciais • 0% Conflagrados</span>
@@ -4524,7 +4528,7 @@
               </div>
 
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
-                <div class="estrato-card-seguranca livres">
+                <div class="estrato-card-seguranca livres" id="cardEstratoLivres">
                   <div class="estrato-card-header-seg">
                     <span class="estrato-card-titulo-seg livres">🟢 Quarteirões Livres</span>
                     <span class="estrato-card-pct livres" id="pctQuartLivres">0,0%</span>
@@ -4544,7 +4548,7 @@
                   <span style="font-size: 0.7rem; color: #15803d;">Quarteirões com livre acesso e circulação segura da equipe.</span>
                 </div>
 
-                <div class="estrato-card-seguranca parciais">
+                <div class="estrato-card-seguranca parciais" id="cardEstratoParciais">
                   <div class="estrato-card-header-seg">
                     <span class="estrato-card-titulo-seg parciais">🟡 Parcialmente Conflagrados</span>
                     <span class="estrato-card-pct parciais" id="pctQuartParciais">0,0%</span>
@@ -4564,7 +4568,7 @@
                   <span style="font-size: 0.7rem; color: #b45309;">Acesso com atenção, exigindo horários específicos ou acompanhamento.</span>
                 </div>
 
-                <div class="estrato-card-seguranca conflagrados">
+                <div class="estrato-card-seguranca conflagrados" id="cardEstratoConflagrados">
                   <div class="estrato-card-header-seg">
                     <span class="estrato-card-titulo-seg conflagrados">🔴 Quarteirões Conflagrados</span>
                     <span class="estrato-card-pct conflagrados" id="pctQuartConflagrados">0,0%</span>
@@ -4881,19 +4885,19 @@
               </table>
 
               <div class="ql-tabela-scroll">
-              <table id="tabela-liraa">
-                <colgroup>
-                  <col style="width:6%"><col style="width:9%"><col style="width:17%"><col style="width:7%"><col style="width:7%">
-                  <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:17%"><col style="width:16%">
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th>Nº</th><th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
-                    <th>PE</th><th>O</th><th>TOTAL</th><th class="col-liraa">LIRAa</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
+                <table id="tabela-liraa">
+                  <colgroup>
+                    <col style="width:6%"><col style="width:9%"><col style="width:17%"><col style="width:7%"><col style="width:7%">
+                    <col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:17%"><col style="width:16%">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>Nº</th><th>Posição</th><th>Quarteirão</th><th>R</th><th>C</th><th>TB</th>
+                      <th>PE</th><th>O</th><th>TOTAL</th><th class="col-liraa">LIRAa</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -5804,6 +5808,43 @@
         setTxt("labelCorrCiclo", ehLiraa ? "LIRAa:" : "Ciclo:");
         setTxt("tituloModalGerenciarSemanas", ehLiraa ? "🗓️ Gerenciar Semanas do LIRAa" : "🗓️ Gerenciar Semanas do Ciclo de Visita");
 
+        setTxt("tituloAbaConfigEstrato", ehLiraa ? "🔬 Configuração do Estrato — LIRAa" : "🗺️ Configuração do Estrato");
+        setTxt("subtituloBarraEstrato", ehLiraa ? "🔬 Território & Amostra LIRAa" : "📍 Território & Quarteirões");
+        const subEstEl = document.getElementById("subtituloBarraEstrato");
+        if (subEstEl) subEstEl.style.color = ehLiraa ? "#1e3a8a" : "#166534";
+        const bdgEst = document.getElementById("badgeEstratoStatus");
+        if (bdgEst) bdgEst.className = `badge-aviso-atividade ${ehLiraa ? "liraa" : "ciclo"}`;
+        setTxt("btnSalvarEstrato", ehLiraa ? "💾 Salvar Estrato LIRAa" : "💾 Salvar Estrato");
+        setTxt("btnSincronizarEstrato", ehLiraa ? "🔄 Puxar da Tabela LIRAa" : "🔄 Sincronizar com Equipe");
+        setTxt("btnImprimirPDFEstrato", ehLiraa ? "🖨️ Baixar PDF Estrato LIRAa" : "🖨️ Baixar PDF do Estrato");
+        setTxt("subtituloConfigEstratoDoc", ehLiraa ? "CONFIGURAÇÃO E CARACTERIZAÇÃO DO ESTRATO — LIRAa" : "CONFIGURAÇÃO E CARACTERIZAÇÃO DO ESTRATO");
+        setTxt("descConfigEstratoDoc", ehLiraa ? "Levantamento territorial, controle de quarteirões e parâmetros exclusivos da atividade LIRAa (independentes do Ciclo de Visita)." : "Levantamento territorial, controle de quarteirões e segurança operacional para equipes de campo.");
+        setTxt("tituloLocEstrato", ehLiraa ? "🏛️ Localização e Identificação do Estrato (LIRAa)" : "🏛️ Localização e Identificação do Estrato");
+        setTxt("descLocEstrato", ehLiraa ? "Identificação do município, distrito sanitário, bairro e estrato exclusivos para o LIRAa." : "Identificação do município, distrito sanitário, bairro e número do estrato.");
+        setTxt("tituloQuartEstrato", ehLiraa ? "🧱 Quarteirões do Estrato (LIRAa)" : "🧱 Quarteirões do Estrato");
+        setTxt("descQuartEstrato", ehLiraa ? "Quarteirões selecionados, relação de quarteirões livres e imóveis estimados para o levantamento LIRAa." : "Total de quarteirões, classificação de segurança e imóveis estimados por categoria.");
+        setTxt("labelEstratoQuartTotal", ehLiraa ? "🧱 Quarteirões Selecionados:" : "🧱 Quarteirões Total:");
+        const toggleDisp = (id, visivel) => { const el = document.getElementById(id); if (el) el.style.display = visivel ? "" : "none"; };
+        toggleDisp("cardEstratoParciais", !ehLiraa);
+        toggleDisp("cardEstratoConflagrados", !ehLiraa);
+        toggleDisp("estratoDistribuicaoWrap", !ehLiraa);
+        toggleDisp("btnAutoSomarQuart", !ehLiraa);
+        toggleDisp("txtSomaCategorias", !ehLiraa);
+        const inpImovTotEst = document.getElementById("estratoTotalImoveis");
+        if (inpImovTotEst) inpImovTotEst.title = ehLiraa ? "Calculado automaticamente a partir dos Imóveis Estimados (LIRAa)" : "Calculado automaticamente: Livres + Parciais + Conflagrados";
+
+        setTxt("dashPanel1Titulo", ehLiraa ? "🔬 Imóveis Inspecionados por Semana (LIRAa)" : "📊 Produção de Imóveis por Semana");
+        setTxt("dashPanel2Titulo", ehLiraa ? "🧪 Depósitos Encontrados vs Focados por Tipo (A1–E)" : "📉 Evolução das Pendências por Semana");
+        setTxt("dashPanel3Titulo", ehLiraa ? "🎯 Cobertura da Amostra LIRAa (Imóveis)" : "🏠 Situação dos Imóveis");
+        setTxt("dashPanel4Titulo", ehLiraa ? "📐 Situação dos Quarteirões — LIRAa" : "🧱 Situação dos Quarteirões");
+        setTxt("dashPanel5Titulo", ehLiraa ? "🔬 Resumo Semanal — Índices & Amostras LIRAa" : "📅 Resumo por semana");
+        const setBadge = (id, cls, txt) => { const el = document.getElementById(id); if (el) { el.className = `dash-painel-badge ${cls}`; el.textContent = txt; } };
+        setBadge("dashPanel1Badge", ehLiraa ? "azul" : "verde", ehLiraa ? "Amostra LIRAa" : "Visitas / Ciclo");
+        setBadge("dashPanel2Badge", ehLiraa ? "vermelho" : "vermelho", ehLiraa ? "Focos / LIRAa" : "Pendências / Ciclo");
+        setBadge("dashPanel3Badge", "azul", ehLiraa ? "Amostra vs Inspecionados" : "Informados vs Restantes");
+        setBadge("dashPanel4Badge", "ambar", ehLiraa ? "Sorteados vs Trabalhados" : "Designados vs Restantes");
+        setBadge("dashPanel5Badge", ehLiraa ? "azul" : "verde", ehLiraa ? "IIP, IB, Focos & Quarteirões" : "Quarteirões Concluídos & Indicadores");
+
         const progAt = document.getElementById("progAtividade");
         if (progAt) progAt.value = alvo;
 
@@ -5933,6 +5974,7 @@
         }
         sincronizarPeriodosSemanasCiclo(alvo);
         ajustarSemanaAtivaParaProgramacao(false);
+        window._dashUltimaAtividade = null;
         atualizarInterfaceAtividade(alvo);
         document.body.classList.remove("atividade-pendente");
         const tela = document.getElementById("telaEscolhaAtividade");
@@ -5949,6 +5991,7 @@
           verificarEAtualizarBadgeAtividade();
           renderizarCabecalhoResumo();
           renderizarRodape();
+          if (typeof renderizarConfigEstrato === "function") renderizarConfigEstrato();
           if (alvo === "liraa" && typeof renderizarIndicesLiraa === "function") renderizarIndicesLiraa();
           if (alvo === "liraa" && typeof window._sincronizarQuarteiroesLiraaComBoletins === "function") window._sincronizarQuarteiroesLiraaComBoletins();
         } catch(e) { console.error("[SelecaoAtividade]", e); }
@@ -6301,7 +6344,7 @@
         semanas: {}, semanasLiraa: {},
         programacao: [], ciclosConfig: {},
         ciclo: { cabecalho: {}, rodape: {} }, cicloLiraa: { cabecalho: {}, rodape: {} },
-        configEquipe: null, configEstrato: null,
+        configEquipe: null, configEstrato: null, configEstratoLiraa: null,
         relatoriosCampo: [], _migracaoObsCiclo: false,
         quarteiroesConcluidos: {},
         _ultimaSemanaPorAtividade: { ciclo: "", liraa: "" }
@@ -6597,6 +6640,18 @@
         }
         if (!estado.semanas || typeof estado.semanas !== "object") estado.semanas = {};
         return estado.semanas;
+      }
+      function chaveEstratoAtivo(at = null) {
+        const alvo = (at || (estado && estado.atividadeAtiva) || "ciclo") === "liraa" ? "liraa" : "ciclo";
+        return alvo === "liraa" ? "configEstratoLiraa" : "configEstrato";
+      }
+      function estratoAtivo(at = null) {
+        const alvo = (at || (estado && estado.atividadeAtiva) || "ciclo") === "liraa" ? "liraa" : "ciclo";
+        const chave = alvo === "liraa" ? "configEstratoLiraa" : "configEstrato";
+        if (!estado[chave] || typeof estado[chave] !== "object") {
+          estado[chave] = obterConfigEstratoPadrao(alvo);
+        }
+        return estado[chave];
       }
       function semana() { const r = repoAtivo(); if (!r[estado.semanaAtiva]) { const k = Object.keys(r); if (k.length > 0) estado.semanaAtiva = k[0]; else { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, estado.atividadeAtiva || "ciclo", "1"); estado.semanaAtiva = s; } } return r[estado.semanaAtiva]; }
       function diaAtual() { const s = semana(); if (!s || !s.dias) return null; if (!s.dias[estado.diaAtivo]) estado.diaAtivo = "segunda"; return s.dias[estado.diaAtivo]; }
@@ -7384,7 +7439,8 @@
         });
         return {
           configEquipe: est.configEquipe ? JSON.parse(JSON.stringify(est.configEquipe)) : obterConfigEquipePadrao(),
-          configEstrato: est.configEstrato ? JSON.parse(JSON.stringify(est.configEstrato)) : obterConfigEstratoPadrao(),
+          configEstrato: est.configEstrato ? JSON.parse(JSON.stringify(est.configEstrato)) : obterConfigEstratoPadrao("ciclo"),
+          configEstratoLiraa: est.configEstratoLiraa ? JSON.parse(JSON.stringify(est.configEstratoLiraa)) : obterConfigEstratoPadrao("liraa"),
           ciclosConfig: est.ciclosConfig ? JSON.parse(JSON.stringify(est.ciclosConfig)) : {},
           programacao: Array.isArray(est.programacao) ? JSON.parse(JSON.stringify(est.programacao)) : [],
           usuariosPermitidos: Array.isArray(est.usuariosPermitidos) ? JSON.parse(JSON.stringify(est.usuariosPermitidos)) : [],
@@ -7407,13 +7463,14 @@
           : remotePayload;
         if (!merged) return false;
         const antes = JSON.stringify({
-          configEquipe: est.configEquipe, configEstrato: est.configEstrato, ciclosConfig: est.ciclosConfig,
-          programacao: est.programacao, usuariosPermitidos: est.usuariosPermitidos, semanasInativas: est.semanasInativas,
-          indicesLiraaForm: est.indicesLiraaForm, quarteiroesLiraaTabela: est.quarteiroesLiraaTabela,
-          ciclo: est.ciclo, cicloLiraa: est.cicloLiraa
+          configEquipe: est.configEquipe, configEstrato: est.configEstrato, configEstratoLiraa: est.configEstratoLiraa,
+          ciclosConfig: est.ciclosConfig, programacao: est.programacao, usuariosPermitidos: est.usuariosPermitidos,
+          semanasInativas: est.semanasInativas, indicesLiraaForm: est.indicesLiraaForm,
+          quarteiroesLiraaTabela: est.quarteiroesLiraaTabela, ciclo: est.ciclo, cicloLiraa: est.cicloLiraa
         });
         if (merged.configEquipe) est.configEquipe = merged.configEquipe;
         if (merged.configEstrato) est.configEstrato = merged.configEstrato;
+        if (merged.configEstratoLiraa) est.configEstratoLiraa = merged.configEstratoLiraa;
         if (merged.ciclosConfig) est.ciclosConfig = merged.ciclosConfig;
         if (Array.isArray(merged.programacao)) est.programacao = merged.programacao;
         if (Array.isArray(merged.usuariosPermitidos)) {
@@ -7451,10 +7508,10 @@
           try { seEngine()?.enqueueSyncOp?.("principal", "dominios", "config_geral", { dirtyKeys: ["programacao"], updatedAtMs: tsFix }); } catch (e) {}
         }
         const depois = JSON.stringify({
-          configEquipe: est.configEquipe, configEstrato: est.configEstrato, ciclosConfig: est.ciclosConfig,
-          programacao: est.programacao, usuariosPermitidos: est.usuariosPermitidos, semanasInativas: est.semanasInativas,
-          indicesLiraaForm: est.indicesLiraaForm, quarteiroesLiraaTabela: est.quarteiroesLiraaTabela,
-          ciclo: est.ciclo, cicloLiraa: est.cicloLiraa
+          configEquipe: est.configEquipe, configEstrato: est.configEstrato, configEstratoLiraa: est.configEstratoLiraa,
+          ciclosConfig: est.ciclosConfig, programacao: est.programacao, usuariosPermitidos: est.usuariosPermitidos,
+          semanasInativas: est.semanasInativas, indicesLiraaForm: est.indicesLiraaForm,
+          quarteiroesLiraaTabela: est.quarteiroesLiraaTabela, ciclo: est.ciclo, cicloLiraa: est.cicloLiraa
         });
         return antes !== depois;
       }
@@ -7560,7 +7617,8 @@
         if (!estado.quarteiroesConcluidos || typeof estado.quarteiroesConcluidos !== "object") estado.quarteiroesConcluidos = {};
         if (!estado.resumoReconhecimento || typeof estado.resumoReconhecimento !== "object") estado.resumoReconhecimento = obterResumoReconhecimentoPadrao();
         if (!estado.configEquipe) estado.configEquipe = obterConfigEquipePadrao();
-        if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
+        if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao("ciclo");
+        if (!estado.configEstratoLiraa) estado.configEstratoLiraa = obterConfigEstratoPadrao("liraa");
         autoCompletarConfigEquipeEEstrato(estado);
         aplicarExclusoesPermanentesSistema(estado);
       }
@@ -7574,9 +7632,11 @@
         atualizarTotais();
         renderizarTabelaProgramacao();
         renderizarConfigEquipe();
+        if (typeof renderizarConfigEstrato === "function") renderizarConfigEstrato();
         renderizarListaRelatoriosCampo();
         renderizarResumoReconhecimento();
         try { if (estado.atividadeAtiva === "liraa" || document.getElementById("aba-indices-liraa")?.classList.contains("ativo")) renderizarIndicesLiraa(); } catch(e) {}
+        try { if (document.getElementById("aba-dashboard")?.classList.contains("ativo")) renderizarDashboard(); } catch(e) {}
         validarSessaoAposSync();
         if (typeof atualizarEstatisticasEscolhaAtividade === "function") atualizarEstatisticasEscolhaAtividade();
       }
@@ -7687,7 +7747,7 @@
               semanas: {}, semanasLiraa: {}, _semanasTombstones: {}, programacao: [], usuariosPermitidos: [],
               semanasInativas: {}, ciclosConfig: {}, relatoriosCampo: [], quarteiroesConcluidos: {},
               resumoReconhecimento: obterResumoReconhecimentoPadrao(),
-              configEquipe: obterConfigEquipePadrao(), configEstrato: obterConfigEstratoPadrao(),
+              configEquipe: obterConfigEquipePadrao(), configEstrato: obterConfigEstratoPadrao("ciclo"), configEstratoLiraa: obterConfigEstratoPadrao("liraa"),
               atividadeAtiva: estado?.atividadeAtiva || "ciclo", diaAtivo: "segunda"
             };
             const api = _pmcdBridgeApi || window.PmcdFirebase;
@@ -7926,10 +7986,10 @@
           const res = JSON.parse(JSON.stringify(nuvem));
           const cfgMerged = eng.mergeConfigGeralPayload(extrairPayloadConfigGeral(local), extrairPayloadConfigGeral(nuvem));
           Object.assign(res, {
-            configEquipe: cfgMerged.configEquipe, configEstrato: cfgMerged.configEstrato, ciclosConfig: cfgMerged.ciclosConfig,
-            programacao: cfgMerged.programacao, usuariosPermitidos: cfgMerged.usuariosPermitidos, semanasInativas: cfgMerged.semanasInativas,
-            indicesLiraaForm: cfgMerged.indicesLiraaForm, quarteiroesLiraaTabela: cfgMerged.quarteiroesLiraaTabela,
-            ciclo: cfgMerged.ciclo, cicloLiraa: cfgMerged.cicloLiraa
+            configEquipe: cfgMerged.configEquipe, configEstrato: cfgMerged.configEstrato, configEstratoLiraa: cfgMerged.configEstratoLiraa,
+            ciclosConfig: cfgMerged.ciclosConfig, programacao: cfgMerged.programacao, usuariosPermitidos: cfgMerged.usuariosPermitidos,
+            semanasInativas: cfgMerged.semanasInativas, indicesLiraaForm: cfgMerged.indicesLiraaForm,
+            quarteiroesLiraaTabela: cfgMerged.quarteiroesLiraaTabela, ciclo: cfgMerged.ciclo, cicloLiraa: cfgMerged.cicloLiraa
           });
           const relMerged = eng.mergeRelatoriosEResumoPayload(extrairPayloadRelatoriosEResumo(local), extrairPayloadRelatoriosEResumo(nuvem));
           res.relatoriosCampo = relMerged.relatoriosCampo;
@@ -8497,7 +8557,8 @@
         if (estado._migracaoObsCiclo === undefined) estado._migracaoObsCiclo = false;
         if (!estado.configEquipe) estado.configEquipe = obterConfigEquipePadrao();
         else if (!Array.isArray(estado.configEquipe.agentes)) estado.configEquipe.agentes = NOMES_AGENTES_PADRAO.map(nome => ({ id: "ag_" + Date.now() + "_" + Math.random().toString(36).slice(2,6), nome, ativo: true }));
-        if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
+        if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao("ciclo");
+        if (!estado.configEstratoLiraa) estado.configEstratoLiraa = obterConfigEstratoPadrao("liraa");
         if (!estado.resumoReconhecimento || typeof estado.resumoReconhecimento !== "object") estado.resumoReconhecimento = obterResumoReconhecimentoPadrao();
         const r = repoAtivo();
         if (Object.keys(r).length === 0) { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, estado.atividadeAtiva, "1"); estado.semanaAtiva = s; }
@@ -8579,16 +8640,18 @@
             d.configEquipe.agentes.forEach(ag => { if (ag && !ag.atualizadoEm) ag.atualizadoEm = agora; });
           }
         }
-        if (d.configEstrato && typeof d.configEstrato === "object") {
-          if (!d.configEstrato._fieldTs || typeof d.configEstrato._fieldTs !== "object") d.configEstrato._fieldTs = {};
-          Object.keys(d.configEstrato).forEach(fk => {
-            if (fk === "_ts" || fk === "_fieldTs") return;
-            if (String(d.configEstrato[fk] ?? "").trim() !== "") {
-              if (!Number(d.configEstrato._fieldTs[fk])) d.configEstrato._fieldTs[fk] = agora;
-            }
-          });
-          d.configEstrato._ts = agora;
-        }
+        ["configEstrato", "configEstratoLiraa"].forEach(chaveEst => {
+          if (d[chaveEst] && typeof d[chaveEst] === "object") {
+            if (!d[chaveEst]._fieldTs || typeof d[chaveEst]._fieldTs !== "object") d[chaveEst]._fieldTs = {};
+            Object.keys(d[chaveEst]).forEach(fk => {
+              if (fk === "_ts" || fk === "_fieldTs") return;
+              if (String(d[chaveEst][fk] ?? "").trim() !== "") {
+                if (!Number(d[chaveEst]._fieldTs[fk])) d[chaveEst]._fieldTs[fk] = agora;
+              }
+            });
+            d[chaveEst]._ts = agora;
+          }
+        });
         autoCompletarConfigEquipeEEstrato(d);
         if (d.ciclo && typeof d.ciclo === "object") d.ciclo._ts = agora;
         if (d.cicloLiraa && typeof d.cicloLiraa === "object") d.cicloLiraa._ts = agora;
@@ -8672,7 +8735,10 @@
           preservarAtividadeAtual = true
         } = opcoes;
         if (!temDadosLocaisReais(estado)) {
-          return aplicarDadosImportadosNoEstado(rawObj, {
+          const seedIsolado = JSON.parse(JSON.stringify(rawObj));
+          // O backup LIRAa traz configEstrato herdado do Ciclo; nunca espelhar isso no configEstratoLiraa
+          if (!seedIsolado.configEstratoLiraa) seedIsolado.configEstratoLiraa = obterConfigEstratoPadrao("liraa");
+          return aplicarDadosImportadosNoEstado(seedIsolado, {
             fonte,
             enfileirarNuvem,
             flagKey: SEED_LIRAA_BACKUP_FLAG,
@@ -8710,6 +8776,9 @@
           estado.quarteiroesLiraaTabela = JSON.parse(JSON.stringify(d.quarteiroesLiraaTabela));
         }
         if (d.cicloLiraa) estado.cicloLiraa = JSON.parse(JSON.stringify(d.cicloLiraa));
+        if (d.configEstratoLiraa && !estado.configEstratoLiraa?._ts) {
+          estado.configEstratoLiraa = JSON.parse(JSON.stringify(d.configEstratoLiraa));
+        }
         if (d.configEquipe) {
           if (!estado.configEquipe || !preservarAtividadeAtual || atAnterior === "liraa" || !localStorage.getItem(SEED_LIRAA_BACKUP_FLAG)) {
             const locEq = estado.configEquipe || {};
@@ -9410,7 +9479,11 @@
       function calcularStatusQuarteiroes() {
         const mapa = extrairQuarteiroesCiclo();
         if (!estado.quarteiroesConcluidos) estado.quarteiroesConcluidos = {};
-        const programados = num(estado.configEstrato?.quarteiroesLivresQtd) + num(estado.configEstrato?.quarteiroesParciaisQtd);
+        const estAt = estratoAtivo();
+        const ehLiraa = (estado?.atividadeAtiva || "ciclo") === "liraa";
+        const programados = ehLiraa
+          ? (num(estAt?.quarteiroesTotal) || num(estAt?.quarteiroesLivresQtd))
+          : (num(estAt?.quarteiroesLivresQtd) + num(estAt?.quarteiroesParciaisQtd));
         let concluidos = 0, emAndamento = 0, precisaRevisao = 0;
         const detalhes = [];
         mapa.forEach((info, q) => {
@@ -9453,8 +9526,12 @@
       }
       // Total de quarteirões = Livres + Parciais + Conflagrados
       function calcularTotalQuarteiroes() {
-        const est = estado.configEstrato || {};
-        return num(est.quarteiroesLivresQtd) + num(est.quarteiroesParciaisQtd) + num(est.quarteiroesConflagradosQtd);
+        const est = estratoAtivo() || {};
+        if ((estado?.atividadeAtiva || "ciclo") === "liraa") {
+          return num(est.quarteiroesTotal) || num(est.quarteiroesLivresQtd);
+        }
+        const somaCat = num(est.quarteiroesLivresQtd) + num(est.quarteiroesParciaisQtd) + num(est.quarteiroesConflagradosQtd);
+        return somaCat > 0 ? somaCat : num(est.quarteiroesTotal);
       }
 
       function dashObterFiltros() {
@@ -9468,28 +9545,44 @@
         const col = repoAtivo(at);
         const cfg = obterDatasCicloEfetivas(ano, ciclo, at);
         const si = Number(cfg.semanaInicio), st = Number(cfg.semanaTermino);
-        let ks = [];
-        if (si && st && si <= st) { for (let s = si; s <= st; s++) ks.push(String(s)); }
-        else { ks = Object.keys(col || {}).filter(k => normalizarNumeroCiclo(col[k]?.cabecalho?.ciclo) === ciclo); }
-        return ks.filter(k => !semanaEstaInativa(k, ano, at));
+        const setKs = new Set();
+        if (si && st && si <= st) {
+          for (let s = si; s <= st; s++) setKs.add(String(s));
+        }
+        if (at === "liraa" || !si || !st || si > st) {
+          Object.keys(col || {}).forEach(k => {
+            const sem = col[k];
+            if (!sem || sem._deleted) return;
+            const sAno = obterAnoSemana(sem);
+            if (ano && sAno && Number(sAno) !== Number(ano)) return;
+            if (normalizarNumeroCiclo(sem?.cabecalho?.ciclo) === ciclo) setKs.add(String(k));
+          });
+        }
+        return Array.from(setKs)
+          .filter(k => !semanaEstaInativa(k, ano, at))
+          .sort((a, b) => Number(a) - Number(b));
       }
       function dashAgregarCiclo(ano, ciclo) {
         const at = (estado && estado.atividadeAtiva) || "ciclo";
         const col = repoAtivo(at);
         const semanas = dashSemanasDoCiclo(ano, ciclo);
-        const agg = { semanas: semanas.length, diasProd: 0, PROGRAMADOS: 0, TRABALHADO: 0, TOTAL: 0, INFORMADOS: 0, PENDENCIAS: 0, RECUPERADOS: 0, TRATADOS_GERAL: 0, SUPERVISAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, porSemana: [], porAgente: {} };
+        const agg = { semanas: semanas.length, diasProd: 0, PROGRAMADOS: 0, TRABALHADO: 0, R: 0, C: 0, TB: 0, PE: 0, O: 0, TOTAL: 0, INFORMADOS: 0, PENDENCIAS: 0, RECUPERADOS: 0, TRATADOS_GERAL: 0, SUPERVISAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, porSemana: [], porAgente: {} };
         TIPOS_DEPOSITOS.forEach(t => { agg.DEP[t] = 0; agg.DEP_FOCADOS_TIPO[t] = 0; });
         semanas.forEach(sk => {
           const tS = calcularTotaisSemana(sk, col);
           if (tS) {
-            agg.diasProd += tS.diasComProducao; agg.PROGRAMADOS += tS.PROGRAMADOS; agg.TRABALHADO += tS.TRABALHADO; agg.TOTAL += tS.TOTAL; agg.INFORMADOS += tS.INFORMADOS; agg.PENDENCIAS += tS.PENDENCIAS; agg.RECUPERADOS += (tS.RECUPERADOS || 0); agg.TRATADOS_GERAL += tS.TRATADOS_GERAL; agg.SUPERVISAO += tS.SUPERVISAO;
+            agg.diasProd += tS.diasComProducao; agg.PROGRAMADOS += tS.PROGRAMADOS; agg.TRABALHADO += tS.TRABALHADO;
+            agg.R += tS.R || 0; agg.C += tS.C || 0; agg.TB += tS.TB || 0; agg.PE += tS.PE || 0; agg.O += tS.O || 0;
+            agg.TOTAL += tS.TOTAL; agg.INFORMADOS += tS.INFORMADOS; agg.PENDENCIAS += tS.PENDENCIAS; agg.RECUPERADOS += (tS.RECUPERADOS || 0); agg.TRATADOS_GERAL += tS.TRATADOS_GERAL; agg.SUPERVISAO += tS.SUPERVISAO;
             TIPOS_DEPOSITOS.forEach(t => {
               agg.DEP[t] += tS.DEP[t] || 0;
               agg.DEP_FOCADOS_TIPO[t] += (tS.DEP_FOCADOS_TIPO && tS.DEP_FOCADOS_TIPO[t]) || 0;
             });
             agg.DEP_TOTAL += tS.DEP_TOTAL || 0; agg.DEP_TRATADOS += tS.DEP_TRATADOS || 0; agg.DEP_GRAMAS += tS.DEP_GRAMAS || 0;
             agg.DEP_FOCADOS += tS.DEP_FOCADOS || 0; agg.DEP_AMOSTRAS += tS.DEP_AMOSTRAS || 0;
-            agg.porSemana.push({ semana: sk, total: tS.TOTAL, programados: tS.PROGRAMADOS, trabalhado: tS.TRABALHADO, recuperados: (tS.RECUPERADOS || 0), rendimento: tS.RENDIMENTO, ip: tS.IP, pend: tS.PENDENCIAS, depFocados: tS.DEP_FOCADOS || 0 });
+            const iipSem = tS.TOTAL > 0 ? (100 * (tS.DEP_FOCADOS || 0) / tS.TOTAL) : 0;
+            const ibSem = tS.TOTAL > 0 ? (100 * (tS.DEP_FOCADOS || 0) / tS.TOTAL) : 0;
+            agg.porSemana.push({ semana: sk, total: tS.TOTAL, r: tS.R || 0, c: tS.C || 0, tb: tS.TB || 0, pe: tS.PE || 0, o: tS.O || 0, programados: tS.PROGRAMADOS, trabalhado: tS.TRABALHADO, recuperados: (tS.RECUPERADOS || 0), rendimento: tS.RENDIMENTO, ip: tS.IP, pend: tS.PENDENCIAS, depTotal: tS.DEP_TOTAL || 0, depFocados: tS.DEP_FOCADOS || 0, depAmostras: tS.DEP_AMOSTRAS || 0, gramas: tS.DEP_GRAMAS || 0, iip: iipSem, ib: ibSem });
           }
           const s = col?.[sk];
           DIAS_SEMANA.forEach(dk => {
@@ -9817,6 +9910,101 @@
         return html;
       }
 
+      function obterResumoAmostraLiraa() {
+        let ql = estado?.quarteiroesLiraaTabela;
+        if (!ql || typeof ql !== "object") {
+          try {
+            const raw = localStorage.getItem("LIRAA_FORM_DATA_STORAGE");
+            if (raw) ql = JSON.parse(raw);
+          } catch (e) {}
+        }
+        const linhas = Array.isArray(ql?.linhas) ? ql.linhas : [];
+        let quartPreenchidos = 0;
+        let quartSelecionados = 0;
+        let imoveisBaseTabela = 0;
+        let imoveisBaseSelecionados = 0;
+        let imoveisAmostraLiraa = 0;
+        linhas.forEach(item => {
+          if (!item || !Array.isArray(item.celulas)) return;
+          const qNum = String(item.celulas[0] || "").trim();
+          const somaIm = [1, 2, 3, 4, 5].reduce((acc, idx) => acc + Math.max(0, Math.trunc(num(item.celulas[idx]))), 0);
+          if (qNum !== "" || somaIm > 0) quartPreenchidos++;
+          imoveisBaseTabela += somaIm;
+          if (item.isSel) {
+            quartSelecionados++;
+            imoveisBaseSelecionados += somaIm;
+            if (somaIm > 0) imoveisAmostraLiraa += Math.ceil(somaIm / 5);
+          }
+        });
+        return {
+          quartPreenchidos,
+          quartSelecionados,
+          imoveisBaseTabela,
+          imoveisBaseSelecionados,
+          imoveisAmostraLiraa,
+          cabecalho: ql?.cabecalho || {}
+        };
+      }
+
+      function dashGraficoBarrasDepositosLiraa(agg) {
+        const tipos = TIPOS_DEPOSITOS;
+        const itens = tipos.map(t => ({
+          tipo: t,
+          encontrados: Number(agg?.DEP?.[t]) || 0,
+          focados: Number(agg?.DEP_FOCADOS_TIPO?.[t]) || 0
+        }));
+        const totalEnc = itens.reduce((s, x) => s + x.encontrados, 0);
+        const totalFoc = itens.reduce((s, x) => s + x.focados, 0);
+        if (totalEnc === 0 && totalFoc === 0) {
+          return `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;font-size:0.88rem;">🧪 Sem depósitos ou focos registrados no LIRAa selecionado.</div>`;
+        }
+        const maxVal = Math.max(1, ...itens.map(x => Math.max(x.encontrados, x.focados)));
+        const largura = 580, altura = 220;
+        const padL = 46, padR = 20, padT = 24, padB = 42;
+        const innerW = largura - padL - padR;
+        const innerH = altura - padT - padB;
+        const yBase = padT + innerH;
+        const grupoW = innerW / itens.length;
+        const barW = Math.min(22, Math.max(12, grupoW * 0.28));
+
+        let svg = `<svg viewBox="0 0 ${largura} ${altura}" width="100%" height="${altura}" role="img" preserveAspectRatio="xMidYMid meet" class="grafico-svg-2d" style="overflow:visible;">`;
+        for (let i = 0; i <= 4; i++) {
+          const frac = i / 4;
+          const y = padT + innerH * frac;
+          const v = Math.round(maxVal * (1 - frac));
+          svg += `<line x1="${padL}" y1="${y}" x2="${largura - padR}" y2="${y}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3"/>`;
+          svg += `<text x="${padL - 8}" y="${y + 4}" font-size="11" fill="#64748b" text-anchor="end" font-weight="700">${formatarNumeroMilhar(v)}</text>`;
+        }
+        svg += `<line x1="${padL}" y1="${yBase}" x2="${largura - padR}" y2="${yBase}" stroke="#cbd5e1" stroke-width="1.2"/>`;
+
+        itens.forEach((it, idx) => {
+          const cx = padL + grupoW * (idx + 0.5);
+          const hEnc = (it.encontrados / maxVal) * innerH;
+          const hFoc = (it.focados / maxVal) * innerH;
+          const xEnc = cx - barW - 2;
+          const xFoc = cx + 2;
+          const yEnc = yBase - hEnc;
+          const yFoc = yBase - hFoc;
+
+          svg += `<rect x="${xEnc}" y="${yEnc}" width="${barW}" height="${Math.max(0, hEnc)}" rx="4" fill="#2563eb"><title>${it.tipo} — Encontrados/Inspec.: ${it.encontrados}</title></rect>`;
+          if (it.encontrados > 0) {
+            svg += `<text x="${xEnc + barW / 2}" y="${Math.max(12, yEnc - 5)}" font-size="10" font-weight="800" fill="#1e3a8a" text-anchor="middle">${formatarNumeroMilhar(it.encontrados)}</text>`;
+          }
+          svg += `<rect x="${xFoc}" y="${yFoc}" width="${barW}" height="${Math.max(0, hFoc)}" rx="4" fill="#dc2626"><title>${it.tipo} — Com foco: ${it.focados}</title></rect>`;
+          if (it.focados > 0) {
+            svg += `<text x="${xFoc + barW / 2}" y="${Math.max(12, yFoc - 5)}" font-size="10" font-weight="800" fill="#991b1b" text-anchor="middle">${formatarNumeroMilhar(it.focados)}</text>`;
+          }
+          svg += `<text x="${cx}" y="${yBase + 18}" font-size="11.5" font-weight="800" fill="#1e293b" text-anchor="middle">${it.tipo}</text>`;
+        });
+
+        svg += `</svg>`;
+        svg += `<div style="display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:6px;font-size:0.78rem;font-weight:700;color:#334155;">
+          <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:3px;background:#2563eb;display:inline-block;"></span>Encontrados (${formatarNumeroMilhar(totalEnc)})</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:3px;background:#dc2626;display:inline-block;"></span>Com Foco / Larvas (${formatarNumeroMilhar(totalFoc)})</span>
+        </div>`;
+        return svg;
+      }
+
       function renderizarDashboard() {
         const at = (estado && estado.atividadeAtiva) || "ciclo";
         const ehLiraa = at === "liraa";
@@ -9826,119 +10014,226 @@
         if (statusEl) statusEl.textContent = "Calculando...";
         try {
           const agg = dashAgregarCiclo(ano, ciclo);
-          // ===== Imóveis =====
-          const imoveisEstimados = num(estado.configEstrato?.imoveisEstimados);
-          const imoveisProgramados = num(estado.configEstrato?.imoveisEstimadosLivres) + num(estado.configEstrato?.imoveisEstimadosParciais);
-          const baseImoveisProgramados = imoveisProgramados > 0 ? imoveisProgramados : imoveisEstimados;
-          const restamImoveis = baseImoveisProgramados > 0 ? Math.max(0, baseImoveisProgramados - agg.INFORMADOS) : null;
-          const pctCobertura = imoveisProgramados > 0 ? Math.min(100, (100 * agg.INFORMADOS / imoveisProgramados)) : null;
-
           const kpis = document.getElementById("dashKpis");
-          if (kpis) {
-            const cards = [
-              dashCard("Total de imóveis estimados", imoveisEstimados > 0 ? formatarNumeroMilhar(imoveisEstimados) : "—", "Livres + Parciais + Conflagrados", "azul"),
-              dashCard("Imóveis programados", imoveisProgramados > 0 ? formatarNumeroMilhar(imoveisProgramados) : "—", "Livres + Parciais", ""),
-              dashCard("Informados", formatarNumeroMilhar(agg.INFORMADOS), `Pendentes: <b>${formatarNumeroMilhar(agg.PENDENCIAS)}</b>`, "vermelho"),
-              dashCard("Restam", restamImoveis == null ? "—" : formatarNumeroMilhar(restamImoveis), imoveisProgramados > 0 ? dashBarra(pctCobertura, "Cobertura sobre programados") : "Defina os imóveis programados", "ambar"),
-              dashCard("Inspecionados", formatarNumeroMilhar(agg.TOTAL), `Imóveis inspecionados ${sufixoPer}`, "roxo"),
-              dashCard("Recuperados", formatarNumeroMilhar(agg.RECUPERADOS), `Imóveis recuperados ${sufixoPer}`, "verde"),
-              dashCard("Rendimento", fmtRendimento(agg.rendimento), "Imóveis trabalhados / dia", "teal"),
-              dashCard("Pendência", formatarNumeroMilhar(agg.PENDENCIAS), "Fechados + Recusados + Abandonados − Recuperados", "vermelho"),
-              dashCard("Índice de Pendência (IP)", fmtPct(agg.ip), "100 × Pend / Inform.", "rosa")
-            ];
-            if (ehLiraa) {
-              cards.push(
-                dashCard("Índice de Infestação Predial (IIP)", agg.TOTAL > 0 ? fmtPct(agg.iip) : "—", agg.iip < 1 ? "🟢 Satisfatório (< 1,0%)" : (agg.iip < 4 ? "🟡 Alerta (1,0%–3,9%)" : "🔴 Risco de Surto (≥ 4,0%)"), agg.iip < 1 ? "verde" : (agg.iip < 4 ? "ambar" : "vermelho")),
-                dashCard("Índice de Breteau (IB)", agg.TOTAL > 0 ? fmtPct(agg.ib) : "—", "100 × Dep. Focados / Inspecionados", "azul"),
-                dashCard("Depósitos Focados", formatarNumeroMilhar(agg.DEP_FOCADOS), `Amostras coletadas: <b>${formatarNumeroMilhar(agg.DEP_AMOSTRAS)}</b>`, "rosa")
-              );
-            }
-            kpis.innerHTML = cards.join("");
-          }
-
-          // ===== Quarteirões =====
-          const qs = calcularStatusQuarteiroes();
-          const totalQuarteiroes = calcularTotalQuarteiroes();
           const kq = document.getElementById("dashKpisQuarteiroes");
-          if (kq) {
-            kq.innerHTML = [
-              dashCard("Quarteirões Total", formatarNumeroMilhar(totalQuarteiroes), "Livres + Parciais + Conflagrados", "azul"),
-              dashCard("Quarteirões programados", formatarNumeroMilhar(qs.programados), "Livres + Parciais", ""),
-              dashCard("Quarteirões concluídos", formatarNumeroMilhar(qs.concluidos), qs.precisaRevisao > 0 ? `⚠️ ${formatarNumeroMilhar(qs.precisaRevisao)} p/ revisão` : "Marcados como concluídos", "teal"),
-              dashCard("Quarteirões em andamento", formatarNumeroMilhar(qs.emAndamento), "Iniciados, não concluídos", "ambar"),
-              dashCard("Quarteirões restantes", formatarNumeroMilhar(qs.restantes), "Programados − Concluídos", "roxo")
-            ].join("");
-          }
-
-          // 1. Gráfico de Linha 2D — Produção por Semana
           const gS = document.getElementById("dashGraficoSemanas");
-          if (gS) {
-            if (!agg.porSemana.length) gS.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;">📊 Sem lançamentos ${sufixoPer}.</div>`;
-            else gS.innerHTML = dashGraficoLinhas2D(agg.porSemana.map(x => ({ rotulo: "SE " + pad2(x.semana), valor: x.total })), { corTema: ehLiraa ? "azul" : "verde" });
-          }
-
-          // 2. Gráfico de Linha 2D — Evolução das Pendências
           const gPend = document.getElementById("dashGraficoPendencias");
-          if (gPend) {
-            if (!agg.porSemana.length) gPend.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;">📉 Sem pendências registradas.</div>`;
-            else gPend.innerHTML = dashGraficoLinhas2D(agg.porSemana.map(x => ({ rotulo: "SE " + pad2(x.semana), valor: x.pend })), { corTema: "vermelho" });
-          }
-
-          // 3. Gráfico de Pizza 2D — Situação dos Imóveis
           const gPizzaImov = document.getElementById("dashGraficoPizzaImoveis");
-          if (gPizzaImov) {
-            const valRestam = restamImoveis != null ? restamImoveis : Math.max(0, baseImoveisProgramados - agg.INFORMADOS);
-            const fatiasImov = [
-              { rotulo: "Imóveis informados", valor: agg.INFORMADOS, cor: ehLiraa ? "#2563eb" : "#16a34a", corBorda: ehLiraa ? "#1d4ed8" : "#15803d", subrotulo: "Imóveis visitados e informados" },
-              { rotulo: "Imóveis restantes", valor: valRestam, cor: "#eab308", corBorda: "#ca8a04", subrotulo: baseImoveisProgramados > 0 ? "Restantes sobre os imóveis programados" : "Aguardando cadastro de estimativa" }
-            ];
-            gPizzaImov.innerHTML = dashPizza2D(fatiasImov);
-          }
-
-          // 4. Gráfico de Pizza 2D — Situação dos Quarteirões
           const gPizzaQuart = document.getElementById("dashGraficoPizzaQuarteiroes");
-          if (gPizzaQuart) {
-            const designados = qs.concluidos + qs.emAndamento;
-            const restantesQ = Math.max(0, qs.programados - designados);
-            const fatiasQuart = [
-              { rotulo: "Quarteirões designados", valor: designados, cor: "#0284c7", corBorda: "#0369a1", subrotulo: `${formatarNumeroMilhar(qs.concluidos)} concluídos + ${formatarNumeroMilhar(qs.emAndamento)} em andamento` },
-              { rotulo: "Quarteirões restantes", valor: restantesQ, cor: "#f97316", corBorda: "#ea580c", subrotulo: "Programados ainda não designados" }
-            ];
-            gPizzaQuart.innerHTML = dashPizza2D(fatiasQuart);
-          }
-
-          // 5. Tabela Resumo por semana
           const tS = document.getElementById("dashTabelaSemanas");
-          if (tS) {
-            if (!agg.porSemana.length) {
-              tS.innerHTML = `<thead><tr><th>Semana</th><th>Total</th><th>Quarteirões concluídos</th><th>Quarteirões</th><th>Rend.</th><th>IP</th><th>Pend.</th></tr></thead><tbody><tr><td colspan="7" style="text-align:center;color:#64748b;padding:24px;">Nenhuma semana registrada ${sufixoPer}.</td></tr></tbody>`;
-            } else {
-              const mapaQuartConcluidos = obterMapaQuarteiroesConcluidosPorSemana(ano, ciclo);
-              tS.innerHTML = `<thead>
-                <tr>
-                  <th style="min-width:70px;">Semana</th>
-                  <th style="min-width:75px;">Total</th>
-                  <th style="min-width:110px;text-align:center;">Quarteirões concluídos</th>
-                  <th style="min-width:140px;text-align:left;">Quarteirões</th>
-                  <th style="min-width:75px;">Rend.</th>
-                  <th style="min-width:75px;">IP</th>
-                  <th style="min-width:75px;">Pend.</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${agg.porSemana.map(x => {
-                  const infoQ = obterQuarteiroesConcluidosDaSemana(x.semana, ano, ciclo, mapaQuartConcluidos);
-                  return `<tr>
-                    <td><strong>SE ${pad2(x.semana)}</strong></td>
-                    <td style="font-weight:700;">${formatarNumeroMilhar(x.total)}</td>
-                    <td style="text-align:center;font-weight:800;color:#14532d;"><span style="display:inline-block;padding:2px 8px;border-radius:12px;background:#dcfce7;border:1px solid #86efac;">${formatarNumeroMilhar(infoQ.qtd)}</span></td>
-                    <td style="text-align:left;font-size:0.8rem;color:#334155;max-width:320px;word-break:break-word;" title="${infoQ.texto}">${infoQ.texto}</td>
-                    <td>${fmtRendimento(x.rendimento)}</td>
-                    <td>${fmtPct(x.ip)}</td>
-                    <td style="color:${x.pend > 0 ? '#dc2626' : '#14532d'};font-weight:800;">${formatarNumeroMilhar(x.pend)}</td>
-                  </tr>`;
-                }).join("")}
-              </tbody>`;
+
+          if (ehLiraa) {
+            // ===== DASHBOARD EXCLUSIVO DA ATIVIDADE LIRAa (sem espelhar Ciclo de Visita) =====
+            const estLiraa = estratoAtivo("liraa");
+            const amostraLiraa = obterResumoAmostraLiraa();
+            const estImovEst = num(estLiraa?.imoveisEstimados);
+            const estImovProg = num(estLiraa?.imoveisEstimadosLivres);
+            const metaImoveisLiraa = estImovProg > 0 ? estImovProg : (estImovEst > 0 ? estImovEst : amostraLiraa.imoveisAmostraLiraa);
+            const restamLiraa = metaImoveisLiraa > 0 ? Math.max(0, metaImoveisLiraa - agg.TOTAL) : null;
+            const pctCoberturaLiraa = metaImoveisLiraa > 0 ? Math.min(100, (100 * agg.TOTAL) / metaImoveisLiraa) : null;
+            const rotuloEstratoLiraa = [estLiraa?.bairro, estLiraa?.estrato ? `Estrato ${estLiraa.estrato}` : ""].filter(Boolean).join(" • ");
+            const clIIP = agg.TOTAL === 0 ? "azul" : (agg.iip < 1 ? "verde" : (agg.iip < 4 ? "ambar" : "vermelho"));
+            const descIIP = agg.TOTAL === 0
+              ? "Aguardando lançamentos de imóveis/focos"
+              : (agg.iip < 1 ? "🟢 Satisfatório (< 1,0%)" : (agg.iip < 4 ? "🟡 Alerta (1,0%–3,9%)" : "🔴 Risco de Surto (≥ 4,0%)"));
+
+            if (kpis) {
+              kpis.innerHTML = [
+                dashCard("Amostra LIRAa (Imóveis)", amostraLiraa.imoveisAmostraLiraa > 0 ? formatarNumeroMilhar(amostraLiraa.imoveisAmostraLiraa) : "—", amostraLiraa.quartSelecionados > 0 ? `${formatarNumeroMilhar(amostraLiraa.quartSelecionados)} quarteirões sorteados • Base: ${formatarNumeroMilhar(amostraLiraa.imoveisBaseSelecionados)} im.` : "Selecione quarteirões na aba Quarteirões do LIRAa", "azul"),
+                dashCard("Imóveis do Estrato (LIRAa)", estImovEst > 0 ? formatarNumeroMilhar(estImovEst) : "—", estImovProg > 0 ? `Programados LIRAa: <b>${formatarNumeroMilhar(estImovProg)}</b>` : (rotuloEstratoLiraa || "Configure em Configuração do Estrato (LIRAa)"), ""),
+                dashCard("Inspecionados (LIRAa)", formatarNumeroMilhar(agg.TOTAL), `R:${formatarNumeroMilhar(agg.R)} • C:${formatarNumeroMilhar(agg.C)} • TB:${formatarNumeroMilhar(agg.TB)} • PE:${formatarNumeroMilhar(agg.PE)} • O:${formatarNumeroMilhar(agg.O)}`, "roxo"),
+                dashCard("Cobertura da Amostra LIRAa", restamLiraa == null ? "—" : (restamLiraa > 0 ? `Faltam ${formatarNumeroMilhar(restamLiraa)}` : "Meta atingida"), metaImoveisLiraa > 0 ? dashBarra(pctCoberturaLiraa, estImovProg > 0 ? "Sobre programados LIRAa" : "Sobre amostra sorteada") : "Sem amostra ou estrato LIRAa", "teal"),
+                dashCard("Índice de Infestação Predial (IIP)", agg.TOTAL > 0 ? fmtPct(agg.iip) : "—", descIIP, clIIP),
+                dashCard("Índice de Breteau (IB)", agg.TOTAL > 0 ? fmtPct(agg.ib) : "—", `100 × Dep. Focados (${formatarNumeroMilhar(agg.DEP_FOCADOS)}) / Inspec.`, "azul"),
+                dashCard("Depósitos Focados & Amostras", `${formatarNumeroMilhar(agg.DEP_FOCADOS)} focos`, `Amostras coletadas: <b>${formatarNumeroMilhar(agg.DEP_AMOSTRAS)}</b> • Dep. enc.: ${formatarNumeroMilhar(agg.DEP_TOTAL)}`, "vermelho"),
+                dashCard("Tratamento & Larvicida", `${formatarNumeroMilhar(agg.DEP_TRATADOS)} dep.`, `Larvicida: <b>${fmtDecCell(agg.DEP_GRAMAS)} g</b> • Imóv. trat.: ${formatarNumeroMilhar(agg.TRATADOS_GERAL)}`, "verde"),
+                dashCard("Pendências & IP (LIRAa)", `${formatarNumeroMilhar(agg.PENDENCIAS)} (${fmtPct(agg.ip)})`, `Informados LIRAa: <b>${formatarNumeroMilhar(agg.INFORMADOS)}</b>`, "rosa")
+              ].join("");
+            }
+
+            const qsL = calcularStatusQuarteiroes();
+            const estQuartSel = num(estLiraa?.quarteiroesTotal) || num(estLiraa?.quarteiroesLivresQtd);
+            const metaQuartLiraa = estQuartSel > 0 ? estQuartSel : amostraLiraa.quartSelecionados;
+            const restamQuartLiraa = Math.max(0, metaQuartLiraa - qsL.concluidos);
+
+            if (kq) {
+              kq.innerHTML = [
+                dashCard("Quarteirões Selecionados (Estrato)", estQuartSel > 0 ? formatarNumeroMilhar(estQuartSel) : "—", "Configuração do Estrato (LIRAa)", "azul"),
+                dashCard("Quarteirões Sorteados", formatarNumeroMilhar(amostraLiraa.quartSelecionados), `${formatarNumeroMilhar(amostraLiraa.quartPreenchidos)} preenchidos na tabela LIRAa`, "teal"),
+                dashCard("Quarteirões Programados (LIRAa)", formatarNumeroMilhar(metaQuartLiraa), estQuartSel > 0 ? "Quarteirões selecionados (LIRAa)" : "Sorteados da amostra LIRAa", ""),
+                dashCard("Concluídos (LIRAa)", formatarNumeroMilhar(qsL.concluidos), qsL.precisaRevisao > 0 ? `⚠️ ${formatarNumeroMilhar(qsL.precisaRevisao)} p/ revisão` : "Marcados na atividade LIRAa", "verde"),
+                dashCard("Em Andamento / Restantes", `${formatarNumeroMilhar(qsL.emAndamento)} / ${formatarNumeroMilhar(restamQuartLiraa)}`, "Iniciados / Faltam concluir (LIRAa)", "ambar")
+              ].join("");
+            }
+
+            if (gS) {
+              if (!agg.porSemana.length) gS.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;">🔬 Sem lançamentos registrados no LIRAa.</div>`;
+              else gS.innerHTML = dashGraficoLinhas2D(agg.porSemana.map(x => ({ rotulo: "SE " + pad2(x.semana), valor: x.total })), { corTema: "azul" });
+            }
+
+            if (gPend) {
+              gPend.innerHTML = dashGraficoBarrasDepositosLiraa(agg);
+            }
+
+            if (gPizzaImov) {
+              if (metaImoveisLiraa <= 0 && agg.TOTAL <= 0) {
+                gPizzaImov.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;font-size:0.88rem;">🎯 Selecione os quarteirões da amostra ou configure o Estrato LIRAa para visualizar a cobertura.</div>`;
+              } else {
+                const restPizza = Math.max(0, metaImoveisLiraa - agg.TOTAL);
+                gPizzaImov.innerHTML = dashPizza2D([
+                  { rotulo: "Inspecionados (LIRAa)", valor: agg.TOTAL, cor: "#2563eb", corBorda: "#1d4ed8", subrotulo: "Imóveis trabalhados no LIRAa" },
+                  { rotulo: "Restantes da amostra", valor: restPizza, cor: "#eab308", corBorda: "#ca8a04", subrotulo: estImovProg > 0 ? "Saldo sobre programados LIRAa" : "Saldo sobre amostra LIRAa (20%)" }
+                ]);
+              }
+            }
+
+            if (gPizzaQuart) {
+              if (metaQuartLiraa <= 0 && qsL.totalTrabalhados <= 0) {
+                gPizzaQuart.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;font-size:0.88rem;">📐 Selecione os quarteirões sorteados ou configure o Estrato LIRAa.</div>`;
+              } else {
+                const designadosL = qsL.concluidos + qsL.emAndamento;
+                const restantesQL = Math.max(0, metaQuartLiraa - designadosL);
+                gPizzaQuart.innerHTML = dashPizza2D([
+                  { rotulo: "Quarteirões trabalhados", valor: designadosL, cor: "#0d9488", corBorda: "#0f766e", subrotulo: `${formatarNumeroMilhar(qsL.concluidos)} concluídos + ${formatarNumeroMilhar(qsL.emAndamento)} em andamento` },
+                  { rotulo: "Quarteirões restantes", valor: restantesQL, cor: "#f97316", corBorda: "#ea580c", subrotulo: estQuartSel > 0 ? "Saldo do Estrato LIRAa" : "Saldo da amostra sorteada" }
+                ]);
+              }
+            }
+
+            if (tS) {
+              if (!agg.porSemana.length) {
+                tS.innerHTML = `<thead><tr><th>Semana</th><th>Inspec.</th><th>Dep. Inspec.</th><th>Focados</th><th>Amostras</th><th>IIP</th><th>IB</th><th>Larv. (g)</th><th>Quarteirões concluídos</th><th>Quarteirões</th></tr></thead><tbody><tr><td colspan="10" style="text-align:center;color:#64748b;padding:24px;">Nenhuma semana registrada no LIRAa selecionado.</td></tr></tbody>`;
+              } else {
+                const mapaQuartConcluidos = obterMapaQuarteiroesConcluidosPorSemana(ano, ciclo);
+                tS.innerHTML = `<thead>
+                  <tr>
+                    <th style="min-width:68px;">Semana</th>
+                    <th style="min-width:72px;">Inspec.</th>
+                    <th style="min-width:80px;">Dep. Inspec.</th>
+                    <th style="min-width:70px;">Focados</th>
+                    <th style="min-width:72px;">Amostras</th>
+                    <th style="min-width:68px;">IIP</th>
+                    <th style="min-width:68px;">IB</th>
+                    <th style="min-width:74px;">Larv. (g)</th>
+                    <th style="min-width:105px;text-align:center;">Quarteirões concluídos</th>
+                    <th style="min-width:130px;text-align:left;">Quarteirões</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${agg.porSemana.map(x => {
+                    const infoQ = obterQuarteiroesConcluidosDaSemana(x.semana, ano, ciclo, mapaQuartConcluidos);
+                    return `<tr>
+                      <td><strong>SE ${pad2(x.semana)}</strong></td>
+                      <td style="font-weight:700;color:#1e3a8a;">${formatarNumeroMilhar(x.total)}</td>
+                      <td>${formatarNumeroMilhar(x.depTotal || 0)}</td>
+                      <td style="color:${(x.depFocados || 0) > 0 ? '#dc2626' : '#14532d'};font-weight:800;">${formatarNumeroMilhar(x.depFocados || 0)}</td>
+                      <td>${formatarNumeroMilhar(x.depAmostras || 0)}</td>
+                      <td style="font-weight:700;">${x.total > 0 ? fmtPct(x.iip) : "—"}</td>
+                      <td style="font-weight:700;">${x.total > 0 ? fmtPct(x.ib) : "—"}</td>
+                      <td>${fmtDecCell(x.gramas || 0)}</td>
+                      <td style="text-align:center;font-weight:800;color:#1e3a8a;"><span style="display:inline-block;padding:2px 8px;border-radius:12px;background:#dbeafe;border:1px solid #93c5fd;">${formatarNumeroMilhar(infoQ.qtd)}</span></td>
+                      <td style="text-align:left;font-size:0.8rem;color:#334155;max-width:280px;word-break:break-word;" title="${infoQ.texto}">${infoQ.texto}</td>
+                    </tr>`;
+                  }).join("")}
+                </tbody>`;
+              }
+            }
+          } else {
+            // ===== DASHBOARD CICLO DE VISITA =====
+            const estCiclo = estratoAtivo("ciclo");
+            const imoveisEstimados = num(estCiclo?.imoveisEstimados);
+            const imoveisProgramados = num(estCiclo?.imoveisEstimadosLivres) + num(estCiclo?.imoveisEstimadosParciais);
+            const baseImoveisProgramados = imoveisProgramados > 0 ? imoveisProgramados : imoveisEstimados;
+            const restamImoveis = baseImoveisProgramados > 0 ? Math.max(0, baseImoveisProgramados - agg.INFORMADOS) : null;
+            const pctCobertura = imoveisProgramados > 0 ? Math.min(100, (100 * agg.INFORMADOS / imoveisProgramados)) : null;
+
+            if (kpis) {
+              const cards = [
+                dashCard("Total de imóveis estimados", imoveisEstimados > 0 ? formatarNumeroMilhar(imoveisEstimados) : "—", "Livres + Parciais + Conflagrados", "azul"),
+                dashCard("Imóveis programados", imoveisProgramados > 0 ? formatarNumeroMilhar(imoveisProgramados) : "—", "Livres + Parciais", ""),
+                dashCard("Informados", formatarNumeroMilhar(agg.INFORMADOS), `Pendentes: <b>${formatarNumeroMilhar(agg.PENDENCIAS)}</b>`, "vermelho"),
+                dashCard("Restam", restamImoveis == null ? "—" : formatarNumeroMilhar(restamImoveis), imoveisProgramados > 0 ? dashBarra(pctCobertura, "Cobertura sobre programados") : "Defina os imóveis programados", "ambar"),
+                dashCard("Inspecionados", formatarNumeroMilhar(agg.TOTAL), `Imóveis inspecionados ${sufixoPer}`, "roxo"),
+                dashCard("Recuperados", formatarNumeroMilhar(agg.RECUPERADOS), `Imóveis recuperados ${sufixoPer}`, "verde"),
+                dashCard("Rendimento", fmtRendimento(agg.rendimento), "Imóveis trabalhados / dia", "teal"),
+                dashCard("Pendência", formatarNumeroMilhar(agg.PENDENCIAS), "Fechados + Recusados + Abandonados − Recuperados", "vermelho"),
+                dashCard("Índice de Pendência (IP)", fmtPct(agg.ip), "100 × Pend / Inform.", "rosa")
+              ];
+              kpis.innerHTML = cards.join("");
+            }
+
+            const qs = calcularStatusQuarteiroes();
+            const totalQuarteiroes = calcularTotalQuarteiroes();
+            if (kq) {
+              kq.innerHTML = [
+                dashCard("Quarteirões Total", formatarNumeroMilhar(totalQuarteiroes), "Livres + Parciais + Conflagrados", "azul"),
+                dashCard("Quarteirões programados", formatarNumeroMilhar(qs.programados), "Livres + Parciais", ""),
+                dashCard("Quarteirões concluídos", formatarNumeroMilhar(qs.concluidos), qs.precisaRevisao > 0 ? `⚠️ ${formatarNumeroMilhar(qs.precisaRevisao)} p/ revisão` : "Marcados como concluídos", "teal"),
+                dashCard("Quarteirões em andamento", formatarNumeroMilhar(qs.emAndamento), "Iniciados, não concluídos", "ambar"),
+                dashCard("Quarteirões restantes", formatarNumeroMilhar(qs.restantes), "Programados − Concluídos", "roxo")
+              ].join("");
+            }
+
+            if (gS) {
+              if (!agg.porSemana.length) gS.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;">📊 Sem lançamentos ${sufixoPer}.</div>`;
+              else gS.innerHTML = dashGraficoLinhas2D(agg.porSemana.map(x => ({ rotulo: "SE " + pad2(x.semana), valor: x.total })), { corTema: "verde" });
+            }
+
+            if (gPend) {
+              if (!agg.porSemana.length) gPend.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;">📉 Sem pendências registradas.</div>`;
+              else gPend.innerHTML = dashGraficoLinhas2D(agg.porSemana.map(x => ({ rotulo: "SE " + pad2(x.semana), valor: x.pend })), { corTema: "vermelho" });
+            }
+
+            if (gPizzaImov) {
+              const valRestam = restamImoveis != null ? restamImoveis : Math.max(0, baseImoveisProgramados - agg.INFORMADOS);
+              const fatiasImov = [
+                { rotulo: "Imóveis informados", valor: agg.INFORMADOS, cor: "#16a34a", corBorda: "#15803d", subrotulo: "Imóveis visitados e informados" },
+                { rotulo: "Imóveis restantes", valor: valRestam, cor: "#eab308", corBorda: "#ca8a04", subrotulo: baseImoveisProgramados > 0 ? "Restantes sobre os imóveis programados" : "Aguardando cadastro de estimativa" }
+              ];
+              gPizzaImov.innerHTML = dashPizza2D(fatiasImov);
+            }
+
+            if (gPizzaQuart) {
+              const designados = qs.concluidos + qs.emAndamento;
+              const restantesQ = Math.max(0, qs.programados - designados);
+              const fatiasQuart = [
+                { rotulo: "Quarteirões designados", valor: designados, cor: "#0284c7", corBorda: "#0369a1", subrotulo: `${formatarNumeroMilhar(qs.concluidos)} concluídos + ${formatarNumeroMilhar(qs.emAndamento)} em andamento` },
+                { rotulo: "Quarteirões restantes", valor: restantesQ, cor: "#f97316", corBorda: "#ea580c", subrotulo: "Programados ainda não designados" }
+              ];
+              gPizzaQuart.innerHTML = dashPizza2D(fatiasQuart);
+            }
+
+            if (tS) {
+              if (!agg.porSemana.length) {
+                tS.innerHTML = `<thead><tr><th>Semana</th><th>Total</th><th>Quarteirões concluídos</th><th>Quarteirões</th><th>Rend.</th><th>IP</th><th>Pend.</th></tr></thead><tbody><tr><td colspan="7" style="text-align:center;color:#64748b;padding:24px;">Nenhuma semana registrada ${sufixoPer}.</td></tr></tbody>`;
+              } else {
+                const mapaQuartConcluidos = obterMapaQuarteiroesConcluidosPorSemana(ano, ciclo);
+                tS.innerHTML = `<thead>
+                  <tr>
+                    <th style="min-width:70px;">Semana</th>
+                    <th style="min-width:75px;">Total</th>
+                    <th style="min-width:110px;text-align:center;">Quarteirões concluídos</th>
+                    <th style="min-width:140px;text-align:left;">Quarteirões</th>
+                    <th style="min-width:75px;">Rend.</th>
+                    <th style="min-width:75px;">IP</th>
+                    <th style="min-width:75px;">Pend.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${agg.porSemana.map(x => {
+                    const infoQ = obterQuarteiroesConcluidosDaSemana(x.semana, ano, ciclo, mapaQuartConcluidos);
+                    return `<tr>
+                      <td><strong>SE ${pad2(x.semana)}</strong></td>
+                      <td style="font-weight:700;">${formatarNumeroMilhar(x.total)}</td>
+                      <td style="text-align:center;font-weight:800;color:#14532d;"><span style="display:inline-block;padding:2px 8px;border-radius:12px;background:#dcfce7;border:1px solid #86efac;">${formatarNumeroMilhar(infoQ.qtd)}</span></td>
+                      <td style="text-align:left;font-size:0.8rem;color:#334155;max-width:320px;word-break:break-word;" title="${infoQ.texto}">${infoQ.texto}</td>
+                      <td>${fmtRendimento(x.rendimento)}</td>
+                      <td>${fmtPct(x.ip)}</td>
+                      <td style="color:${x.pend > 0 ? '#dc2626' : '#14532d'};font-weight:800;">${formatarNumeroMilhar(x.pend)}</td>
+                    </tr>`;
+                  }).join("")}
+                </tbody>`;
+              }
             }
           }
 
@@ -10941,10 +11236,11 @@
         const cN = normalizarNumeroCiclo(cab.ciclo || "1");
         const pS = obterPeriodoDaSemana(sk, anoS, cN, "liraa");
 
+        const estLiraa = estratoAtivo("liraa");
         res.cabecalho = {
-          municipio: (estado.configEstrato?.cidade || "Salvador").trim() || "Salvador",
-          bairro: cab.bairro || estado.configEstrato?.bairro || estado.configEquipe?.bairro || "",
-          estrato: cab.estrato || estado.configEstrato?.estrato || estado.configEquipe?.estrato || "",
+          municipio: (estLiraa?.cidade || "Salvador").trim() || "Salvador",
+          bairro: cab.bairro || estLiraa?.bairro || "",
+          estrato: cab.estrato || estLiraa?.estrato || "",
           equipe: cab.equipe || estado.configEquipe?.equipe || "",
           agentes: cab.agentesEquipe || obterTextoAgentesEquipe(sem) || "",
           supervisor: cab.supervisor || estado.configEquipe?.supervisor || "",
@@ -10956,7 +11252,7 @@
           terminoISO: pS.terminoISO || converterDataBRparaISO(cab.semanaTermino) || ""
         };
         res.rodape = {
-          responsavel: sem.rodape?.responsavel || estado.configEquipe?.responsavel || "",
+          responsavel: sem.rodape?.responsavel || estLiraa?.responsavel || estado.configEquipe?.responsavel || "",
           data: sem.rodape?.data || pS.terminoISO || hojeISO()
         };
 
@@ -11728,8 +12024,11 @@
         }
         const st = calcularStatusQuarteiroes();
         const agg = dashAgregarCiclo(ctx.ano, ctx.ciclo);
-        const imoveisEstimados = num(estado.configEstrato?.imoveisEstimados);
-        const imoveisProgramados = num(estado.configEstrato?.imoveisEstimadosLivres) + num(estado.configEstrato?.imoveisEstimadosParciais);
+        const estAtivo = estratoAtivo(ctx.atividade);
+        const imoveisEstimados = num(estAtivo?.imoveisEstimados);
+        const imoveisProgramados = ctx.atividade === "liraa"
+          ? num(estAtivo?.imoveisEstimadosLivres)
+          : (num(estAtivo?.imoveisEstimadosLivres) + num(estAtivo?.imoveisEstimadosParciais));
         const baseImoveisProgramados = imoveisProgramados > 0 ? imoveisProgramados : imoveisEstimados;
         const restamImoveis = baseImoveisProgramados > 0 ? Math.max(0, baseImoveisProgramados - agg.INFORMADOS) : null;
         const cardsEl = document.getElementById("qdResumoCards");
@@ -11854,22 +12153,22 @@
         if (!est.configEquipe._fieldTs || typeof est.configEquipe._fieldTs !== "object") est.configEquipe._fieldTs = {};
         if (!est.configEstrato || typeof est.configEstrato !== "object") est.configEstrato = {};
         if (!est.configEstrato._fieldTs || typeof est.configEstrato._fieldTs !== "object") est.configEstrato._fieldTs = {};
+        if (!est.configEstratoLiraa || typeof est.configEstratoLiraa !== "object") est.configEstratoLiraa = {};
+        if (!est.configEstratoLiraa._fieldTs || typeof est.configEstratoLiraa._fieldTs !== "object") est.configEstratoLiraa._fieldTs = {};
 
         const eq = est.configEquipe;
         const es = est.configEstrato;
         const semAtivaKey = String(est.semanaAtiva || "");
-        const colAtiva = est.atividadeAtiva === "liraa" ? est.semanasLiraa : est.semanas;
         const semanasOrdenadas = [];
-        if (semAtivaKey && colAtiva?.[semAtivaKey]) semanasOrdenadas.push(colAtiva[semAtivaKey]);
-        [est.semanasLiraa, est.semanas].forEach(col => {
-          if (!col || typeof col !== "object") return;
-          Object.keys(col)
+        if (semAtivaKey && est.semanas?.[semAtivaKey]) semanasOrdenadas.push(est.semanas[semAtivaKey]);
+        if (est.semanas && typeof est.semanas === "object") {
+          Object.keys(est.semanas)
             .sort((a, b) => Number(b) - Number(a))
             .forEach(sk => {
-              const s = col[sk];
+              const s = est.semanas[sk];
               if (s && !s._deleted && !semanasOrdenadas.includes(s)) semanasOrdenadas.push(s);
             });
-        });
+        }
 
         const buscarEmSemanas = (fn) => {
           for (const s of semanasOrdenadas) {
@@ -12040,20 +12339,20 @@
             estado.configEquipe._fieldTs[prop] = agora;
             estado.configEquipe._ts = agora;
             if (prop === "bairro" || prop === "estrato") {
-              if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
+              if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao("ciclo");
               if (!estado.configEstrato._fieldTs) estado.configEstrato._fieldTs = {};
               estado.configEstrato[prop] = e.target.value;
               estado.configEstrato._fieldTs[prop] = agora;
               estado.configEstrato._ts = agora;
-              renderizarConfigEstrato();
+              if (estado.atividadeAtiva !== "liraa") renderizarConfigEstrato();
             } else if (prop === "responsavel" && e.target.value.trim() !== "") {
-              if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
+              if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao("ciclo");
               if (!estado.configEstrato._fieldTs) estado.configEstrato._fieldTs = {};
               if (!String(estado.configEstrato.responsavel || "").trim() || (Number(estado.configEstrato._fieldTs.responsavel) || 0) <= 1) {
                 estado.configEstrato.responsavel = e.target.value;
                 estado.configEstrato._fieldTs.responsavel = agora;
                 estado.configEstrato._ts = agora;
-                renderizarConfigEstrato();
+                if (estado.atividadeAtiva !== "liraa") renderizarConfigEstrato();
               }
             }
             const s = semana();
@@ -12085,10 +12384,11 @@
           if (st) { st.textContent = "✅ Sincronizado!"; setTimeout(() => { st.textContent = "💾 Salvo automaticamente"; }, 3000); }
         });
       }
-      function obterConfigEstratoPadrao() {
-        const cEq = estado.configEquipe || {};
+      function obterConfigEstratoPadrao(at = null) {
+        const alvo = (at || (estado && estado.atividadeAtiva) || "ciclo") === "liraa" ? "liraa" : "ciclo";
+        const cEq = alvo === "ciclo" ? (estado?.configEquipe || {}) : {};
         return {
-          cidade: "Salvador",
+          cidade: alvo === "liraa" ? "" : "Salvador",
           distrito: "",
           bairro: cEq.bairro || "",
           estrato: cEq.estrato || "",
@@ -12111,19 +12411,19 @@
         };
       }
       function recalcularIndicadoresEstrato() {
-        if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
-        const est = estado.configEstrato;
+        const ehLiraa = (estado?.atividadeAtiva || "ciclo") === "liraa";
+        const est = estratoAtivo();
         const imvLiv = num(est.imoveisEstimadosLivres);
-        const imvPar = num(est.imoveisEstimadosParciais);
-        const imvCon = num(est.imoveisEstimadosConflagrados);
+        const imvPar = ehLiraa ? 0 : num(est.imoveisEstimadosParciais);
+        const imvCon = ehLiraa ? 0 : num(est.imoveisEstimadosConflagrados);
         const imvTotal = imvLiv + imvPar + imvCon;
         est.imoveisEstimados = String(imvTotal);
         const inImvTotal = document.getElementById("estratoTotalImoveis");
         if (inImvTotal) inImvTotal.value = imvTotal > 0 ? formatarNumeroMilhar(imvTotal) : "";
         const tot = num(est.quarteiroesTotal);
         const liv = num(est.quarteiroesLivresQtd);
-        const par = num(est.quarteiroesParciaisQtd);
-        const con = num(est.quarteiroesConflagradosQtd);
+        const par = ehLiraa ? 0 : num(est.quarteiroesParciaisQtd);
+        const con = ehLiraa ? 0 : num(est.quarteiroesConflagradosQtd);
         const soma = liv + par + con;
         const txtSoma = document.getElementById("txtSomaCategorias");
         if (txtSoma) txtSoma.textContent = `Soma das categorias: ${formatarNumeroMilhar(soma)}`;
@@ -12149,29 +12449,57 @@
         }
         const bdg = document.getElementById("badgeValidaQuart");
         if (bdg) {
-          if (tot <= 0 && soma === 0) {
-            bdg.className = "badge-contagem-agentes";
-            bdg.innerHTML = `<strong>0</strong> quarteirões`;
-          } else if (tot > 0 && soma === tot) {
-            bdg.className = "tag-status-cfg ativo";
-            bdg.style.background = "#dcfce7";
-            bdg.style.color = "#14532d";
-            bdg.innerHTML = `✓ Total confere (${formatarNumeroMilhar(tot)} quart.)`;
-          } else if (tot > 0 && soma !== tot) {
-            const dif = Math.abs(tot - soma);
-            bdg.className = "tag-status-cfg inativo";
-            bdg.style.background = "#fee2e2";
-            bdg.style.color = "#991b1b";
-            bdg.innerHTML = `⚠️ Soma (${formatarNumeroMilhar(soma)}) difere do total (${formatarNumeroMilhar(tot)}) [Dif: ${formatarNumeroMilhar(dif)}]`;
+          bdg.style.background = "";
+          bdg.style.color = "";
+          if (ehLiraa) {
+            if (tot <= 0 && liv === 0) {
+              bdg.className = "badge-contagem-agentes";
+              bdg.innerHTML = `<strong>0</strong> quarteirões selecionados`;
+            } else if (tot > 0 && liv === 0) {
+              bdg.className = "tag-status-cfg ativo";
+              bdg.style.background = "#dbeafe";
+              bdg.style.color = "#1e3a8a";
+              bdg.innerHTML = `✓ ${formatarNumeroMilhar(tot)} quarteirões selecionados`;
+            } else if (tot > 0 && liv === tot) {
+              bdg.className = "tag-status-cfg ativo";
+              bdg.style.background = "#dcfce7";
+              bdg.style.color = "#14532d";
+              bdg.innerHTML = `✓ Confere (${formatarNumeroMilhar(tot)} selecionados)`;
+            } else if (tot > 0 && liv !== tot) {
+              const dif = Math.abs(tot - liv);
+              bdg.className = "tag-status-cfg inativo";
+              bdg.style.background = "#fee2e2";
+              bdg.style.color = "#991b1b";
+              bdg.innerHTML = `⚠️ Livres (${formatarNumeroMilhar(liv)}) difere dos selecionados (${formatarNumeroMilhar(tot)}) [Dif: ${formatarNumeroMilhar(dif)}]`;
+            } else {
+              bdg.className = "badge-contagem-agentes";
+              bdg.innerHTML = `Quarteirões livres: <strong>${formatarNumeroMilhar(liv)}</strong>`;
+            }
           } else {
-            bdg.className = "badge-contagem-agentes";
-            bdg.innerHTML = `Total estimado: <strong>${formatarNumeroMilhar(soma)}</strong>`;
+            if (tot <= 0 && soma === 0) {
+              bdg.className = "badge-contagem-agentes";
+              bdg.innerHTML = `<strong>0</strong> quarteirões`;
+            } else if (tot > 0 && soma === tot) {
+              bdg.className = "tag-status-cfg ativo";
+              bdg.style.background = "#dcfce7";
+              bdg.style.color = "#14532d";
+              bdg.innerHTML = `✓ Total confere (${formatarNumeroMilhar(tot)} quart.)`;
+            } else if (tot > 0 && soma !== tot) {
+              const dif = Math.abs(tot - soma);
+              bdg.className = "tag-status-cfg inativo";
+              bdg.style.background = "#fee2e2";
+              bdg.style.color = "#991b1b";
+              bdg.innerHTML = `⚠️ Soma (${formatarNumeroMilhar(soma)}) difere do total (${formatarNumeroMilhar(tot)}) [Dif: ${formatarNumeroMilhar(dif)}]`;
+            } else {
+              bdg.className = "badge-contagem-agentes";
+              bdg.innerHTML = `Total estimado: <strong>${formatarNumeroMilhar(soma)}</strong>`;
+            }
           }
         }
       }
       function renderizarConfigEstrato() {
-        if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
-        const est = estado.configEstrato;
+        const ehLiraa = (estado?.atividadeAtiva || "ciclo") === "liraa";
+        const est = estratoAtivo();
         const camposNumericos = ["quarteiroesTotal", "quarteiroesLivresQtd", "quarteiroesParciaisQtd", "quarteiroesConflagradosQtd", "imoveisEstimadosLivres", "imoveisEstimadosParciais", "imoveisEstimadosConflagrados"];
         document.querySelectorAll("[data-estrato]").forEach(inp => {
           const k = inp.dataset.estrato;
@@ -12187,27 +12515,30 @@
         const inImvTotal = document.getElementById("estratoTotalImoveis");
         if (inImvTotal) {
           const liv = num(est.imoveisEstimadosLivres);
-          const par = num(est.imoveisEstimadosParciais);
-          const con = num(est.imoveisEstimadosConflagrados);
+          const par = ehLiraa ? 0 : num(est.imoveisEstimadosParciais);
+          const con = ehLiraa ? 0 : num(est.imoveisEstimadosConflagrados);
           const totalImov = liv + par + con;
           inImvTotal.value = totalImov > 0 ? formatarNumeroMilhar(totalImov) : "";
         }
         recalcularIndicadoresEstrato();
       }
       function configurarListenersConfigEstrato() {
-        if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
+        estratoAtivo("ciclo");
+        estratoAtivo("liraa");
         const camposNumericos = ["quarteiroesTotal", "quarteiroesLivresQtd", "quarteiroesParciaisQtd", "quarteiroesConflagradosQtd", "imoveisEstimadosLivres", "imoveisEstimadosParciais", "imoveisEstimadosConflagrados"];
         document.querySelectorAll("[data-estrato]").forEach(inp => {
           const k = inp.dataset.estrato;
           if (k === "imoveisEstimados") return;
           const handler = () => {
             const agora = agoraSyncMs();
-            if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
-            estado.configEstrato[k] = inp.value;
-            if (!estado.configEstrato._fieldTs) estado.configEstrato._fieldTs = {};
-            estado.configEstrato._fieldTs[k] = agora;
-            estado.configEstrato._ts = agora;
-            if (k === "bairro" || k === "estrato") {
+            const ehLiraa = estado?.atividadeAtiva === "liraa";
+            const est = estratoAtivo();
+            const chaveEst = chaveEstratoAtivo();
+            est[k] = inp.value;
+            if (!est._fieldTs) est._fieldTs = {};
+            est._fieldTs[k] = agora;
+            est._ts = agora;
+            if (!ehLiraa && (k === "bairro" || k === "estrato")) {
               if (!estado.configEquipe) estado.configEquipe = obterConfigEquipePadrao();
               estado.configEquipe[k] = inp.value;
               if (!estado.configEquipe._fieldTs) estado.configEquipe._fieldTs = {};
@@ -12220,7 +12551,7 @@
               renderizarCiclo();
               salvar("tudo");
             } else {
-              salvar("config_geral", { dirtyKeys: ["configEstrato"] });
+              salvar("config_geral", { dirtyKeys: [chaveEst] });
             }
             recalcularIndicadoresEstrato();
             renderizarDashboard();
@@ -12238,20 +12569,22 @@
         const bSalvar = document.getElementById("btnSalvarEstrato");
         if (bSalvar) {
           bSalvar.addEventListener("click", () => {
-            if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
+            const ehLiraa = estado?.atividadeAtiva === "liraa";
+            const est = estratoAtivo();
+            const chaveEst = chaveEstratoAtivo();
             const agora = agoraSyncMs();
-            if (!estado.configEstrato._fieldTs) estado.configEstrato._fieldTs = {};
-            Object.keys(estado.configEstrato).forEach(fk => {
+            if (!est._fieldTs) est._fieldTs = {};
+            Object.keys(est).forEach(fk => {
               if (fk === "_ts" || fk === "_fieldTs") return;
-              if (String(estado.configEstrato[fk] ?? "").trim() !== "" && !Number(estado.configEstrato._fieldTs[fk])) {
-                estado.configEstrato._fieldTs[fk] = agora;
+              if (String(est[fk] ?? "").trim() !== "" && !Number(est._fieldTs[fk])) {
+                est._fieldTs[fk] = agora;
               }
             });
-            estado.configEstrato._ts = agora;
-            salvar("config_geral", { dirtyKeys: ["configEstrato"] });
+            est._ts = agora;
+            salvar("config_geral", { dirtyKeys: [chaveEst] });
             const bdg = document.getElementById("badgeEstratoStatus");
             if (bdg) {
-              bdg.textContent = "✅ Estrato salvo!";
+              bdg.textContent = ehLiraa ? "✅ Estrato LIRAa salvo!" : "✅ Estrato salvo!";
               setTimeout(() => { bdg.textContent = "💾 Salvo automaticamente"; }, 2500);
             }
           });
@@ -12260,18 +12593,19 @@
         if (bAutoSoma) {
           bAutoSoma.addEventListener("click", () => {
             const agora = agoraSyncMs();
-            if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
-            const liv = num(estado.configEstrato.quarteiroesLivresQtd);
-            const par = num(estado.configEstrato.quarteiroesParciaisQtd);
-            const con = num(estado.configEstrato.quarteiroesConflagradosQtd);
+            const est = estratoAtivo();
+            const chaveEst = chaveEstratoAtivo();
+            const liv = num(est.quarteiroesLivresQtd);
+            const par = num(est.quarteiroesParciaisQtd);
+            const con = num(est.quarteiroesConflagradosQtd);
             const soma = liv + par + con;
-            estado.configEstrato.quarteiroesTotal = String(soma);
-            if (!estado.configEstrato._fieldTs) estado.configEstrato._fieldTs = {};
-            estado.configEstrato._fieldTs.quarteiroesTotal = agora;
-            estado.configEstrato._ts = agora;
+            est.quarteiroesTotal = String(soma);
+            if (!est._fieldTs) est._fieldTs = {};
+            est._fieldTs.quarteiroesTotal = agora;
+            est._ts = agora;
             const inTot = document.getElementById("estratoQuartTotal");
             if (inTot) inTot.value = formatarNumeroMilhar(soma);
-            salvar("config_geral", { dirtyKeys: ["configEstrato"] });
+            salvar("config_geral", { dirtyKeys: [chaveEst] });
             recalcularIndicadoresEstrato();
             renderizarDashboard();
           });
@@ -12280,23 +12614,58 @@
         if (bSinc) {
           bSinc.addEventListener("click", () => {
             const agora = agoraSyncMs();
-            if (!estado.configEstrato) estado.configEstrato = obterConfigEstratoPadrao();
-            if (!estado.configEstrato._fieldTs) estado.configEstrato._fieldTs = {};
-            const cEq = estado.configEquipe || {};
-            if (cEq.bairro) { estado.configEstrato.bairro = cEq.bairro; estado.configEstrato._fieldTs.bairro = agora; }
-            if (cEq.estrato) { estado.configEstrato.estrato = cEq.estrato; estado.configEstrato._fieldTs.estrato = agora; }
-            if (cEq.supervisor && !estado.configEstrato.responsavel) { estado.configEstrato.responsavel = cEq.supervisor; estado.configEstrato._fieldTs.responsavel = agora; }
-            const relsAtivos = (estado.relatoriosCampo || []).filter(r => r && !r._deleted);
-            if (relsAtivos.length > 0) {
-              const ult = relsAtivos[relsAtivos.length - 1];
-              if (ult.distritoSanitario && !estado.configEstrato.distrito) { estado.configEstrato.distrito = ult.distritoSanitario; estado.configEstrato._fieldTs.distrito = agora; }
+            const ehLiraa = estado?.atividadeAtiva === "liraa";
+            const est = estratoAtivo();
+            const chaveEst = chaveEstratoAtivo();
+            if (!est._fieldTs) est._fieldTs = {};
+            if (ehLiraa) {
+              const ql = estado.quarteiroesLiraaTabela || {};
+              const qCab = ql.cabecalho || {};
+              const resumoL = obterResumoAmostraLiraa();
+              const munLimpo = String(qCab.municipio || "").replace(/^\d+\s*/, "").trim();
+              if (munLimpo && !est.cidade) { est.cidade = munLimpo; est._fieldTs.cidade = agora; }
+              if (qCab.distrito && !est.distrito) { est.distrito = String(qCab.distrito).trim(); est._fieldTs.distrito = agora; }
+              const sub = String(qCab.sublocal || "").trim();
+              if (sub) {
+                const mEst = sub.match(/Estrato\s+([^\s/]+)/i);
+                const bPart = sub.split("/")[0]?.trim();
+                if (bPart && !est.bairro) { est.bairro = bPart; est._fieldTs.bairro = agora; }
+                if (mEst?.[1] && !est.estrato) { est.estrato = mEst[1].trim(); est._fieldTs.estrato = agora; }
+              }
+              const sL = repoAtivo("liraa")?.[estado.semanaAtiva] || Object.values(repoAtivo("liraa") || {})[0] || null;
+              if (sL?.cabecalho?.bairro && !est.bairro) { est.bairro = String(sL.cabecalho.bairro).trim(); est._fieldTs.bairro = agora; }
+              if (sL?.cabecalho?.estrato && !est.estrato) { est.estrato = String(sL.cabecalho.estrato).trim(); est._fieldTs.estrato = agora; }
+              if (sL?.rodape?.responsavel && !est.responsavel) { est.responsavel = String(sL.rodape.responsavel).trim(); est._fieldTs.responsavel = agora; }
+              if (resumoL.quartSelecionados > 0 && !num(est.quarteiroesLivresQtd)) {
+                est.quarteiroesLivresQtd = String(resumoL.quartSelecionados);
+                est._fieldTs.quarteiroesLivresQtd = agora;
+              }
+              if (resumoL.quartSelecionados > 0 && !num(est.quarteiroesTotal)) {
+                est.quarteiroesTotal = String(resumoL.quartSelecionados);
+                est._fieldTs.quarteiroesTotal = agora;
+              }
+              if (resumoL.imoveisAmostraLiraa > 0 && !num(est.imoveisEstimadosLivres)) {
+                est.imoveisEstimadosLivres = String(resumoL.imoveisAmostraLiraa);
+                est._fieldTs.imoveisEstimadosLivres = agora;
+              }
+            } else {
+              const cEq = estado.configEquipe || {};
+              if (cEq.bairro) { est.bairro = cEq.bairro; est._fieldTs.bairro = agora; }
+              if (cEq.estrato) { est.estrato = cEq.estrato; est._fieldTs.estrato = agora; }
+              if (cEq.supervisor && !est.responsavel) { est.responsavel = cEq.supervisor; est._fieldTs.responsavel = agora; }
+              const relsAtivos = (estado.relatoriosCampo || []).filter(r => r && !r._deleted);
+              if (relsAtivos.length > 0) {
+                const ult = relsAtivos[relsAtivos.length - 1];
+                if (ult.distritoSanitario && !est.distrito) { est.distrito = ult.distritoSanitario; est._fieldTs.distrito = agora; }
+              }
             }
-            estado.configEstrato._ts = agora;
-            salvar("config_geral", { dirtyKeys: ["configEstrato"] });
+            est._ts = agora;
+            salvar("config_geral", { dirtyKeys: [chaveEst] });
             renderizarConfigEstrato();
+            renderizarDashboard();
             const bdg = document.getElementById("badgeEstratoStatus");
             if (bdg) {
-              bdg.textContent = "🔄 Sincronizado com Equipe!";
+              bdg.textContent = ehLiraa ? "🔄 Puxado da Tabela LIRAa!" : "🔄 Sincronizado com Equipe!";
               setTimeout(() => { bdg.textContent = "💾 Salvo automaticamente"; }, 2500);
             }
           });
@@ -12304,8 +12673,11 @@
         const bPdf = document.getElementById("btnImprimirPDFEstrato");
         if (bPdf) {
           bPdf.addEventListener("click", () => {
-            const eNum = estado.configEstrato?.estrato ? `_Estrato_${estado.configEstrato.estrato}` : "";
-            gerarPDF("areaConfigEstrato", `PMCD_Configuracao${eNum}_${hojeISO()}.pdf`, { orientacao: "portrait" })
+            const ehLiraa = estado?.atividadeAtiva === "liraa";
+            const est = estratoAtivo();
+            const eNum = est?.estrato ? `_Estrato_${est.estrato}` : "";
+            const suf = ehLiraa ? "_LIRAa" : "";
+            gerarPDF("areaConfigEstrato", `PMCD_Configuracao${suf}${eNum}_${hojeISO()}.pdf`, { orientacao: "portrait" })
               .catch(e => alert("❌ " + (e?.message || e)));
           });
         }
@@ -13217,9 +13589,12 @@
             if (id === "dashboard") {
               const anoEl = document.getElementById("dashAno"), cicEl = document.getElementById("dashCiclo"), semEl = document.getElementById("dashSemanaRef");
               const s = semana();
-              if (anoEl && !anoEl.value) anoEl.value = obterAnoSemana(s);
+              const mudouAtividadeDash = window._dashUltimaAtividade !== atAtual;
+              if (anoEl && (!anoEl.value || mudouAtividadeDash)) anoEl.value = obterAnoSemana(s);
               if (cicEl) cicEl.value = obterFiltroConsolidadoAtivo() || identificarCicloAtivo();
               if (semEl) semEl.value = estado.semanaAtiva;
+              window._dashUltimaAtividade = atAtual;
+              atualizarInterfaceAtividade(atAtual);
               renderizarDashboard();
             }
           }
@@ -13322,18 +13697,20 @@
             const agora = agoraSyncMs();
             const k = inp.dataset.cab;
             const s = semana();
+            const ehLiraa = estado?.atividadeAtiva === "liraa";
             if (s?.cabecalho) { s.cabecalho[k] = inp.value; if (!s._cabTs) s._cabTs = {}; s._cabTs[k] = agora; s._ts = agora; }
-            const tocouEquipe = estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(k) && String(inp.value || "").trim() !== "";
+            const tocouEquipe = !ehLiraa && estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(k) && String(inp.value || "").trim() !== "";
             if (tocouEquipe) {
               estado.configEquipe[k] = inp.value;
               if (!estado.configEquipe._fieldTs) estado.configEquipe._fieldTs = {};
               estado.configEquipe._fieldTs[k] = agora;
               estado.configEquipe._ts = agora;
-              if ((k === "bairro" || k === "estrato") && estado.configEstrato) {
-                estado.configEstrato[k] = inp.value;
-                if (!estado.configEstrato._fieldTs) estado.configEstrato._fieldTs = {};
-                estado.configEstrato._fieldTs[k] = agora;
-                estado.configEstrato._ts = agora;
+              if (k === "bairro" || k === "estrato") {
+                const estAt = estratoAtivo("ciclo");
+                estAt[k] = inp.value;
+                if (!estAt._fieldTs) estAt._fieldTs = {};
+                estAt._fieldTs[k] = agora;
+                estAt._ts = agora;
                 renderizarConfigEstrato();
               }
             }
@@ -13364,24 +13741,26 @@
           document.querySelectorAll("[data-ciclocab]").forEach(inp => inp.addEventListener("input", () => {
             const agora = agoraSyncMs();
             const k = inp.dataset.ciclocab;
+            const ehLiraa = estado?.atividadeAtiva === "liraa";
             const cons = objConsolidadoAtivo();
             cons.cabecalho[k] = inp.value;
             cons._ts = agora;
-            const tocouEquipe = estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(k) && String(inp.value || "").trim() !== "";
+            const tocouEquipe = !ehLiraa && estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(k) && String(inp.value || "").trim() !== "";
             if (tocouEquipe) {
               estado.configEquipe[k] = inp.value;
               if (!estado.configEquipe._fieldTs) estado.configEquipe._fieldTs = {};
               estado.configEquipe._fieldTs[k] = agora;
               estado.configEquipe._ts = agora;
-              if ((k === "bairro" || k === "estrato") && estado.configEstrato) {
-                estado.configEstrato[k] = inp.value;
-                if (!estado.configEstrato._fieldTs) estado.configEstrato._fieldTs = {};
-                estado.configEstrato._fieldTs[k] = agora;
-                estado.configEstrato._ts = agora;
+              if (k === "bairro" || k === "estrato") {
+                const estAt = estratoAtivo("ciclo");
+                estAt[k] = inp.value;
+                if (!estAt._fieldTs) estAt._fieldTs = {};
+                estAt._fieldTs[k] = agora;
+                estAt._ts = agora;
                 renderizarConfigEstrato();
               }
             }
-            const consKey = (estado?.atividadeAtiva === "liraa") ? "cicloLiraa" : "ciclo";
+            const consKey = ehLiraa ? "cicloLiraa" : "ciclo";
             salvar("config_geral", { dirtyKeys: tocouEquipe ? [consKey, "configEquipe", "configEstrato"] : [consKey] });
             renderizarConfigEquipe();
           }));

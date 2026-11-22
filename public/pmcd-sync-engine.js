@@ -664,6 +664,31 @@
       }
     }
 
+    // 2b. configEstratoLiraa (isolado da atividade Ciclo de Visita)
+    if (localCfg.configEstratoLiraa) {
+      if (!res.configEstratoLiraa) {
+        res.configEstratoLiraa = cloneDeep(localCfg.configEstratoLiraa);
+      } else {
+        const esL = localCfg.configEstratoLiraa;
+        const esR = res.configEstratoLiraa;
+        const esLTs = toMs(esL._ts, tsL);
+        const esRTs = toMs(esR._ts, tsR);
+        esR._fieldTs = { ...(esR._fieldTs || {}) };
+        Object.keys(esL).forEach((fk) => {
+          if (fk === '_ts' || fk === '_fieldTs') return;
+          const fL = effectiveFieldTs(esL[fk], esL._fieldTs?.[fk], esLTs);
+          const fR = effectiveFieldTs(esR[fk], esR._fieldTs?.[fk], esRTs);
+          if (fL > fR || (fL === fR && hasNonEmptyValue(esL[fk]) && !hasNonEmptyValue(esR[fk]))) {
+            esR[fk] = esL[fk];
+            if (fL > 0) esR._fieldTs[fk] = fL;
+          } else if (fR > 0) {
+            esR._fieldTs[fk] = fR;
+          }
+        });
+        esR._ts = Math.max(esLTs, esRTs);
+      }
+    }
+
     // 3. ciclosConfig (mapa por ano_ciclo_atividade)
     res.ciclosConfig = { ...(res.ciclosConfig || {}) };
     const ccL = localCfg.ciclosConfig || {};
