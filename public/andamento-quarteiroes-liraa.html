@@ -5460,12 +5460,10 @@
     let chaveEncontrada = "";
 
     Object.keys(mapa).forEach(k => {
-      if (normalizarChaveQuarteirao(k) === normTarget) {
+      if (normalizarChaveQuarteirao(k) === normTarget && statusQuarteiroes[k] === "concluido") {
         encontrou = true;
         chaveEncontrada = k;
-        if (statusQuarteiroes[k] === "concluido") {
-          estaConcluido = true;
-        }
+        estaConcluido = true;
         const item = mapa[k];
         soma.R += parseInt(String(item.R || 0).replace(/\D/g, ""), 10) || 0;
         soma.C += parseInt(String(item.C || 0).replace(/\D/g, ""), 10) || 0;
@@ -5778,13 +5776,13 @@
               <span>🟢</span>
               <div>
                 <div><b>${nomeQ}:</b> <b>${r.total} imóvel(is) atribuído(s) no Boletim</b>${detalheTipos}</div>
-                <div class="comparativo-header-sub">Este quarteirão possui imóveis no Boletim, mas ainda não foi lançado no Diário / Concluídos.</div>
+                <div class="comparativo-header-sub">Este quarteirão possui imóveis no Boletim, mas ainda não está na relação da aba Concluídos.</div>
               </div>
             </div>
             <span class="comparativo-header-pill info">ℹ️ Sem registro em Concluídos</span>
           </div>
           <div class="comparativo-footer">
-            <span>Para realizar o comparativo automático individual (R, C, TB, PE e O), lance este quarteirão no Diário.</span>
+            <span>A comparação automática de divergências (R, C, TB, PE e O) só é feita entre os quarteirões do Boletim e os da aba Concluídos.</span>
           </div>
         </div>
       `;
@@ -5894,7 +5892,7 @@
     if (chavesFiltradas.length === 0 && filtroQuarteiroesBoletinsAtivo === "divergentes") {
       const optVazio = document.createElement("option");
       optVazio.value = "";
-      optVazio.textContent = "🎉 Nenhuma divergência encontrada! Todos os quarteirões estão conferidos.";
+      optVazio.textContent = "🎉 Nenhuma divergência encontrada entre Boletins e Concluídos!";
       sel.appendChild(optVazio);
     } else {
       chavesFiltradas.forEach(q => {
