@@ -212,7 +212,38 @@
       .coluna-agente { width: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
       .coluna-agente.inativo { background: #f8fafc; border: 1px dashed #cbd5e1; opacity: 0.95; padding: 8px 12px; }
       .coluna-agente.inativo .cabecalho-agente { border-bottom: none; padding-bottom: 0; }
-      .coluna-agente.inativo .corpo-tabelas-agente, .coluna-agente.inativo .bloco-tabela, .coluna-agente.inativo .separador-bloco { display: none !important; }
+      .coluna-agente.inativo .corpo-tabelas-agente, .coluna-agente.inativo .bloco-tabela, .coluna-agente.inativo .separador-bloco, .coluna-agente.inativo .ocorrencias-dia-box { display: none !important; }
+      .ocorrencias-dia-box { margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 7px; background: #f8fafc; overflow: hidden; transition: border-color 0.15s ease, background-color 0.15s ease; }
+      .ocorrencias-dia-box.tem-selecao { border-color: #86efac; background: #f0fdf4; }
+      .ocorrencias-dia-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; background: transparent; border: none; cursor: pointer; text-align: left; font-family: inherit; color: #14532d; }
+      .ocorrencias-dia-toggle:hover { background: rgba(22, 163, 74, 0.06); }
+      .ocorrencias-dia-toggle-left { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; flex: 1; }
+      .ocorrencias-dia-titulo { font-size: 0.82rem; font-weight: 800; color: #14532d; white-space: nowrap; }
+      .ocorrencias-dia-badge { font-size: 0.7rem; font-weight: 800; padding: 2px 7px; border-radius: 10px; background: #dcfce7; color: #166534; border: 1px solid #86efac; white-space: nowrap; }
+      .ocorrencias-dia-badge.vazio { background: #e2e8f0; color: #475569; border-color: #cbd5e1; font-weight: 700; }
+      .ocorrencias-dia-resumo { font-size: 0.74rem; font-weight: 600; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+      .ocorrencias-dia-seta { font-size: 0.8rem; font-weight: 900; color: #475569; flex-shrink: 0; transition: transform 0.15s ease; }
+      .ocorrencias-dia-box.aberto .ocorrencias-dia-seta { transform: rotate(180deg); color: #166534; }
+      .ocorrencias-dia-painel { display: none; border-top: 1px solid #cbd5e1; padding: 10px 12px; background: #ffffff; }
+      .ocorrencias-dia-box.aberto .ocorrencias-dia-painel { display: block; }
+      .ocorrencias-dia-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px 10px; }
+      .ocorrencias-dia-item { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 5px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.78rem; font-weight: 600; color: #1e293b; cursor: pointer; user-select: none; min-height: 34px; transition: background 0.15s ease, border-color 0.15s ease; }
+      .ocorrencias-dia-item:hover { background: #f1f5f9; border-color: #cbd5e1; }
+      .ocorrencias-dia-item.selecionado { background: #dcfce7; border-color: #4ade80; color: #14532d; font-weight: 700; }
+      .ocorrencias-dia-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #166534; cursor: pointer; flex-shrink: 0; margin: 0; }
+      .ocorrencias-dia-footer { margin-top: 8px; padding-top: 7px; border-top: 1px dashed #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 0.72rem; color: #64748b; }
+      .ocorrencias-dia-limpar { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 4px; padding: 3px 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+      .ocorrencias-dia-limpar:hover { background: #fecaca; }
+      #prodIndWrapper .resumo-tabela th { white-space: normal; overflow: visible; text-overflow: initial; line-height: 1.2; padding: 5px 3px; vertical-align: middle; }
+      .prod-th-dia { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+      .prod-th-dia-nome { font-weight: 800; font-size: 0.74rem; color: #14532d; }
+      .prod-th-dia-data { font-weight: 700; font-size: 0.68rem; color: #166534; }
+      #prodIndWrapper .resumo-tabela td.td-prod-obs { white-space: normal !important; overflow: visible !important; text-overflow: initial !important; text-align: left !important; vertical-align: middle; padding: 5px 7px !important; }
+      .prod-obs-ocorrencias { display: flex; flex-direction: column; gap: 3px; margin-bottom: 4px; }
+      .prod-obs-ocorrencia-item { font-size: 0.75rem; line-height: 1.32; color: #14532d; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px; padding: 2px 6px; word-break: break-word; }
+      .prod-obs-data { font-weight: 800; color: #166534; }
+      .prod-obs-desc { font-weight: 600; color: #1e293b; }
+      .prod-obs-input { width: 100%; border: none; background: transparent; padding: 4px 2px; font-size: 0.78rem; outline: none; text-align: left; color: #1e293b; }
       .coluna-agente.tema-0 { border: 2px solid #86efac; border-top: 5px solid #16a34a; background: #ffffff; }
       .coluna-agente.tema-0 .cabecalho-agente { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 6px 6px 0 0; padding: 6px 10px; border-bottom: 2px solid #bbf7d0; }
       .coluna-agente.tema-0 .cabecalho-agente h3 { color: #14532d; }
@@ -396,7 +427,7 @@
       }
 
       @media print, .capturando-pdf {
-        .badge-em-lancamento, .icone-lancando-agente { display: none !important; }
+        .badge-em-lancamento, .icone-lancando-agente, .ocorrencias-dia-box { display: none !important; }
         .coluna-agente:focus-within, .coluna-agente.em-lancamento { box-shadow: none !important; }
         .coluna-agente:focus-within .th-nome-agente, .coluna-agente.em-lancamento .th-nome-agente,
         .coluna-agente:focus-within .wrap-nome-agente, .coluna-agente.em-lancamento .wrap-nome-agente,
@@ -2824,6 +2855,23 @@
         .bloco-tabela td.celula-input select {
           min-height: 28px;
           font-size: 0.78rem;
+        }
+        .ocorrencias-dia-toggle {
+          min-height: 40px;
+          padding: 9px 10px;
+        }
+        .ocorrencias-dia-grid {
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          gap: 6px;
+        }
+        .ocorrencias-dia-item {
+          min-height: 38px;
+          font-size: 0.82rem;
+          padding: 7px 9px;
+        }
+        .ocorrencias-dia-item input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
         }
         .resumo-wrapper,
         .dash-svg-wrap,
@@ -6547,7 +6595,12 @@
                 inp.parentNode.replaceChild(rep, inp);
                 return;
               }
-              const v = (inp.value !== undefined && inp.value !== null && inp.value !== "") ? inp.value : (inp.placeholder || "");
+              const ehProdObs = inp.classList.contains("prod-obs-input");
+              const v = (inp.value !== undefined && inp.value !== null && inp.value !== "") ? inp.value : (ehProdObs ? "" : (inp.placeholder || ""));
+              if (ehProdObs && !v) {
+                inp.remove();
+                return;
+              }
               const rep = cd.createElement('div'); rep.textContent = v; rep.className = inp.className;
               const ff = inp.style.getPropertyValue("font-family"); const fs = inp.style.getPropertyValue("font-size"); const lh = inp.style.getPropertyValue("line-height");
               const ptd = inp.closest('td');
@@ -6556,6 +6609,9 @@
                 if (ehRec) {
                   rep.style.cssText = `width:100%;text-align:center;font-weight:700;font-size:0.65rem;line-height:1.2;padding:0;color:#14532d;display:block;`;
                   ptd.style.padding = '1.5px 1px';
+                  ptd.style.verticalAlign = 'middle';
+                } else if (ehProdObs) {
+                  rep.style.cssText = `width:100%;text-align:left;font-weight:600;font-size:0.76rem;line-height:1.3;padding:2px 0 0;color:#334155;display:block;white-space:normal;word-break:break-word;`;
                   ptd.style.verticalAlign = 'middle';
                 } else {
                   rep.style.cssText = `width:100%;text-align:center;font-weight:700;font-size:0.78rem;line-height:1.3;padding:0;color:#14532d;display:block;`;
@@ -7636,6 +7692,7 @@
         renderizarListaRelatoriosCampo();
         renderizarResumoReconhecimento();
         try { if (estado.atividadeAtiva === "liraa" || document.getElementById("aba-indices-liraa")?.classList.contains("ativo")) renderizarIndicesLiraa(); } catch(e) {}
+        try { if (document.getElementById("aba-producao-individual")?.classList.contains("ativo")) renderizarProducaoIndividual(); } catch(e) {}
         try { if (document.getElementById("aba-dashboard")?.classList.contains("ativo")) renderizarDashboard(); } catch(e) {}
         validarSessaoAposSync();
         if (typeof atualizarEstatisticasEscolhaAtividade === "function") atualizarEstatisticasEscolhaAtividade();
@@ -10357,6 +10414,230 @@
         { nome: "Vermelho", icone: "🔴" },
         { nome: "Branco", icone: "⚪" }
       ];
+      const OCORRENCIAS_DIA_OPCOES = [
+        "Chuva",
+        "Feriado",
+        "Ponto Facultativo",
+        "Assembleia da Categoria",
+        "Falta abonada pela chefia",
+        "Licença Médica",
+        "Mutirão",
+        "Ação Educativa",
+        "Bloqueio de Transmissão",
+        "Capacitação da Equipe",
+        "Reunião Administrativa",
+        "Paralisação",
+        "Greve de Ônibus",
+        "Equipamento Indisponível"
+      ];
+      const _ocorrenciasDiaAbertas = new Set();
+      function chaveToggleOcorrenciasDia(agId) {
+        return `${estado?.atividadeAtiva || "ciclo"}:${estado?.semanaAtiva || ""}:${estado?.diaAtivo || ""}:${agId || ""}`;
+      }
+      function normalizarListaOcorrenciasDia(listaRaw) {
+        let arr = [];
+        if (Array.isArray(listaRaw)) {
+          arr = listaRaw;
+        } else if (typeof listaRaw === "string") {
+          const t = listaRaw.trim();
+          if (!t) return [];
+          if (t.startsWith("[")) {
+            try {
+              const p = JSON.parse(t);
+              if (Array.isArray(p)) arr = p;
+            } catch (e) { arr = []; }
+          } else {
+            arr = t.split(/\s*\|\|\s*|\s*;\s*/);
+          }
+        }
+        const mapaCanon = new Map(OCORRENCIAS_DIA_OPCOES.map(op => [op.toLowerCase(), op]));
+        const vistas = new Set();
+        const extras = [];
+        arr.forEach(item => {
+          const limpo = String(item || "").trim();
+          if (!limpo) return;
+          const canon = mapaCanon.get(limpo.toLowerCase()) || limpo;
+          const chave = canon.toLowerCase();
+          if (vistas.has(chave)) return;
+          vistas.add(chave);
+          if (!mapaCanon.has(chave)) extras.push(canon);
+        });
+        const ordenadas = OCORRENCIAS_DIA_OPCOES.filter(op => vistas.has(op.toLowerCase()));
+        return ordenadas.concat(extras);
+      }
+      function lerOcorrenciasAgenteDia(ag) {
+        if (!ag || !ag.valores) return [];
+        return normalizarListaOcorrenciasDia(ag.valores.ocorrenciasDia);
+      }
+      function salvarOcorrenciasAgenteDia(ag, lista) {
+        if (!ag) return [];
+        const norm = normalizarListaOcorrenciasDia(lista);
+        if (!ag.valores) ag.valores = {};
+        if (!ag._valoresTs) ag._valoresTs = {};
+        const novoVal = norm.length > 0 ? JSON.stringify(norm) : "";
+        const agora = agoraSyncMs();
+        ag.valores.ocorrenciasDia = novoVal;
+        ag._valoresTs.ocorrenciasDia = agora;
+        ag._ts = agora;
+        salvar("semana");
+        if (document.getElementById("aba-producao-individual")?.classList.contains("ativo")) {
+          try { renderizarProducaoIndividual(); } catch (e) {}
+        }
+        return norm;
+      }
+      function encontrarAgenteNoDia(diaObj, ag) {
+        if (!diaObj || !Array.isArray(diaObj.agentes) || !ag) return null;
+        const ativosNaoExcl = diaObj.agentes.filter(a => a && !a._deleted);
+        if (ag.id) {
+          const porId = ativosNaoExcl.find(a => a.id === ag.id);
+          if (porId) return porId;
+        }
+        const nomeAlvo = String(ag.nome || "").trim().toLowerCase();
+        if (nomeAlvo) {
+          return ativosNaoExcl.find(a => a.nome && String(a.nome).trim().toLowerCase() === nomeAlvo) || null;
+        }
+        return null;
+      }
+      function obterOcorrenciasSemanaAgente(semObj, ag) {
+        if (!semObj || !semObj.dias || !ag) return [];
+        const registros = [];
+        const chavesVistas = new Set();
+        DIAS_SEMANA.forEach(dk => {
+          const d = semObj.dias[dk];
+          if (!d) return;
+          const aD = encontrarAgenteNoDia(d, ag);
+          if (!aD) return;
+          const lista = lerOcorrenciasAgenteDia(aD);
+          if (lista.length === 0) return;
+          const dataISO = d.data || "";
+          const dataBR = formatarDataBR(dataISO);
+          const diaSemanaNome = (nomeDiaExibido(dataISO, dk) || NOMES_DIAS[dk] || "").toLowerCase();
+          const dataExibida = (diaSemanaNome && dataBR)
+            ? `${diaSemanaNome}, ${dataBR}`
+            : (dataBR || diaSemanaNome || dk);
+          lista.forEach(desc => {
+            const chaveUnica = `${dk}::${dataISO}::${desc.toLowerCase()}`;
+            if (chavesVistas.has(chaveUnica)) return;
+            chavesVistas.add(chaveUnica);
+            registros.push({ diaKey: dk, dataISO, dataBR, diaSemana: diaSemanaNome, dataExibida, descricao: desc });
+          });
+        });
+        return registros;
+      }
+      function criarBlocoOcorrenciasDia(ag) {
+        const box = document.createElement("div");
+        const chToggle = chaveToggleOcorrenciasDia(ag.id);
+        let selecionadas = lerOcorrenciasAgenteDia(ag);
+        box.className = "ocorrencias-dia-box" + (_ocorrenciasDiaAbertas.has(chToggle) ? " aberto" : "") + (selecionadas.length > 0 ? " tem-selecao" : "");
+        box.dataset.ocorrenciasAgente = ag.id || "";
+
+        const btnToggle = document.createElement("button");
+        btnToggle.type = "button";
+        btnToggle.className = "ocorrencias-dia-toggle";
+        btnToggle.setAttribute("aria-expanded", _ocorrenciasDiaAbertas.has(chToggle) ? "true" : "false");
+
+        const left = document.createElement("div");
+        left.className = "ocorrencias-dia-toggle-left";
+        const titulo = document.createElement("span");
+        titulo.className = "ocorrencias-dia-titulo";
+        titulo.textContent = "📋 Ocorrências do Dia";
+        const badge = document.createElement("span");
+        badge.className = "ocorrencias-dia-badge";
+        const resumo = document.createElement("span");
+        resumo.className = "ocorrencias-dia-resumo";
+        left.appendChild(titulo);
+        left.appendChild(badge);
+        left.appendChild(resumo);
+
+        const seta = document.createElement("span");
+        seta.className = "ocorrencias-dia-seta";
+        seta.textContent = "▾";
+        btnToggle.appendChild(left);
+        btnToggle.appendChild(seta);
+        box.appendChild(btnToggle);
+
+        const painel = document.createElement("div");
+        painel.className = "ocorrencias-dia-painel";
+        const grid = document.createElement("div");
+        grid.className = "ocorrencias-dia-grid";
+
+        const footer = document.createElement("div");
+        footer.className = "ocorrencias-dia-footer";
+        const infoTxt = document.createElement("span");
+        infoTxt.textContent = "Registradas automaticamente em Produção Individual → Observação.";
+        const btnLimpar = document.createElement("button");
+        btnLimpar.type = "button";
+        btnLimpar.className = "ocorrencias-dia-limpar";
+        btnLimpar.textContent = "Limpar seleção";
+        footer.appendChild(infoTxt);
+        footer.appendChild(btnLimpar);
+
+        const atualizarResumoVisual = (lista) => {
+          const qtd = lista.length;
+          box.classList.toggle("tem-selecao", qtd > 0);
+          if (qtd > 0) {
+            badge.className = "ocorrencias-dia-badge";
+            badge.textContent = qtd === 1 ? "1 selecionada" : `${qtd} selecionadas`;
+            resumo.textContent = lista.join(", ");
+            resumo.title = lista.join(", ");
+            btnLimpar.style.display = estaModoLeitura() ? "none" : "inline-block";
+          } else {
+            badge.className = "ocorrencias-dia-badge vazio";
+            badge.textContent = "Nenhuma";
+            resumo.textContent = "";
+            resumo.title = "";
+            btnLimpar.style.display = "none";
+          }
+        };
+
+        const checkboxes = [];
+        OCORRENCIAS_DIA_OPCOES.forEach(opcao => {
+          const lbl = document.createElement("label");
+          const marcado = selecionadas.includes(opcao);
+          lbl.className = "ocorrencias-dia-item" + (marcado ? " selecionado" : "");
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.value = opcao;
+          cb.checked = marcado;
+          cb.addEventListener("change", () => {
+            if (estaModoLeitura()) {
+              cb.checked = !cb.checked;
+              return;
+            }
+            const novas = checkboxes.filter(x => x.cb.checked).map(x => x.opcao);
+            selecionadas = salvarOcorrenciasAgenteDia(ag, novas);
+            checkboxes.forEach(x => x.lbl.classList.toggle("selecionado", selecionadas.includes(x.opcao)));
+            atualizarResumoVisual(selecionadas);
+          });
+          const sp = document.createElement("span");
+          sp.textContent = opcao;
+          lbl.appendChild(cb);
+          lbl.appendChild(sp);
+          grid.appendChild(lbl);
+          checkboxes.push({ opcao, cb, lbl });
+        });
+
+        btnLimpar.addEventListener("click", () => {
+          if (estaModoLeitura()) return;
+          checkboxes.forEach(x => { x.cb.checked = false; x.lbl.classList.remove("selecionado"); });
+          selecionadas = salvarOcorrenciasAgenteDia(ag, []);
+          atualizarResumoVisual(selecionadas);
+        });
+
+        btnToggle.addEventListener("click", () => {
+          const vaiAbrir = !box.classList.contains("aberto");
+          box.classList.toggle("aberto", vaiAbrir);
+          btnToggle.setAttribute("aria-expanded", vaiAbrir ? "true" : "false");
+          if (vaiAbrir) _ocorrenciasDiaAbertas.add(chToggle);
+          else _ocorrenciasDiaAbertas.delete(chToggle);
+        });
+
+        atualizarResumoVisual(selecionadas);
+        painel.appendChild(grid);
+        painel.appendChild(footer);
+        box.appendChild(painel);
+        return box;
+      }
       function criarColunaAgente(ag, idx = 0) {
         const t = idx % 5;
         const col = document.createElement("div"); col.className = `coluna-agente tema-${t}` + (ag.ativo ? "" : " inativo"); col.dataset.agenteId = ag.id;
@@ -10378,6 +10659,7 @@
         corpo.appendChild(criarBlocoSimples(ag, "b4", LINHAS_BLOCO_4)); corpo.appendChild(criarSeparador());
         corpo.appendChild(criarBlocoDepositos(ag));
         col.appendChild(corpo);
+        col.appendChild(criarBlocoOcorrenciasDia(ag));
         col.addEventListener("focusin", () => {
           document.querySelectorAll(".coluna-agente.em-lancamento").forEach(el => {
             if (el !== col) el.classList.remove("em-lancamento");
@@ -11948,24 +12230,76 @@
         if (estado.configEquipe?.agentes?.length > 0) ags = estado.configEquipe.agentes.filter(a => a && !a._deleted).map(a => ({ id: a.id, nome: (a.nome || "Agente").trim(), ativo: a.ativo !== false }));
         else { const u = new Map(); DIAS_SEMANA.forEach(dk => { const d = s.dias?.[dk]; if (d?.agentes) d.agentes.forEach(a => { if (!a || a._deleted || !a.nome) return; const ch = String(a.nome).trim().toLowerCase(); if (!u.has(ch)) u.set(ch, { id: a.id, nome: a.nome.trim(), ativo: a.ativo !== false }); }); }); ags = Array.from(u.values()); }
         if (ags.length === 0) { w.innerHTML = `<p style="text-align:center; padding: 30px; color: #64748b; font-weight: 600;">Nenhum agente cadastrado.</p>`; return; }
-        const LP = ["160px","60px","60px","60px","60px","60px","60px","340px"]; const MP = "860px";
+        const LP = ["160px","78px","78px","78px","78px","78px","64px","320px"]; const MP = "934px";
         const acg = (t) => { const c = document.createElement("colgroup"); LP.forEach(x => { const cc = document.createElement("col"); cc.style.width = x; c.appendChild(cc); }); t.appendChild(c); };
+        const pSem = obterPeriodoDaSemana(estado.semanaAtiva, obterAnoSemana(s), normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"), at);
+        const rotulosDiasCurto = { segunda: "Segunda", terca: "Terça", quarta: "Quarta", quinta: "Quinta", sexta: "Sexta" };
+        const criarTheadProd = () => {
+          const thEl = document.createElement("thead");
+          const trEl = document.createElement("tr");
+          const thAg = document.createElement("th"); thAg.className = "cabecalho-titulo"; thAg.textContent = "Agente"; trEl.appendChild(thAg);
+          DIAS_SEMANA.forEach((dk, idxDia) => {
+            const thDia = document.createElement("th");
+            thDia.className = "cabecalho-titulo";
+            const dObj = s.dias?.[dk];
+            const dISO = dObj?.data || adicionarDiasISO(pSem.inicioISO, idxDia);
+            const dBR = formatarDataBR(dISO);
+            const boxDia = document.createElement("div");
+            boxDia.className = "prod-th-dia";
+            const spNome = document.createElement("span");
+            spNome.className = "prod-th-dia-nome";
+            spNome.textContent = rotulosDiasCurto[dk] || dk;
+            boxDia.appendChild(spNome);
+            if (dBR) {
+              const spData = document.createElement("span");
+              spData.className = "prod-th-dia-data";
+              spData.textContent = dBR;
+              boxDia.appendChild(spData);
+            }
+            thDia.appendChild(boxDia);
+            trEl.appendChild(thDia);
+          });
+          const thTot = document.createElement("th"); thTot.className = "cabecalho-destaque"; thTot.textContent = "Total"; trEl.appendChild(thTot);
+          const thObs = document.createElement("th"); thObs.className = "cabecalho-titulo"; thObs.textContent = "Observação"; trEl.appendChild(thObs);
+          thEl.appendChild(trEl);
+          return thEl;
+        };
         const t = document.createElement("table"); t.className = "resumo-tabela"; t.style.minWidth = MP; t.style.width = "100%"; t.style.tableLayout = "fixed"; acg(t);
-        const th = document.createElement("thead"); const trH = document.createElement("tr"); ["Agente","Segunda","Terça","Quarta","Quinta","Sexta","Total","Observação"].forEach(x => { const e = document.createElement("th"); e.className = x === "Total" ? "cabecalho-destaque" : "cabecalho-titulo"; e.textContent = x; trH.appendChild(e); });
-        th.appendChild(trH); t.appendChild(th);
+        t.appendChild(criarTheadProd());
         const tb = document.createElement("tbody"); const tD = { segunda: 0, terca: 0, quarta: 0, quinta: 0, sexta: 0 }; let tg = 0;
         ags.forEach(ag => {
           const tr = document.createElement("tr"); const tN = document.createElement("td"); tN.style.textAlign = "left"; tN.style.paddingLeft = "10px"; tN.style.fontWeight = "700"; tN.style.color = "#14532d"; tN.textContent = ag.nome; tr.appendChild(tN);
           let tA = 0;
-          DIAS_SEMANA.forEach(dk => { const d = s.dias?.[dk]; const aD = d?.agentes?.find(a => a && !a._deleted && (a.id === ag.id || (a.nome && ag.nome && a.nome.trim().toLowerCase() === ag.nome.trim().toLowerCase()))); const p = aD ? calcularProducaoAgenteDia(aD) : 0; tD[dk] += p; tA += p; const td = document.createElement("td"); td.textContent = p > 0 ? fmtIntCell(p) : "—"; td.style.textAlign = "center"; tr.appendChild(td); });
+          DIAS_SEMANA.forEach(dk => { const d = s.dias?.[dk]; const aD = encontrarAgenteNoDia(d, ag); const p = aD ? calcularProducaoAgenteDia(aD) : 0; tD[dk] += p; tA += p; const td = document.createElement("td"); td.textContent = p > 0 ? fmtIntCell(p) : "—"; td.style.textAlign = "center"; tr.appendChild(td); });
           const tT = document.createElement("td"); tT.className = "col-total"; tT.style.fontWeight = "800"; tT.textContent = fmtIntCell(tA); tr.appendChild(tT); tg += tA;
-          const tO = document.createElement("td"); tO.style.padding = "0"; const inp = document.createElement("input"); inp.type = "text"; inp.placeholder = "Observação..."; inp.style.cssText = "width:100%; border:none; background:transparent; padding:8px; font-size:0.78rem; outline:none; text-align:left;"; const ok = `prod-obs-${ag.id}`; inp.value = getResumoValor(ok, ""); inp.addEventListener("input", () => setResumoValor(ok, inp.value)); inp.addEventListener("focus", () => { inp.style.background = "#fef9c3"; }); inp.addEventListener("blur", () => { inp.style.background = "transparent"; }); tO.appendChild(inp); tr.appendChild(tO);
+          const tO = document.createElement("td"); tO.className = "td-prod-obs";
+          const ocorrSem = obterOcorrenciasSemanaAgente(s, ag);
+          if (ocorrSem.length > 0) {
+            const listaEl = document.createElement("div");
+            listaEl.className = "prod-obs-ocorrencias";
+            ocorrSem.forEach(reg => {
+              const itemEl = document.createElement("div");
+              itemEl.className = "prod-obs-ocorrencia-item";
+              const spData = document.createElement("span");
+              spData.className = "prod-obs-data";
+              spData.textContent = reg.dataExibida || reg.dataBR;
+              const spDesc = document.createElement("span");
+              spDesc.className = "prod-obs-desc";
+              spDesc.textContent = reg.descricao;
+              itemEl.appendChild(spData);
+              itemEl.appendChild(document.createTextNode(" — "));
+              itemEl.appendChild(spDesc);
+              listaEl.appendChild(itemEl);
+            });
+            tO.appendChild(listaEl);
+          }
+          const inp = document.createElement("input"); inp.type = "text"; inp.className = "prod-obs-input"; inp.placeholder = ocorrSem.length > 0 ? "Observação adicional..." : "Observação..."; const ok = `prod-obs-${ag.id}`; inp.value = getResumoValor(ok, ""); inp.addEventListener("input", () => setResumoValor(ok, inp.value)); inp.addEventListener("focus", () => { inp.style.background = "#fef9c3"; }); inp.addEventListener("blur", () => { inp.style.background = "transparent"; }); tO.appendChild(inp); tr.appendChild(tO);
           tb.appendChild(tr);
         });
         const trT = document.createElement("tr"); trT.className = "linha-total-resumo"; const tl = document.createElement("td"); tl.className = "celula-rotulo-dia"; tl.textContent = "TOTAL DA EQUIPE"; trT.appendChild(tl); DIAS_SEMANA.forEach(dk => { const td = document.createElement("td"); td.textContent = fmtIntCell(tD[dk]); td.style.fontWeight = "800"; trT.appendChild(td); }); const ttd = document.createElement("td"); ttd.className = "col-total"; ttd.style.fontWeight = "800"; ttd.textContent = fmtIntCell(tg); trT.appendChild(ttd); trT.appendChild(document.createElement("td")); tb.appendChild(trT);
         t.appendChild(tb); w.appendChild(t);
         const tA = document.createElement("table"); tA.className = "resumo-tabela"; tA.style.minWidth = MP; tA.style.width = "100%"; tA.style.tableLayout = "fixed"; tA.style.marginTop = "20px"; acg(tA);
-        const thA = document.createElement("thead"); const trA = document.createElement("tr"); ["Agente","Segunda","Terça","Quarta","Quinta","Sexta","Total","Observação"].forEach(x => { const e = document.createElement("th"); e.className = x === "Total" ? "cabecalho-destaque" : "cabecalho-titulo"; e.textContent = x; trA.appendChild(e); }); thA.appendChild(trA); tA.appendChild(thA);
+        tA.appendChild(criarTheadProd());
         const tbA = document.createElement("tbody");
         [{ key: "prod-supervisor", p: "Nome do supervisor..." }, { key: "prod-responsavel", p: "Nome do responsável..." }].forEach(({ key, p }) => {
           const tr = document.createElement("tr");
