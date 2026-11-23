@@ -10933,9 +10933,12 @@
         const bt = document.createElement("button"); bt.className = ag.ativo ? "btn-cinza" : "btn-verde"; bt.textContent = ag.ativo ? "Inativar" : "Reativar"; bt.addEventListener("click", () => toggleAgente(ag.id));
         ac.appendChild(bt); cab.appendChild(ac); col.appendChild(cab);
         const corpo = document.createElement("div"); corpo.className = "corpo-tabelas-agente";
+        const ehLiraa = (estado?.atividadeAtiva || "ciclo") === "liraa";
         corpo.appendChild(criarBlocoQuarteirao(ag)); corpo.appendChild(criarSeparador());
         corpo.appendChild(criarBlocoImoveis(ag)); corpo.appendChild(criarSeparador());
-        corpo.appendChild(criarBlocoSimples(ag, "b2", LINHAS_BLOCO_2)); corpo.appendChild(criarSeparador());
+        if (!ehLiraa) {
+          corpo.appendChild(criarBlocoSimples(ag, "b2", LINHAS_BLOCO_2)); corpo.appendChild(criarSeparador());
+        }
         corpo.appendChild(criarBlocoSimples(ag, "bTratados", LINHAS_BLOCO_TRATADOS)); corpo.appendChild(criarSeparador());
         corpo.appendChild(criarBlocoCalculado(ag, "Informados")); corpo.appendChild(criarSeparador());
         corpo.appendChild(criarBlocoSimples(ag, "b4", LINHAS_BLOCO_4)); corpo.appendChild(criarSeparador());
@@ -11124,7 +11127,11 @@
         linhas.forEach((l, rIdx) => { const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinhaBloco = `${ag.id}-${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.className = "celula-input"; const ch = `${bId}-r${rIdx}-c${c}`; td.appendChild(criarInputInteiro(ag, v, ch, atualizarTotais)); } tr.appendChild(td); } tb.appendChild(tr); });
         t.appendChild(tb); w.appendChild(t); return w;
       }
-      function calcularInformadoColuna(v, c) { return num(v[`b1-r2-c${c}`]) + num(v[`b1-r3-c${c}`]) + num(v[`b1-r4-c${c}`]) + num(v[`b1-r6-c${c}`]) + num(v[`b2-r0-c${c}`]) + num(v[`b2-r2-c${c}`]) + num(v[`b2-r3-c${c}`]) - num(v[`b2-r1-c${c}`]); }
+      function calcularInformadoColuna(v, c, atParam = null) {
+        const base = num(v[`b1-r2-c${c}`]) + num(v[`b1-r3-c${c}`]) + num(v[`b1-r4-c${c}`]) + num(v[`b1-r6-c${c}`]);
+        if ((atParam || estado?.atividadeAtiva || "ciclo") === "liraa") return base;
+        return base + num(v[`b2-r0-c${c}`]) + num(v[`b2-r2-c${c}`]) + num(v[`b2-r3-c${c}`]) - num(v[`b2-r1-c${c}`]);
+      }
       function criarBlocoCalculado(ag, rot) {
         const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const tb = document.createElement("tbody"); const tr = document.createElement("tr");
         tr.innerHTML = `<td class="celula-rotulo">${rot}</td>`;
@@ -11176,7 +11183,12 @@
             </div>
           </div>
         </div>`;
-        c.appendChild(criarTotalBlocoQuarteirao()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoImoveis()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b2", LINHAS_BLOCO_2)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("bTratados", LINHAS_BLOCO_TRATADOS)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoInformados()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b4", LINHAS_BLOCO_4)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoDepositos()); return c;
+        const ehLiraa = (estado?.atividadeAtiva || "ciclo") === "liraa";
+        c.appendChild(criarTotalBlocoQuarteirao()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoImoveis()); c.appendChild(criarSeparador());
+        if (!ehLiraa) {
+          c.appendChild(criarTotalBlocoSimples("b2", LINHAS_BLOCO_2)); c.appendChild(criarSeparador());
+        }
+        c.appendChild(criarTotalBlocoSimples("bTratados", LINHAS_BLOCO_TRATADOS)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoInformados()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b4", LINHAS_BLOCO_4)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoDepositos()); return c;
       }
       function criarTotalBlocoQuarteirao() {
         const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t);
@@ -11366,10 +11378,13 @@
             peAgente += pe;
             const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(v[`b1-r0-c${c}`] || "").trim());
             if (!isColPE) {
-              somas.FECHADOS += num(v[`b2-r0-c${c}`]);
-              somas.RECUPERADOS += num(v[`b2-r1-c${c}`]);
-              somas.RECUSADOS += num(v[`b2-r2-c${c}`]);
-              somas.ABANDONADOS += num(v[`b2-r3-c${c}`]);
+              const ehLiraaDia = (s?.atividade || estado?.atividadeAtiva || "ciclo") === "liraa";
+              if (!ehLiraaDia) {
+                somas.FECHADOS += num(v[`b2-r0-c${c}`]);
+                somas.RECUPERADOS += num(v[`b2-r1-c${c}`]);
+                somas.RECUSADOS += num(v[`b2-r2-c${c}`]);
+                somas.ABANDONADOS += num(v[`b2-r3-c${c}`]);
+              }
               somas.ELIMINADOS += num(v[`b4-r0-c${c}`]);
               somas.TRATADOS_REAIS += num(v[`bTratados-r0-c${c}`]);
               const cQ = extrairQuarteiroesConcluidosColuna(v[`b1-r0-c${c}`], v[`b1-r1-c${c}`]);
@@ -13406,7 +13421,7 @@
         irParaSemana(nS);
       }
       function autoPreencherDatasSemana() { const d = diaAtual(); if (!d?.data) return; const o = { segunda: 0, terca: 1, quarta: 2, quinta: 3, sexta: 4 }[estado.diaAtivo] || 0; const seg = adicionarDiasISO(d.data, -o); const s = semana(); if (s?.dias) { const agora = agoraSyncMs(); DIAS_SEMANA.forEach((dia, i) => { if (s.dias[dia]) { s.dias[dia].data = adicionarDiasISO(seg, i); if (!s.dias[dia]._fieldTs) s.dias[dia]._fieldTs = {}; s.dias[dia]._fieldTs.data = agora; s.dias[dia]._ts = agora; } }); if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio(); if (!s._cabTs) s._cabTs = {}; s.cabecalho.semanaInicio = formatarDataBR(seg); s._cabTs.semanaInicio = agora; s.cabecalho.semanaTermino = formatarDataBR(adicionarDiasISO(seg, 4)); s._cabTs.semanaTermino = agora; } salvar("semana"); renderizar(); atualizarTotais(); }
-      function haInformadosExcedidosSemana(sR) { const s = sR || semana(); if (!s?.dias) return false; for (const dk of DIAS_SEMANA) { const d = s.dias[dk]; if (!d) continue; const a = (d.agentes || []).filter(x => x && !x._deleted && x.ativo); for (const ag of a) { const v = ag.valores || {}; for (let c = 1; c <= 7; c++) { if (calcularInformadoColuna(v, c) > 19) return true; } } } return false; }
+      function haInformadosExcedidosSemana(sR) { const s = sR || semana(); if (!s?.dias) return false; const atSem = s?.atividade || estado?.atividadeAtiva || "ciclo"; for (const dk of DIAS_SEMANA) { const d = s.dias[dk]; if (!d) continue; const a = (d.agentes || []).filter(x => x && !x._deleted && x.ativo); for (const ag of a) { const v = ag.valores || {}; for (let c = 1; c <= 7; c++) { if (calcularInformadoColuna(v, c, atSem) > 19) return true; } } } return false; }
       function haInformadosExcedidosGlobal() { const col = repoAtivo(); if (!col) return false; for (const k of Object.keys(col)) { if (haInformadosExcedidosSemana(col[k])) return true; } return false; }
       function instalarNavegacaoSetas() {
         const teclas = new Set(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"]); const ign = new Set(["checkbox","radio","date","time","file","submit","button","range","color","hidden","reset"]);
