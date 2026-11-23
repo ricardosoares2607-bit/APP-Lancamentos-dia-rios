@@ -6398,10 +6398,13 @@
       const COLUNAS_CICLO_1_5 = ["Semana","Período","Prog.","Trab.","Quart."];
       const COLUNAS_6_11 = ["R","C","TB","PE","O","TOTAL"];
       const COLUNAS_12_20 = ["Trat.","Fec.","Recp.","Recs.","Aband.","Inf.","Pend.","IP","Rend."];
+      const COLUNAS_12_20_LIRAA = ["Trat.","Inf.","Rend."];
       const COLUNAS_21_28 = ["A1","A2","B","C","D1","D2","E","TOTAL"];
       const COLUNAS_29_34 = ["Trat.","Lit.","g.","Elim.","Foc.","Sup."];
       const LARGURAS_TABELA_SEMANA = ["165px","44px","44px","44px","38px","38px","38px","38px","38px","52px","44px","42px","44px","42px","44px","46px","46px","48px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
+      const LARGURAS_TABELA_SEMANA_LIRAA = ["165px","44px","44px","44px","38px","38px","38px","38px","38px","52px","44px","46px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
       const LARGURAS_TABELA_CICLO = ["100px","160px","44px","44px","44px","38px","38px","38px","38px","38px","52px","44px","42px","44px","42px","44px","46px","46px","48px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
+      const LARGURAS_TABELA_CICLO_LIRAA = ["100px","160px","44px","44px","44px","38px","38px","38px","38px","38px","52px","44px","46px","50px","36px","36px","36px","36px","36px","36px","36px","52px","44px","42px","42px","44px","44px","44px"];
       const CAMPOS_CABECALHO = ["bairro","estrato","equipe","agentesEquipe","supervisor","mes","ciclo","cicloInicio","cicloTermino","semana","semanaInicio","semanaTermino"];
       let estado = {
         atividadeAtiva: "ciclo", semanaAtiva: "1", diaAtivo: "segunda",
@@ -6838,7 +6841,7 @@
         cab.mes = (at === "ciclo") ? (mesDaSem || obterNomeMesDeData(seg) || mes || "") : (mes || obterNomeMesDeData(seg));
         cab.cicloInicio = formatarDataBR(dc.inicio); cab.cicloTermino = formatarDataBR(dc.termino);
         cab.semanaInicio = p.inicioBR; cab.semanaTermino = p.terminoBR;
-        if (estado.configEquipe) { if (estado.configEquipe.bairro) cab.bairro = estado.configEquipe.bairro; if (estado.configEquipe.estrato) cab.estrato = estado.configEquipe.estrato; if (estado.configEquipe.equipe) cab.equipe = estado.configEquipe.equipe; if (estado.configEquipe.supervisor) cab.supervisor = estado.configEquipe.supervisor; cab.agentesEquipe = (at === "ciclo") ? "" : obterTextoAgentesEquipe(); }
+        if (estado.configEquipe) { if (estado.configEquipe.bairro) cab.bairro = estado.configEquipe.bairro; if (estado.configEquipe.estrato) cab.estrato = estado.configEquipe.estrato; if (estado.configEquipe.equipe) cab.equipe = estado.configEquipe.equipe; if (estado.configEquipe.supervisor) cab.supervisor = estado.configEquipe.supervisor; cab.agentesEquipe = ""; }
         const rod = criarRodapeVazio(); if (estado.configEquipe?.responsavel) rod.responsavel = estado.configEquipe.responsavel;
         return { atividade: at, ano, dias, resumo: { valores: {} }, cabecalho: cab, rodape: rod };
       }
@@ -8695,7 +8698,8 @@
             if (!s.rodape) s.rodape = criarRodapeVazio();
             if (!s.cabecalho.semana) s.cabecalho.semana = k;
             CAMPOS_CABECALHO.forEach(kk => { if (s.cabecalho[kk] === undefined) s.cabecalho[kk] = ""; });
-            if (!s.cabecalho.agentesEquipe) s.cabecalho.agentesEquipe = obterTextoAgentesEquipe(s);
+            if (!s._cabAgentesManual && typeof obterAgentesQueTrabalharamNaSemana === "function") s.cabecalho.agentesEquipe = obterAgentesQueTrabalharamNaSemana(s).join(", ");
+            else if (!s.cabecalho.agentesEquipe) s.cabecalho.agentesEquipe = "";
             DIAS_SEMANA.forEach(d => {
               if (!s.dias[d]) { s.dias[d] = { data: hojeISO(), programados: "", agentes: [] }; const base = (estado.configEquipe?.agentes?.length > 0) ? estado.configEquipe.agentes : NOMES_AGENTES_PADRAO.map(n => criarAgente(n)); base.filter(a => a && !a._deleted).forEach(a => s.dias[d].agentes.push({ id: a.id || ("ag_" + Date.now() + "_" + Math.random().toString(36).slice(2,6)), nome: a.nome || "Agente", ativo: a.ativo !== false, valores: {} })); }
               if (!s.dias[d].data) s.dias[d].data = hojeISO();
@@ -10455,10 +10459,10 @@
       function renderizarCabecalhoResumo() {
         const s = semana(); const cab = s ? s.cabecalho : {}; const ano = obterAnoSemana(s); const cN = normalizarNumeroCiclo(cab ? cab.ciclo : "1"); const atAtual = (s?.atividade || estado?.atividadeAtiva || "ciclo"); const ehCiclo = atAtual === "ciclo"; const dc = obterDatasCicloEfetivas(ano, cN, estado.atividadeAtiva); const pA = obterPeriodoDaSemana(estado.semanaAtiva, ano, cN, estado.atividadeAtiva);
         const mesAutoCiclo = ehCiclo ? (obterMesDaSemana(s, pA) || obterNomeMesDeData(pA.inicioISO) || cab?.mes || "") : "";
-        const agentesTrabCiclo = ehCiclo ? obterAgentesQueTrabalharamNaSemana(s).join(", ") : "";
-        if (cab && ehCiclo) {
-          if (!s._cabMesManual && mesAutoCiclo) cab.mes = mesAutoCiclo;
-          if (!s._cabAgentesManual) cab.agentesEquipe = agentesTrabCiclo;
+        const agentesTrabalharamSem = obterAgentesQueTrabalharamNaSemana(s).join(", ");
+        if (cab) {
+          if (ehCiclo && !s._cabMesManual && mesAutoCiclo) cab.mes = mesAutoCiclo;
+          if (!s._cabAgentesManual) cab.agentesEquipe = agentesTrabalharamSem;
         }
         document.querySelectorAll("[data-cab]").forEach(i => {
           const k = i.dataset.cab;
@@ -10473,14 +10477,8 @@
           else if (k === "semanaInicio") i.value = pA.inicioBR;
           else if (k === "semanaTermino") i.value = pA.terminoBR;
           else if (k === "agentesEquipe") {
-            if (ehCiclo) {
-              const tCiclo = (s?._cabAgentesManual && cab?.agentesEquipe !== undefined && cab.agentesEquipe !== "") ? cab.agentesEquipe : agentesTrabCiclo;
-              if (document.activeElement !== i) i.value = tCiclo;
-            } else {
-              const t = (cab && cab.agentesEquipe !== undefined && cab.agentesEquipe !== "") ? cab.agentesEquipe : obterTextoAgentesEquipe(s);
-              if (document.activeElement !== i) i.value = t;
-              if (cab && !cab.agentesEquipe) cab.agentesEquipe = t;
-            }
+            const valAgentes = (s?._cabAgentesManual && cab?.agentesEquipe !== undefined && cab.agentesEquipe !== "") ? cab.agentesEquipe : agentesTrabalharamSem;
+            if (document.activeElement !== i) i.value = valAgentes;
           }
           else { const vd = (estado.configEquipe && estado.configEquipe[k]) ? estado.configEquipe[k] : ""; i.value = cab && cab[k] ? cab[k] : vd; if (cab && !cab[k] && vd) cab[k] = vd; }
         });
@@ -10588,14 +10586,15 @@
           .filter(a => a && !a._deleted && a.ativo !== false)
           .reduce((acc, ag) => acc + lerQtdOcorrenciaPEAgenteDia(ag), 0);
       }
-      function agenteTrabalhouNoDia(ag) {
+      function agenteTrabalhouNoDia(ag, at = null) {
         if (!ag || ag._deleted || ag.ativo === false) return false;
+        const ehLiraaAt = (at || estado?.atividadeAtiva || "ciclo") === "liraa";
         const v = ag.valores || {};
         for (let c = 1; c <= 7; c++) {
           if (String(v[`b1-r0-c${c}`] || "").trim() !== "") return true;
           if (String(v[`b1-r1-c${c}`] || "").trim() !== "") return true;
           if (num(v[`b1-r2-c${c}`]) > 0 || num(v[`b1-r3-c${c}`]) > 0 || num(v[`b1-r4-c${c}`]) > 0 || num(v[`b1-r5-c${c}`]) > 0 || num(v[`b1-r6-c${c}`]) > 0) return true;
-          if (num(v[`b2-r0-c${c}`]) > 0 || num(v[`b2-r1-c${c}`]) > 0 || num(v[`b2-r2-c${c}`]) > 0 || num(v[`b2-r3-c${c}`]) > 0) return true;
+          if (!ehLiraaAt && (num(v[`b2-r0-c${c}`]) > 0 || num(v[`b2-r1-c${c}`]) > 0 || num(v[`b2-r2-c${c}`]) > 0 || num(v[`b2-r3-c${c}`]) > 0)) return true;
           if (num(v[`bTratados-r0-c${c}`]) > 0) return true;
           if (num(v[`b4-r0-c${c}`]) > 0) return true;
         }
@@ -10612,12 +10611,13 @@
       function obterAgentesQueTrabalharamNaSemana(semObj) {
         const s = semObj || semana();
         if (!s || !s.dias) return [];
+        const atSem = s.atividade || estado?.atividadeAtiva || "ciclo";
         const trabalharamPorChave = new Map();
         DIAS_SEMANA.forEach(dk => {
           const d = s.dias[dk];
           if (!d || !Array.isArray(d.agentes)) return;
           d.agentes.forEach(ag => {
-            if (!agenteTrabalhouNoDia(ag)) return;
+            if (!agenteTrabalhouNoDia(ag, atSem)) return;
             const nome = String(ag.nome || "").trim();
             if (!nome) return;
             const chaveNome = `nm:${nome.toLowerCase()}`;
@@ -11007,7 +11007,7 @@
         const dA = diaAtual(); const dS = dA ? dA.data : hojeISO(); const th = document.createElement("thead"); const trId = document.createElement("tr"); trId.className = "linha-identificacao";
         trId.innerHTML = `<th colspan="2">📅 ${formatarDataBR(dS)}</th><th colspan="2">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th><th colspan="2" class="th-nome-agente" title="Agente do lançamento"><div class="wrap-nome-agente"><span class="icone-lancando-agente">✍️</span><input type="text" class="nome-agente" value="${ag.nome}" /></div></th><th colspan="3" style="padding:2px 3px;"><div class="sup-cab"><span class="sup-rotulo">👁️ Supervisão? <strong style="color:#dc2626;" title="Obrigatório">*</strong></span><select class="sup-sim-nao" required aria-required="true"><option value="">Selecione...</option><option value="Sim">Sim</option><option value="Não">Não</option></select><div class="sup-detalhes" style="display:none;"><label>D:</label><input type="text" inputmode="numeric" class="sup-input sup-direta" placeholder="0" /><label>I:</label><input type="text" inputmode="numeric" class="sup-input sup-indireta" placeholder="0" /><span class="sup-total-wrap"><strong>T:</strong> <span class="sup-total">0</span></span></div></div></th>`;
         th.appendChild(trId);
-        trId.querySelector("input.nome-agente").addEventListener("input", e => { const agora = agoraSyncMs(); ag.nome = e.target.value; ag._ts = agora; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(a => a.id === ag.id); if (c) { c.nome = ag.nome; c.atualizadoEm = agora; } } const s = semana(); if (s?.cabecalho) { const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo"; s.cabecalho.agentesEquipe = ehCicloSem ? obterAgentesQueTrabalharamNaSemana(s).join(", ") : obterTextoAgentesEquipe(s); if (!s._cabTs) s._cabTs = {}; s._cabTs.agentesEquipe = agora; const eq = document.querySelector('[data-cab="agentesEquipe"]'); if (eq) eq.value = s.cabecalho.agentesEquipe; } salvar("tudo"); const h = document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"] .cabecalho-agente h3`); if (h) h.textContent = ag.nome || "Agente"; });
+        trId.querySelector("input.nome-agente").addEventListener("input", e => { const agora = agoraSyncMs(); ag.nome = e.target.value; ag._ts = agora; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(a => a.id === ag.id); if (c) { c.nome = ag.nome; c.atualizadoEm = agora; } } const s = semana(); if (s?.cabecalho && !s._cabAgentesManual) { s.cabecalho.agentesEquipe = obterAgentesQueTrabalharamNaSemana(s).join(", "); if (!s._cabTs) s._cabTs = {}; s._cabTs.agentesEquipe = agora; const eq = document.querySelector('[data-cab="agentesEquipe"]'); if (eq) eq.value = s.cabecalho.agentesEquipe; } salvar("tudo"); const h = document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"] .cabecalho-agente h3`); if (h) h.textContent = ag.nome || "Agente"; });
 
         (function () {
           const sel = trId.querySelector(".sup-sim-nao");
@@ -11566,12 +11566,15 @@
       function renderizarResumo() {
         atualizarObservacaoSupervisaoSemana();
         const w = document.getElementById("resumoWrapper"); if (!w) return;
+        const ehLiraa = (estado?.atividadeAtiva || "ciclo") === "liraa";
+        const cols12_20 = ehLiraa ? COLUNAS_12_20_LIRAA : COLUNAS_12_20;
+        const larguras = ehLiraa ? LARGURAS_TABELA_SEMANA_LIRAA : LARGURAS_TABELA_SEMANA;
         w.innerHTML = ""; const t = document.createElement("table"); t.className = "resumo-tabela";
-        const cg = document.createElement("colgroup"); LARGURAS_TABELA_SEMANA.forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); }); t.appendChild(cg);
+        const cg = document.createElement("colgroup"); larguras.forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); }); t.appendChild(cg);
         const th = document.createElement("thead"); const trH = document.createElement("tr");
         COLUNAS_1_5.forEach(x => trH.innerHTML += `<th class="cabecalho-titulo">${x}</th>`);
         COLUNAS_6_11.forEach(x => trH.innerHTML += `<th class="${x === "TOTAL" ? "cabecalho-destaque" : "cabecalho-titulo"}">${x}</th>`);
-        COLUNAS_12_20.forEach(x => trH.innerHTML += `<th class="${["Inf.", "Pend.", "IP", "Rend."].includes(x) ? "cabecalho-calculado" : "cabecalho-titulo"}">${x}</th>`);
+        cols12_20.forEach(x => trH.innerHTML += `<th class="${["Inf.", "Pend.", "IP", "Rend."].includes(x) ? "cabecalho-calculado" : "cabecalho-titulo"}">${x}</th>`);
         COLUNAS_21_28.forEach(x => trH.innerHTML += `<th class="${x === "TOTAL" ? "cabecalho-destaque" : "cabecalho-titulo"}">${x}</th>`);
         COLUNAS_29_34.forEach(x => trH.innerHTML += `<th class="cabecalho-titulo">${x}</th>`);
         th.appendChild(trH); t.appendChild(th);
@@ -11583,13 +11586,19 @@
           const s = calcularSomasDia(d); const pr = (sA?.dias?.[d]) ? sA.dias[d].programados : ""; tot.PROGRAMADOS += num(pr); if (s && s.TOTAL > 0) dP++;
           if (s) { tot.TRABALHADO += s.TRABALHADO; tot.QUARTEIRAO += s.QUARTEIRAO; tot.R += s.R; tot.C += s.C; tot.TB += s.TB; tot.PE += s.PE; tot.O += s.O; tot.TOTAL += s.TOTAL; tot.FECHADOS += s.FECHADOS; tot.RECUPERADOS += s.RECUPERADOS; tot.RECUSADOS += s.RECUSADOS; tot.ABANDONADOS += s.ABANDONADOS; tot.INFORMADOS += s.INFORMADOS; tot.PENDENCIAS += s.PENDENCIAS; TIPOS_DEPOSITOS.forEach(x => { tot.DEP[x] += s.DEP[x]; }); tot.DEP_TRATADOS += s.DEP_TRATADOS; tot.DEP_LITROS += s.DEP_LITROS; tot.DEP_GRAMAS += s.DEP_GRAMAS; tot.ELIMINADOS += s.ELIMINADOS; tot.DEP_FOCADOS += s.DEP_FOCADOS; tot.TRATADOS_GERAL += s.TRATADOS_REAIS; tot.SUPERVISAO += s.SUPERVISAO_REAL; }
           const dS = sA?.dias?.[d]?.data || ""; const nd = (nomeDiaExibido(dS, d) || "").toLowerCase(); const tx = dS ? `${formatarDataBR(dS)} (${nd})` : (nd ? `— (${nd})` : "—");
+          const colsPendFec = ehLiraa
+            ? `<td>${fmtIntCell(s?.TRATADOS_REAIS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.INFORMADOS || 0)}</td><td class="col-calculada">${s ? fmtRendimento(s.RENDIMENTO) : "—"}</td>`
+            : `<td>${fmtIntCell(s?.TRATADOS_REAIS || 0)}</td><td>${fmtIntCell(s?.FECHADOS || 0)}</td><td>${fmtIntCell(s?.RECUPERADOS || 0)}</td><td>${fmtIntCell(s?.RECUSADOS || 0)}</td><td>${fmtIntCell(s?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.PENDENCIAS || 0)}</td><td class="col-calculada">${s ? fmtPct(s.IP) : "0,0%"}</td><td class="col-calculada">${s ? fmtRendimento(s.RENDIMENTO) : "—"}</td>`;
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td class="celula-data">${tx}</td><td>${pr ? fmtIntCell(pr) : "—"}</td><td>${fmtIntCell(s?.TRABALHADO || 0)}</td><td>${fmtIntCell(s?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(s?.R || 0)}</td><td>${fmtIntCell(s?.C || 0)}</td><td>${fmtIntCell(s?.TB || 0)}</td><td>${fmtIntCell(s?.PE_CONTABILIZADO || 0)}</td><td>${fmtIntCell(s?.O || 0)}</td><td class="col-total">${fmtIntCell(s?.TOTAL || 0)}</td><td>${fmtIntCell(s?.TRATADOS_REAIS || 0)}</td><td>${fmtIntCell(s?.FECHADOS || 0)}</td><td>${fmtIntCell(s?.RECUPERADOS || 0)}</td><td>${fmtIntCell(s?.RECUSADOS || 0)}</td><td>${fmtIntCell(s?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.PENDENCIAS || 0)}</td><td class="col-calculada">${s ? fmtPct(s.IP) : "0,0%"}</td><td class="col-calculada">${s ? fmtRendimento(s.RENDIMENTO) : "—"}</td>${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(s?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(s?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(s?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(s?.DEP_LITROS || 0)}</td><td>${fmtDecCell(s?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(s?.ELIMINADOS || 0)}</td><td>${fmtIntCell(s?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(s?.SUPERVISAO_REAL || 0)}</td>`;
+          tr.innerHTML = `<td class="celula-data">${tx}</td><td>${pr ? fmtIntCell(pr) : "—"}</td><td>${fmtIntCell(s?.TRABALHADO || 0)}</td><td>${fmtIntCell(s?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(s?.R || 0)}</td><td>${fmtIntCell(s?.C || 0)}</td><td>${fmtIntCell(s?.TB || 0)}</td><td>${fmtIntCell(s?.PE_CONTABILIZADO || 0)}</td><td>${fmtIntCell(s?.O || 0)}</td><td class="col-total">${fmtIntCell(s?.TOTAL || 0)}</td>${colsPendFec}${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(s?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(s?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(s?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(s?.DEP_LITROS || 0)}</td><td>${fmtDecCell(s?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(s?.ELIMINADOS || 0)}</td><td>${fmtIntCell(s?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(s?.SUPERVISAO_REAL || 0)}</td>`;
           tb.appendChild(tr);
         });
         const dTG = TIPOS_DEPOSITOS.reduce((a, x) => a + tot.DEP[x], 0); const ipT = tot.INFORMADOS !== 0 ? (100 / tot.INFORMADOS) * tot.PENDENCIAS : 0; const rT = tot.TRABALHADO !== 0 ? tot.TOTAL / tot.TRABALHADO : null;
+        const colsPendFecTotal = ehLiraa
+          ? `<td><strong>${fmtIntCell(tot.TRATADOS_GERAL)}</strong></td><td class="col-calculada">${fmtIntCell(tot.INFORMADOS)}</td><td class="col-calculada">${fmtRendimento(rT)}</td>`
+          : `<td><strong>${fmtIntCell(tot.TRATADOS_GERAL)}</strong></td><td><strong>${fmtIntCell(tot.FECHADOS)}</strong></td><td><strong>${fmtIntCell(tot.RECUPERADOS)}</strong></td><td><strong>${fmtIntCell(tot.RECUSADOS)}</strong></td><td><strong>${fmtIntCell(tot.ABANDONADOS)}</strong></td><td class="col-calculada">${fmtIntCell(tot.INFORMADOS)}</td><td class="col-calculada">${fmtIntCell(tot.PENDENCIAS)}</td><td class="col-calculada">${fmtPct(ipT)}</td><td class="col-calculada">${fmtRendimento(rT)}</td>`;
         const trT = document.createElement("tr"); trT.className = "linha-total-resumo";
-        trT.innerHTML = `<td class="celula-rotulo-dia">Total (${dP} dias)</td><td><strong>${tot.PROGRAMADOS ? fmtIntCell(tot.PROGRAMADOS) : "—"}</strong></td><td><strong>${fmtIntCell(tot.TRABALHADO)}</strong></td><td><strong>${fmtIntCell(tot.QUARTEIRAO)}</strong></td><td><strong>${fmtIntCell(tot.R)}</strong></td><td><strong>${fmtIntCell(tot.C)}</strong></td><td><strong>${fmtIntCell(tot.TB)}</strong></td><td><strong>${fmtIntCell(tot.PE_CONTABILIZADO || 0)}</strong></td><td><strong>${fmtIntCell(tot.O)}</strong></td><td class="col-total">${fmtIntCell(tot.TOTAL)}</td><td><strong>${fmtIntCell(tot.TRATADOS_GERAL)}</strong></td><td><strong>${fmtIntCell(tot.FECHADOS)}</strong></td><td><strong>${fmtIntCell(tot.RECUPERADOS)}</strong></td><td><strong>${fmtIntCell(tot.RECUSADOS)}</strong></td><td><strong>${fmtIntCell(tot.ABANDONADOS)}</strong></td><td class="col-calculada">${fmtIntCell(tot.INFORMADOS)}</td><td class="col-calculada">${fmtIntCell(tot.PENDENCIAS)}</td><td class="col-calculada">${fmtPct(ipT)}</td><td class="col-calculada">${fmtRendimento(rT)}</td>${TIPOS_DEPOSITOS.map(x => `<td><strong>${fmtIntCell(tot.DEP[x])}</strong></td>`).join("")}<td class="col-total">${fmtIntCell(dTG)}</td><td><strong>${fmtIntCell(tot.DEP_TRATADOS)}</strong></td><td><strong>${fmtIntCell(tot.DEP_LITROS)}</strong></td><td><strong>${fmtDecCell(tot.DEP_GRAMAS)}</strong></td><td><strong>${fmtIntCell(tot.ELIMINADOS)}</strong></td><td><strong>${fmtIntCell(tot.DEP_FOCADOS)}</strong></td><td><strong>${fmtIntCell(tot.SUPERVISAO)}</strong></td>`;
+        trT.innerHTML = `<td class="celula-rotulo-dia">Total (${dP} dias)</td><td><strong>${tot.PROGRAMADOS ? fmtIntCell(tot.PROGRAMADOS) : "—"}</strong></td><td><strong>${fmtIntCell(tot.TRABALHADO)}</strong></td><td><strong>${fmtIntCell(tot.QUARTEIRAO)}</strong></td><td><strong>${fmtIntCell(tot.R)}</strong></td><td><strong>${fmtIntCell(tot.C)}</strong></td><td><strong>${fmtIntCell(tot.TB)}</strong></td><td><strong>${fmtIntCell(tot.PE_CONTABILIZADO || 0)}</strong></td><td><strong>${fmtIntCell(tot.O)}</strong></td><td class="col-total">${fmtIntCell(tot.TOTAL)}</td>${colsPendFecTotal}${TIPOS_DEPOSITOS.map(x => `<td><strong>${fmtIntCell(tot.DEP[x])}</strong></td>`).join("")}<td class="col-total">${fmtIntCell(dTG)}</td><td><strong>${fmtIntCell(tot.DEP_TRATADOS)}</strong></td><td><strong>${fmtIntCell(tot.DEP_LITROS)}</strong></td><td><strong>${fmtDecCell(tot.DEP_GRAMAS)}</strong></td><td><strong>${fmtIntCell(tot.ELIMINADOS)}</strong></td><td><strong>${fmtIntCell(tot.DEP_FOCADOS)}</strong></td><td><strong>${fmtIntCell(tot.SUPERVISAO)}</strong></td>`;
         tb.appendChild(trT); t.appendChild(tb);
         w.appendChild(t);
       }
@@ -11607,17 +11616,6 @@
         const col = repoAtivo(at) || {}; const dC = obterDatasCicloEfetivas(an, cI, at); const si = Number(dC.semanaInicio), st = Number(dC.semanaTermino);
         const bdg = document.getElementById("badgeCicloProgramacao");
         if (bdg) { if (si && st) { bdg.className = `badge-aviso-atividade ${ehLiraa ? "liraa" : "ciclo"}`; bdg.textContent = `📋 SE ${pad2(si)} a SE ${pad2(st)} (${formatarDataBR(dC.inicio)} a ${formatarDataBR(dC.termino)})`; } else { bdg.className = "badge-aviso-atividade alerta"; bdg.textContent = "ℹ️ Sem programação cadastrada"; } }
-        const consObj = objConsolidadoAtivo();
-        const cC = (consObj?.cabecalho) || {}; const cA = sA ? sA.cabecalho : {};
-        document.querySelectorAll("[data-ciclocab]").forEach(i => {
-          const k = i.dataset.ciclocab;
-          if (k === "ciclo") i.value = formatarCicloTexto(cI, at);
-          else if (k === "cicloInicio") i.value = formatarDataBR(dC.inicio) || cC.cicloInicio || "";
-          else if (k === "cicloTermino") i.value = formatarDataBR(dC.termino) || cC.cicloTermino || "";
-          else if (k === "mes") i.value = obterNomeMesDeData(dC.inicio) || cC.mes || cA?.mes || "";
-          else if (k === "agentesEquipe") i.value = cC.agentesEquipe || cA?.agentesEquipe || obterTextoAgentesEquipe() || "";
-          else { const vd = (estado.configEquipe && estado.configEquipe[k]) ? estado.configEquipe[k] : ""; i.value = cC[k] || cA?.[k] || vd || ""; }
-        });
         let ksTodos = [];
         if (si && st && si <= st) { for (let s = si; s <= st; s++) ksTodos.push(s); }
         else { ksTodos = Object.keys(col).map(Number).filter(n => !isNaN(n) && normalizarNumeroCiclo(col[String(n)]?.cabecalho?.ciclo) === cI).sort((a, b) => a - b); }
@@ -11627,28 +11625,76 @@
           bdg.textContent = `📋 SE ${pad2(si)} a SE ${pad2(st)} (${ks.length} ativas, ${qtdInativasCiclo} inativa${qtdInativasCiclo > 1 ? "s" : ""})`;
         }
         const inS = document.getElementById("cicloTotalSemanas"); if (inS) { if (si && st) inS.value = qtdInativasCiclo > 0 ? `SE ${pad2(si)} a SE ${pad2(st)} (${ks.length} ativas, ${qtdInativasCiclo} inativa${qtdInativasCiclo > 1 ? "s" : ""})` : `SE ${pad2(si)} a SE ${pad2(st)} (${ks.length} semanas)`; else inS.value = `${ks.length} semana(s)`; }
-        const t = document.createElement("table"); t.className = "resumo-tabela"; const cg = document.createElement("colgroup"); LARGURAS_TABELA_CICLO.forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); }); t.appendChild(cg);
+        const obterAgentesTrabalharamLiraaCiclo = () => {
+          const semanasAlvo = ks.map(sN => col[String(sN)]).filter(Boolean);
+          if (semanasAlvo.length === 0 && sA) semanasAlvo.push(sA);
+          const mapa = new Map();
+          semanasAlvo.forEach(semItem => {
+            obterAgentesQueTrabalharamNaSemana(semItem).forEach(nome => {
+              const ch = nome.trim().toLowerCase();
+              if (ch && !mapa.has(ch)) mapa.set(ch, nome.trim());
+            });
+          });
+          if (mapa.size === 0) return "";
+          const ord = []; const usados = new Set();
+          if (Array.isArray(estado.configEquipe?.agentes)) {
+            estado.configEquipe.agentes.forEach(cfgAg => {
+              if (!cfgAg || cfgAg._deleted) return;
+              const ch = String(cfgAg.nome || "").trim().toLowerCase();
+              if (ch && mapa.has(ch) && !usados.has(ch)) { ord.push(mapa.get(ch)); usados.add(ch); }
+            });
+          }
+          mapa.forEach((nm, ch) => { if (!usados.has(ch)) { ord.push(nm); usados.add(ch); } });
+          return ord.join(", ");
+        };
+        const consObj = objConsolidadoAtivo();
+        const cC = (consObj?.cabecalho) || {}; const cA = sA ? sA.cabecalho : {};
+        document.querySelectorAll("[data-ciclocab]").forEach(i => {
+          const k = i.dataset.ciclocab;
+          if (k === "ciclo") i.value = formatarCicloTexto(cI, at);
+          else if (k === "cicloInicio") i.value = formatarDataBR(dC.inicio) || cC.cicloInicio || "";
+          else if (k === "cicloTermino") i.value = formatarDataBR(dC.termino) || cC.cicloTermino || "";
+          else if (k === "mes") i.value = obterNomeMesDeData(dC.inicio) || cC.mes || cA?.mes || "";
+          else if (k === "agentesEquipe") {
+            if (ehLiraa) {
+              const valAgLiraa = (consObj?._cabAgentesManual && cC.agentesEquipe) ? cC.agentesEquipe : obterAgentesTrabalharamLiraaCiclo();
+              if (document.activeElement !== i) i.value = valAgLiraa;
+            } else {
+              i.value = cC.agentesEquipe || cA?.agentesEquipe || obterTextoAgentesEquipe() || "";
+            }
+          }
+          else { const vd = (estado.configEquipe && estado.configEquipe[k]) ? estado.configEquipe[k] : ""; i.value = cC[k] || cA?.[k] || vd || ""; }
+        });
+        const cols12_20Ciclo = ehLiraa ? COLUNAS_12_20_LIRAA : COLUNAS_12_20;
+        const largurasCiclo = ehLiraa ? LARGURAS_TABELA_CICLO_LIRAA : LARGURAS_TABELA_CICLO;
+        const t = document.createElement("table"); t.className = "resumo-tabela"; const cg = document.createElement("colgroup"); largurasCiclo.forEach(x => { const c = document.createElement("col"); c.style.width = x; cg.appendChild(c); }); t.appendChild(cg);
         const th = document.createElement("thead"); const trH = document.createElement("tr");
         COLUNAS_CICLO_1_5.forEach(x => trH.innerHTML += `<th class="cabecalho-titulo">${x}</th>`);
         COLUNAS_6_11.forEach(x => trH.innerHTML += `<th class="${x === "TOTAL" ? "cabecalho-destaque" : "cabecalho-titulo"}">${x}</th>`);
-        COLUNAS_12_20.forEach(x => trH.innerHTML += `<th class="${["Inf.", "Pend.", "IP", "Rend."].includes(x) ? "cabecalho-calculado" : "cabecalho-titulo"}">${x}</th>`);
+        cols12_20Ciclo.forEach(x => trH.innerHTML += `<th class="${["Inf.", "Pend.", "IP", "Rend."].includes(x) ? "cabecalho-calculado" : "cabecalho-titulo"}">${x}</th>`);
         COLUNAS_21_28.forEach(x => trH.innerHTML += `<th class="${x === "TOTAL" ? "cabecalho-destaque" : "cabecalho-titulo"}">${x}</th>`);
         COLUNAS_29_34.forEach(x => trH.innerHTML += `<th class="cabecalho-titulo">${x}</th>`);
         th.appendChild(trH); t.appendChild(th);
         const tb = document.createElement("tbody");
         const tC = { diasComProducao: 0, PROGRAMADOS: 0, TRABALHADO: 0, QUARTEIRAO: 0, R: 0, C: 0, TB: 0, PE: 0, PE_CONTABILIZADO: 0, O: 0, TOTAL: 0, TRATADOS_GERAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, DEP: {}, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, ELIMINADOS: 0, DEP_FOCADOS: 0, SUPERVISAO: 0 };
         TIPOS_DEPOSITOS.forEach(x => tC.DEP[x] = 0);
-        if (ks.length === 0) { tb.innerHTML = `<tr><td colspan="34" style="padding: 18px; color: #64748b; font-weight: 600;">Nenhuma semana para o ${formatarCicloTexto(cI, at)}.</td></tr>`; t.appendChild(tb); w.appendChild(t); return; }
+        if (ks.length === 0) { tb.innerHTML = `<tr><td colspan="${ehLiraa ? 28 : 34}" style="padding: 18px; color: #64748b; font-weight: 600;">Nenhuma semana para o ${formatarCicloTexto(cI, at)}.</td></tr>`; t.appendChild(tb); w.appendChild(t); return; }
         ks.forEach(sN => {
           const tS = calcularTotaisSemana(String(sN), col); const pI = obterPeriodoDaSemana(sN, an, cI, at);
           if (tS) { tC.diasComProducao += tS.diasComProducao; tC.PROGRAMADOS += tS.PROGRAMADOS; tC.TRABALHADO += tS.TRABALHADO; tC.QUARTEIRAO += tS.QUARTEIRAO; tC.R += tS.R; tC.C += tS.C; tC.TB += tS.TB; tC.PE += tS.PE; tC.O += tS.O; tC.TOTAL += tS.TOTAL; tC.TRATADOS_GERAL += tS.TRATADOS_GERAL; tC.FECHADOS += tS.FECHADOS; tC.RECUPERADOS += tS.RECUPERADOS; tC.RECUSADOS += tS.RECUSADOS; tC.ABANDONADOS += tS.ABANDONADOS; tC.INFORMADOS += tS.INFORMADOS; tC.PENDENCIAS += tS.PENDENCIAS; TIPOS_DEPOSITOS.forEach(x => { tC.DEP[x] += tS.DEP[x]; }); tC.DEP_TRATADOS += tS.DEP_TRATADOS; tC.DEP_LITROS += tS.DEP_LITROS; tC.DEP_GRAMAS += tS.DEP_GRAMAS; tC.ELIMINADOS += tS.ELIMINADOS; tC.DEP_FOCADOS += tS.DEP_FOCADOS; tC.SUPERVISAO += tS.SUPERVISAO; }
+          const colsPendFecCiclo = ehLiraa
+            ? `<td>${fmtIntCell(tS?.TRATADOS_GERAL || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtRendimento(tS?.RENDIMENTO || null)}</td>`
+            : `<td>${fmtIntCell(tS?.TRATADOS_GERAL || 0)}</td><td>${fmtIntCell(tS?.FECHADOS || 0)}</td><td>${fmtIntCell(tS?.RECUPERADOS || 0)}</td><td>${fmtIntCell(tS?.RECUSADOS || 0)}</td><td>${fmtIntCell(tS?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.PENDENCIAS || 0)}</td><td class="col-calculada">${fmtPct(tS?.IP || 0)}</td><td class="col-calculada">${fmtRendimento(tS?.RENDIMENTO || null)}</td>`;
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td class="celula-data">SE ${pad2(sN)}</td><td class="celula-dia-semana">${pI.texto}</td><td>${tS ? (tS.PROGRAMADOS ? fmtIntCell(tS.PROGRAMADOS) : "—") : "—"}</td><td>${fmtIntCell(tS?.TRABALHADO || 0)}</td><td>${fmtIntCell(tS?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(tS?.R || 0)}</td><td>${fmtIntCell(tS?.C || 0)}</td><td>${fmtIntCell(tS?.TB || 0)}</td><td>${fmtIntCell(tS?.PE_CONTABILIZADO || 0)}</td><td>${fmtIntCell(tS?.O || 0)}</td><td class="col-total">${fmtIntCell(tS?.TOTAL || 0)}</td><td>${fmtIntCell(tS?.TRATADOS_GERAL || 0)}</td><td>${fmtIntCell(tS?.FECHADOS || 0)}</td><td>${fmtIntCell(tS?.RECUPERADOS || 0)}</td><td>${fmtIntCell(tS?.RECUSADOS || 0)}</td><td>${fmtIntCell(tS?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(tS?.PENDENCIAS || 0)}</td><td class="col-calculada">${fmtPct(tS?.IP || 0)}</td><td class="col-calculada">${fmtRendimento(tS?.RENDIMENTO || null)}</td>${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(tS?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(tS?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(tS?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_LITROS || 0)}</td><td>${fmtDecCell(tS?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(tS?.ELIMINADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(tS?.SUPERVISAO || 0)}</td>`;
+          tr.innerHTML = `<td class="celula-data">SE ${pad2(sN)}</td><td class="celula-dia-semana">${pI.texto}</td><td>${tS ? (tS.PROGRAMADOS ? fmtIntCell(tS.PROGRAMADOS) : "—") : "—"}</td><td>${fmtIntCell(tS?.TRABALHADO || 0)}</td><td>${fmtIntCell(tS?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(tS?.R || 0)}</td><td>${fmtIntCell(tS?.C || 0)}</td><td>${fmtIntCell(tS?.TB || 0)}</td><td>${fmtIntCell(tS?.PE_CONTABILIZADO || 0)}</td><td>${fmtIntCell(tS?.O || 0)}</td><td class="col-total">${fmtIntCell(tS?.TOTAL || 0)}</td>${colsPendFecCiclo}${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(tS?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(tS?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(tS?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_LITROS || 0)}</td><td>${fmtDecCell(tS?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(tS?.ELIMINADOS || 0)}</td><td>${fmtIntCell(tS?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(tS?.SUPERVISAO || 0)}</td>`;
           tb.appendChild(tr);
         });
         const dTC = TIPOS_DEPOSITOS.reduce((a, x) => a + tC.DEP[x], 0); const ipC = tC.INFORMADOS !== 0 ? (100 / tC.INFORMADOS) * tC.PENDENCIAS : 0; const rC = tC.TRABALHADO !== 0 ? tC.TOTAL / tC.TRABALHADO : null;
+        const colsPendFecCicloTotal = ehLiraa
+          ? `<td><strong>${fmtIntCell(tC.TRATADOS_GERAL)}</strong></td><td class="col-calculada">${fmtIntCell(tC.INFORMADOS)}</td><td class="col-calculada">${fmtRendimento(rC)}</td>`
+          : `<td><strong>${fmtIntCell(tC.TRATADOS_GERAL)}</strong></td><td><strong>${fmtIntCell(tC.FECHADOS)}</strong></td><td><strong>${fmtIntCell(tC.RECUPERADOS)}</strong></td><td><strong>${fmtIntCell(tC.RECUSADOS)}</strong></td><td><strong>${fmtIntCell(tC.ABANDONADOS)}</strong></td><td class="col-calculada">${fmtIntCell(tC.INFORMADOS)}</td><td class="col-calculada">${fmtIntCell(tC.PENDENCIAS)}</td><td class="col-calculada">${fmtPct(ipC)}</td><td class="col-calculada">${fmtRendimento(rC)}</td>`;
         const trT = document.createElement("tr"); trT.className = "linha-total-resumo";
-        trT.innerHTML = `<td class="celula-rotulo-dia">Total ${formatarCicloTexto(cI, at)}</td><td><strong>${tC.diasComProducao} dias prod.</strong></td><td><strong>${tC.PROGRAMADOS ? fmtIntCell(tC.PROGRAMADOS) : "—"}</strong></td><td><strong>${fmtIntCell(tC.TRABALHADO)}</strong></td><td><strong>${fmtIntCell(tC.QUARTEIRAO)}</strong></td><td><strong>${fmtIntCell(tC.R)}</strong></td><td><strong>${fmtIntCell(tC.C)}</strong></td><td><strong>${fmtIntCell(tC.TB)}</strong></td><td><strong>${fmtIntCell(tC.PE_CONTABILIZADO || 0)}</strong></td><td><strong>${fmtIntCell(tC.O)}</strong></td><td class="col-total">${fmtIntCell(tC.TOTAL)}</td><td><strong>${fmtIntCell(tC.TRATADOS_GERAL)}</strong></td><td><strong>${fmtIntCell(tC.FECHADOS)}</strong></td><td><strong>${fmtIntCell(tC.RECUPERADOS)}</strong></td><td><strong>${fmtIntCell(tC.RECUSADOS)}</strong></td><td><strong>${fmtIntCell(tC.ABANDONADOS)}</strong></td><td class="col-calculada">${fmtIntCell(tC.INFORMADOS)}</td><td class="col-calculada">${fmtIntCell(tC.PENDENCIAS)}</td><td class="col-calculada">${fmtPct(ipC)}</td><td class="col-calculada">${fmtRendimento(rC)}</td>${TIPOS_DEPOSITOS.map(x => `<td><strong>${fmtIntCell(tC.DEP[x])}</strong></td>`).join("")}<td class="col-total">${fmtIntCell(dTC)}</td><td><strong>${fmtIntCell(tC.DEP_TRATADOS)}</strong></td><td><strong>${fmtIntCell(tC.DEP_LITROS)}</strong></td><td><strong>${fmtDecCell(tC.DEP_GRAMAS)}</strong></td><td><strong>${fmtIntCell(tC.ELIMINADOS)}</strong></td><td><strong>${fmtIntCell(tC.DEP_FOCADOS)}</strong></td><td><strong>${fmtIntCell(tC.SUPERVISAO)}</strong></td>`;
+        trT.innerHTML = `<td class="celula-rotulo-dia">Total ${formatarCicloTexto(cI, at)}</td><td><strong>${tC.diasComProducao} dias prod.</strong></td><td><strong>${tC.PROGRAMADOS ? fmtIntCell(tC.PROGRAMADOS) : "—"}</strong></td><td><strong>${fmtIntCell(tC.TRABALHADO)}</strong></td><td><strong>${fmtIntCell(tC.QUARTEIRAO)}</strong></td><td><strong>${fmtIntCell(tC.R)}</strong></td><td><strong>${fmtIntCell(tC.C)}</strong></td><td><strong>${fmtIntCell(tC.TB)}</strong></td><td><strong>${fmtIntCell(tC.PE_CONTABILIZADO || 0)}</strong></td><td><strong>${fmtIntCell(tC.O)}</strong></td><td class="col-total">${fmtIntCell(tC.TOTAL)}</td>${colsPendFecCicloTotal}${TIPOS_DEPOSITOS.map(x => `<td><strong>${fmtIntCell(tC.DEP[x])}</strong></td>`).join("")}<td class="col-total">${fmtIntCell(dTC)}</td><td><strong>${fmtIntCell(tC.DEP_TRATADOS)}</strong></td><td><strong>${fmtIntCell(tC.DEP_LITROS)}</strong></td><td><strong>${fmtDecCell(tC.DEP_GRAMAS)}</strong></td><td><strong>${fmtIntCell(tC.ELIMINADOS)}</strong></td><td><strong>${fmtIntCell(tC.DEP_FOCADOS)}</strong></td><td><strong>${fmtIntCell(tC.SUPERVISAO)}</strong></td>`;
         tb.appendChild(trT); t.appendChild(tb); w.appendChild(t);
       }
       /* ===== ABA ÍNDICES LIRAA: RESUMO SEMANAL DO SERVIÇO ANTIVETORIAL ===== */
@@ -11825,7 +11871,7 @@
           bairro: cab.bairro || estLiraa?.bairro || "",
           estrato: cab.estrato || estLiraa?.estrato || "",
           equipe: cab.equipe || estado.configEquipe?.equipe || "",
-          agentes: cab.agentesEquipe || obterTextoAgentesEquipe(sem) || "",
+          agentes: (sem?._cabAgentesManual && cab.agentesEquipe) ? cab.agentesEquipe : obterAgentesQueTrabalharamNaSemana(sem).join(", "),
           supervisor: cab.supervisor || estado.configEquipe?.supervisor || "",
           atividade: "LIRAa",
           ciclo: formatarCicloTexto(cN, "liraa"),
@@ -12669,6 +12715,59 @@
         const cardsEl = document.getElementById("qdResumoCards");
         if (cardsEl) {
           const pct = st.programados > 0 ? Math.min(100, (100 * st.concluidos) / st.programados) : 0;
+          const ehLiraaQd = ctx.atividade === "liraa";
+          let imoveisFocadosQd = 0;
+          if (ehLiraaQd) {
+            const semsLiraaQd = dashSemanasDoCiclo(ctx.ano, ctx.ciclo);
+            semsLiraaQd.forEach(sk => {
+              const fm = estado?.indicesLiraaForm?.porSemana?.[sk]?.focadosManuais;
+              if (fm) {
+                imoveisFocadosQd += num(fm.R) + num(fm.C) + num(fm.TB) + num(fm.PE) + num(fm.O);
+              }
+            });
+          }
+          const depFocadosQd = agg.DEP_FOCADOS || 0;
+          const amostrasQd = agg.DEP_AMOSTRAS || 0;
+          const numeradorIIPQd = imoveisFocadosQd > 0 ? imoveisFocadosQd : depFocadosQd;
+          const iipQd = agg.TOTAL > 0 ? (100 * numeradorIIPQd / agg.TOTAL) : 0;
+          const corIIPQd = agg.TOTAL === 0 ? "#1e40af" : (iipQd < 1 ? "#16a34a" : (iipQd < 4 ? "#d97706" : "#dc2626"));
+          const blocoRecuperadosQd = ehLiraaQd ? "" : `
+                <div class="qd-total-item" data-qd-campo="recuperados">
+                  <span class="qd-total-label">Recuperados</span>
+                  <span class="qd-total-valor" style="color:#16a34a">${formatarNumeroMilhar(agg.RECUPERADOS)}</span>
+                </div>`;
+          const blocosPendenciaQd = ehLiraaQd ? "" : `
+                <div class="qd-total-item" data-qd-campo="pendencia">
+                  <span class="qd-total-label">Pendência</span>
+                  <span class="qd-total-valor" style="color:#dc2626">${formatarNumeroMilhar(agg.PENDENCIAS)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="indice-pendencia">
+                  <span class="qd-total-label">Índice de Pendência</span>
+                  <span class="qd-total-valor" style="color:#e11d48">${fmtPct(agg.ip)}</span>
+                </div>`;
+          const blocoFocosLiraaQd = ehLiraaQd ? `
+              <!-- Índices LIRAa -->
+              <div class="qd-total-card qd-total-card-focos-liraa" style="background: #eff6ff; border: 1.5px solid #bfdbfe;">
+                <div style="width: 100%; font-size: 0.76rem; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px dashed #93c5fd; margin-bottom: 2px;">
+                  🔬 Focos e Infestação (${formatarCicloTexto(ctx.ciclo)})
+                </div>
+                <div class="qd-total-item" data-qd-campo="imoveis-focados">
+                  <span class="qd-total-label">Imóveis Focados</span>
+                  <span class="qd-total-valor" style="color:#dc2626">${formatarNumeroMilhar(imoveisFocadosQd)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="depositos-focados">
+                  <span class="qd-total-label">Depósitos Focados</span>
+                  <span class="qd-total-valor" style="color:#b91c1c">${formatarNumeroMilhar(depFocadosQd)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="amostras-coletadas">
+                  <span class="qd-total-label">Amostras Coletadas</span>
+                  <span class="qd-total-valor" style="color:#7c3aed">${formatarNumeroMilhar(amostrasQd)}</span>
+                </div>
+                <div class="qd-total-item" data-qd-campo="indice-infestacao-predial">
+                  <span class="qd-total-label">Índice de Infestação Predial</span>
+                  <span class="qd-total-valor" style="color:${corIIPQd}">${fmtPct(iipQd)}</span>
+                </div>
+              </div>` : "";
           cardsEl.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
               <!-- Resumo dos Quarteirões -->
@@ -12697,28 +12796,16 @@
                 <div class="qd-total-item" data-qd-campo="inspecionados">
                   <span class="qd-total-label">Inspecionados</span>
                   <span class="qd-total-valor" style="color:#7c3aed">${formatarNumeroMilhar(agg.TOTAL)}</span>
-                </div>
-                <div class="qd-total-item" data-qd-campo="recuperados">
-                  <span class="qd-total-label">Recuperados</span>
-                  <span class="qd-total-valor" style="color:#16a34a">${formatarNumeroMilhar(agg.RECUPERADOS)}</span>
-                </div>
+                </div>${blocoRecuperadosQd}
                 <div class="qd-total-item" data-qd-campo="informados">
                   <span class="qd-total-label">Informados</span>
                   <span class="qd-total-valor" style="color:#0f172a">${formatarNumeroMilhar(agg.INFORMADOS)}</span>
-                </div>
-                <div class="qd-total-item" data-qd-campo="pendencia">
-                  <span class="qd-total-label">Pendência</span>
-                  <span class="qd-total-valor" style="color:#dc2626">${formatarNumeroMilhar(agg.PENDENCIAS)}</span>
-                </div>
-                <div class="qd-total-item" data-qd-campo="indice-pendencia">
-                  <span class="qd-total-label">Índice de Pendência</span>
-                  <span class="qd-total-valor" style="color:#e11d48">${fmtPct(agg.ip)}</span>
-                </div>
+                </div>${blocosPendenciaQd}
                 <div class="qd-total-item" data-qd-campo="restam">
                   <span class="qd-total-label">Restam</span>
                   <span class="qd-total-valor" style="color:#d97706">${restamImoveis != null ? formatarNumeroMilhar(restamImoveis) : "—"}</span>
                 </div>
-              </div>
+              </div>${blocoFocosLiraaQd}
             </div>
           `;
         }
@@ -12912,13 +12999,10 @@
             });
             d._ts = agora;
           });
-          if (semObj.cabecalho) {
-            const ehCicloSem = (semObj.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
-            if (!ehCicloSem || !semObj._cabAgentesManual) {
-              semObj.cabecalho.agentesEquipe = ehCicloSem ? obterAgentesQueTrabalharamNaSemana(semObj).join(", ") : obterTextoAgentesEquipe(semObj);
-              if (!semObj._cabTs) semObj._cabTs = {};
-              semObj._cabTs.agentesEquipe = agora;
-            }
+          if (semObj.cabecalho && !semObj._cabAgentesManual) {
+            semObj.cabecalho.agentesEquipe = obterAgentesQueTrabalharamNaSemana(semObj).join(", ");
+            if (!semObj._cabTs) semObj._cabTs = {};
+            semObj._cabTs.agentesEquipe = agora;
           }
         };
         const s = semana();
@@ -13009,9 +13093,8 @@
           if (s?.cabecalho && estado.configEquipe) {
             if (!s._cabTs) s._cabTs = {};
             ["bairro","estrato","equipe","supervisor"].forEach(k => { s.cabecalho[k] = estado.configEquipe[k] || ""; s._cabTs[k] = agora; });
-            const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
-            if (!ehCicloSem || !s._cabAgentesManual) {
-              s.cabecalho.agentesEquipe = ehCicloSem ? obterAgentesQueTrabalharamNaSemana(s).join(", ") : obterTextoAgentesEquipe(s);
+            if (!s._cabAgentesManual) {
+              s.cabecalho.agentesEquipe = obterAgentesQueTrabalharamNaSemana(s).join(", ");
               s._cabTs.agentesEquipe = agora;
             }
           }
@@ -13335,13 +13418,10 @@
           if (c) { c.ativo = ag.ativo; c.atualizadoEm = agora; estado.configEquipe._ts = agora; }
         }
         const s = semana();
-        if (s?.cabecalho) {
-          const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
-          if (!ehCicloSem || !s._cabAgentesManual) {
-            s.cabecalho.agentesEquipe = ehCicloSem ? obterAgentesQueTrabalharamNaSemana(s).join(", ") : obterTextoAgentesEquipe(s);
-            if (!s._cabTs) s._cabTs = {};
-            s._cabTs.agentesEquipe = agora;
-          }
+        if (s?.cabecalho && !s._cabAgentesManual) {
+          s.cabecalho.agentesEquipe = obterAgentesQueTrabalharamNaSemana(s).join(", ");
+          if (!s._cabTs) s._cabTs = {};
+          s._cabTs.agentesEquipe = agora;
         }
         salvar("tudo"); renderizar(); atualizarTotais(); renderizarConfigEquipe();
       }
@@ -14345,7 +14425,7 @@
             if (s?.cabecalho) {
               s.cabecalho[k] = inp.value;
               if (!ehLiraa && k === "mes") s._cabMesManual = String(inp.value || "").trim() !== "";
-              if (!ehLiraa && k === "agentesEquipe") s._cabAgentesManual = String(inp.value || "").trim() !== "";
+              if (k === "agentesEquipe") s._cabAgentesManual = String(inp.value || "").trim() !== "";
               if (!s._cabTs) s._cabTs = {}; s._cabTs[k] = agora; s._ts = agora;
             }
             const tocouEquipe = !ehLiraa && estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(k) && String(inp.value || "").trim() !== "";
@@ -14393,6 +14473,7 @@
             const ehLiraa = estado?.atividadeAtiva === "liraa";
             const cons = objConsolidadoAtivo();
             cons.cabecalho[k] = inp.value;
+            if (k === "agentesEquipe") cons._cabAgentesManual = String(inp.value || "").trim() !== "";
             cons._ts = agora;
             const tocouEquipe = !ehLiraa && estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(k) && String(inp.value || "").trim() !== "";
             if (tocouEquipe) {
