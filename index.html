@@ -234,6 +234,13 @@
       .ocorrencias-dia-footer { margin-top: 8px; padding-top: 7px; border-top: 1px dashed #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 0.72rem; color: #64748b; }
       .ocorrencias-dia-limpar { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 4px; padding: 3px 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
       .ocorrencias-dia-limpar:hover { background: #fecaca; }
+      .ocorrencias-pe-qtd-box { display: none; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding: 8px 10px; border-radius: 6px; border: 1.5px solid #86efac; background: #f0fdf4; }
+      .ocorrencias-pe-qtd-box.visivel { display: flex; }
+      .ocorrencias-pe-qtd-titulo { font-size: 0.78rem; font-weight: 800; color: #14532d; }
+      .ocorrencias-pe-qtd-label { font-size: 0.78rem; font-weight: 700; color: #166534; }
+      .ocorrencias-pe-qtd-input { width: 82px; min-height: 32px; padding: 4px 8px; border: 1.5px solid #16a34a; border-radius: 5px; background: #ffffff; font-size: 0.84rem; font-weight: 800; color: #14532d; text-align: center; outline: none; }
+      .ocorrencias-pe-qtd-input:focus { border-color: #15803d; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2); background: #fefce8; }
+      .ocorrencias-pe-qtd-unidade { font-size: 0.74rem; font-weight: 600; color: #475569; }
       #prodIndWrapper .resumo-tabela th { white-space: normal; overflow: visible; text-overflow: initial; line-height: 1.2; padding: 5px 3px; vertical-align: middle; }
       .prod-th-dia { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
       .prod-th-dia-nome { font-weight: 800; font-size: 0.74rem; color: #14532d; }
@@ -2872,6 +2879,15 @@
         .ocorrencias-dia-item input[type="checkbox"] {
           width: 18px;
           height: 18px;
+        }
+        .ocorrencias-pe-qtd-box {
+          padding: 9px 10px;
+          gap: 8px;
+        }
+        .ocorrencias-pe-qtd-input {
+          min-height: 38px;
+          width: 92px;
+          font-size: 0.9rem;
         }
         .resumo-wrapper,
         .dash-svg-wrap,
@@ -6731,6 +6747,32 @@
         else estado.cicloFiltroConsolidado = n;
       }
       function obterNomeMesDeData(iso) { if (!iso) return ""; const p = String(iso).split("-"); if (p.length < 2) return ""; const m = Number(p[1]); return (m >= 1 && m <= 12) ? NOMES_MESES[m-1] : ""; }
+      function obterMesDaSemana(semObj, periodoObj = null) {
+        const s = semObj || semana();
+        const ano = s ? obterAnoSemana(s) : new Date().getFullYear();
+        const cN = normalizarNumeroCiclo(s?.cabecalho?.ciclo || "1");
+        const atS = s?.atividade || estado?.atividadeAtiva || "ciclo";
+        const p = periodoObj || (s ? obterPeriodoDaSemana(s?.cabecalho?.semana || estado.semanaAtiva, ano, cN, atS) : null);
+        const contMes = new Map();
+        let primeiroMes = "";
+        DIAS_SEMANA.forEach((dk, idx) => {
+          let iso = s?.dias?.[dk]?.data || "";
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) {
+            iso = p?.inicioISO ? adicionarDiasISO(p.inicioISO, idx) : "";
+          }
+          const nomeMes = obterNomeMesDeData(iso);
+          if (!nomeMes) return;
+          if (!primeiroMes) primeiroMes = nomeMes;
+          contMes.set(nomeMes, (contMes.get(nomeMes) || 0) + 1);
+        });
+        if (contMes.size === 0) return obterNomeMesDeData(p?.inicioISO || "") || "";
+        let melhorMes = primeiroMes;
+        let melhorQtd = -1;
+        contMes.forEach((qtd, nome) => {
+          if (qtd > melhorQtd) { melhorQtd = qtd; melhorMes = nome; }
+        });
+        return melhorMes;
+      }
       function chaveCicloConfig(ano, c, a) { const b = `${ano || new Date().getFullYear()}_${normalizarNumeroCiclo(c)}`; return a ? `${b}_${a}` : b; }
       function obterCicloConfig(ano, c, a) { if (!estado.ciclosConfig) estado.ciclosConfig = {}; const at = a || estado.atividadeAtiva || "ciclo"; const n = estado.ciclosConfig[chaveCicloConfig(ano,c,at)]; if (n && (n.inicio || n.termino || n.semanaInicio || n.semanaTermino)) return n; if (at === "ciclo") { const l = estado.ciclosConfig[chaveCicloConfig(ano,c)]; if (l && (l.inicio || l.termino || l.semanaInicio || l.semanaTermino)) return l; } return { inicio: "", termino: "", semanaInicio: "", semanaTermino: "" }; }
       function salvarCicloConfig(ano, c, ini, fim, si = "", sf = "", a = null) { if (!estado.ciclosConfig) estado.ciclosConfig = {}; const at = a || estado.atividadeAtiva || "ciclo"; estado.ciclosConfig[chaveCicloConfig(ano,c,at)] = { inicio: ini || "", termino: fim || "", semanaInicio: si ? String(si) : "", semanaTermino: sf ? String(sf) : "", _ts: agoraSyncMs() }; }
@@ -6790,10 +6832,12 @@
         const base = (estado.configEquipe?.agentes?.length > 0) ? estado.configEquipe.agentes : NOMES_AGENTES_PADRAO.map(n => criarAgente(n));
         DIAS_SEMANA.forEach(d => { dias[d] = { data: adicionarDiasISO(seg, o[d]), programados: "", agentes: [] }; base.forEach(a => { dias[d].agentes.push({ id: a.id || ("ag_" + Date.now() + "_" + Math.random().toString(36).slice(2,6)), nome: a.nome || "Agente", ativo: a.ativo !== false, valores: {} }); }); });
         const dc = obterDatasCicloEfetivas(ano, cN, at);
-        const cab = criarCabecalhoVazio(); cab.semana = sN; cab.ciclo = cN; cab.mes = mes || obterNomeMesDeData(seg);
+        const cab = criarCabecalhoVazio(); cab.semana = sN; cab.ciclo = cN;
+        const mesDaSem = obterMesDaSemana({ ano, atividade: at, dias, cabecalho: { semana: sN, ciclo: cN } }, p);
+        cab.mes = (at === "ciclo") ? (mesDaSem || obterNomeMesDeData(seg) || mes || "") : (mes || obterNomeMesDeData(seg));
         cab.cicloInicio = formatarDataBR(dc.inicio); cab.cicloTermino = formatarDataBR(dc.termino);
         cab.semanaInicio = p.inicioBR; cab.semanaTermino = p.terminoBR;
-        if (estado.configEquipe) { if (estado.configEquipe.bairro) cab.bairro = estado.configEquipe.bairro; if (estado.configEquipe.estrato) cab.estrato = estado.configEquipe.estrato; if (estado.configEquipe.equipe) cab.equipe = estado.configEquipe.equipe; if (estado.configEquipe.supervisor) cab.supervisor = estado.configEquipe.supervisor; cab.agentesEquipe = obterTextoAgentesEquipe(); }
+        if (estado.configEquipe) { if (estado.configEquipe.bairro) cab.bairro = estado.configEquipe.bairro; if (estado.configEquipe.estrato) cab.estrato = estado.configEquipe.estrato; if (estado.configEquipe.equipe) cab.equipe = estado.configEquipe.equipe; if (estado.configEquipe.supervisor) cab.supervisor = estado.configEquipe.supervisor; cab.agentesEquipe = (at === "ciclo") ? "" : obterTextoAgentesEquipe(); }
         const rod = criarRodapeVazio(); if (estado.configEquipe?.responsavel) rod.responsavel = estado.configEquipe.responsavel;
         return { atividade: at, ano, dias, resumo: { valores: {} }, cabecalho: cab, rodape: rod };
       }
@@ -6936,7 +6980,8 @@
         const k = String(itemProg.se);
         const p = obterPeriodoDaSemana(k, itemProg.ano, itemProg.ciclo, atividade);
         if (!r[k]) {
-          r[k] = criarSemana(p.inicioISO, k, atividade, itemProg.ciclo, itemProg.mes);
+          const mesSem = (atividade === "ciclo") ? (obterMesDaSemana(null, p) || itemProg.mes) : itemProg.mes;
+          r[k] = criarSemana(p.inicioISO, k, atividade, itemProg.ciclo, mesSem);
           r[k].ano = itemProg.ano;
         } else {
           r[k].ano = itemProg.ano;
@@ -6947,7 +6992,12 @@
           const vazia = contarTotalLancamentos({ [keyRepo]: { [k]: r[k] } }) === 0;
           if (vazia) {
             r[k].cabecalho.ciclo = itemProg.ciclo;
-            if (itemProg.mes) r[k].cabecalho.mes = itemProg.mes;
+            if (atividade === "ciclo") {
+              const mesSem = obterMesDaSemana(r[k], p) || itemProg.mes;
+              if (mesSem && !r[k]._cabMesManual) r[k].cabecalho.mes = mesSem;
+            } else if (itemProg.mes) {
+              r[k].cabecalho.mes = itemProg.mes;
+            }
             const dc = obterDatasCicloEfetivas(itemProg.ano, itemProg.ciclo, atividade);
             r[k].cabecalho.cicloInicio = formatarDataBR(dc.inicio);
             r[k].cabecalho.cicloTermino = formatarDataBR(dc.termino);
@@ -7078,7 +7128,12 @@
         const sk = String(se); const repo = repoAtivo(at);
         if (!repo[sk]) { const pd = obterPeriodoDaSemana(sk, p.ano, p.ciclo, at); repo[sk] = criarSemana(pd.inicioISO, sk, at, p.ciclo, p.mes); }
         const s = repo[sk]; if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio();
-        s.cabecalho.ciclo = normalizarNumeroCiclo(p.ciclo); s.cabecalho.semana = sk; s.cabecalho.mes = p.mes || obterNomeMesDeData(iso);
+        s.cabecalho.ciclo = normalizarNumeroCiclo(p.ciclo); s.cabecalho.semana = sk;
+        if (at === "ciclo") {
+          if (!s._cabMesManual) s.cabecalho.mes = obterMesDaSemana(s, obterPeriodoDaSemana(sk, p.ano, p.ciclo, at)) || obterNomeMesDeData(iso) || p.mes;
+        } else {
+          s.cabecalho.mes = p.mes || obterNomeMesDeData(iso);
+        }
         if (p.cicloDataInicio) s.cabecalho.cicloInicio = formatarDataBR(p.cicloDataInicio); if (p.cicloDataTermino) s.cabecalho.cicloTermino = formatarDataBR(p.cicloDataTermino);
         s.ano = p.ano; s.atividade = at;
         estado.semanaAtiva = sk; const ch = chaveDiaDeISO(iso); if (ch) estado.diaAtivo = ch;
@@ -10357,8 +10412,10 @@
         if (lbS) lbS.textContent = `Semana ${pad2(estado.semanaAtiva)}`; if (lbR) lbR.textContent = `Semana ${pad2(estado.semanaAtiva)}`;
         const ano = obterAnoSemana(s); atualizarLimitesSemanas(ano);
         const cA = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1");
-        const mes = s.cabecalho?.mes || obterNomeMesDeData(obterDataSegundaSemana(s));
         const pS = obterPeriodoDaSemana(estado.semanaAtiva, ano, cA, at);
+        const mes = (at === "ciclo" && !s._cabMesManual)
+          ? (obterMesDaSemana(s, pS) || obterNomeMesDeData(obterDataSegundaSemana(s)) || s.cabecalho?.mes || "")
+          : (s.cabecalho?.mes || obterNomeMesDeData(obterDataSegundaSemana(s)));
         const inA = document.getElementById("anoLancamento"), seC = document.getElementById("cicloLancamentoCiclo"), inM = document.getElementById("mesLancamento"), inS = document.getElementById("semanaLancamento"), inI = document.getElementById("semanaDataInicio"), inF = document.getElementById("semanaDataTermino");
         if (inA) inA.value = ano; if (seC) seC.value = cA; if (inM) inM.value = mes; if (inS) inS.value = estado.semanaAtiva; if (inI) inI.value = pS.inicioISO; if (inF) inF.value = pS.terminoISO;
         if (s.cabecalho) { s.cabecalho.semanaInicio = pS.inicioBR; s.cabecalho.semanaTermino = pS.terminoBR; }
@@ -10376,17 +10433,35 @@
         try { if (estado.atividadeAtiva === "liraa" || document.getElementById("aba-indices-liraa")?.classList.contains("ativo")) renderizarIndicesLiraa(); } catch(e) {}
       }
       function renderizarCabecalhoResumo() {
-        const s = semana(); const cab = s ? s.cabecalho : {}; const ano = obterAnoSemana(s); const cN = normalizarNumeroCiclo(cab ? cab.ciclo : "1"); const dc = obterDatasCicloEfetivas(ano, cN, estado.atividadeAtiva); const pA = obterPeriodoDaSemana(estado.semanaAtiva, ano, cN, estado.atividadeAtiva);
+        const s = semana(); const cab = s ? s.cabecalho : {}; const ano = obterAnoSemana(s); const cN = normalizarNumeroCiclo(cab ? cab.ciclo : "1"); const atAtual = (s?.atividade || estado?.atividadeAtiva || "ciclo"); const ehCiclo = atAtual === "ciclo"; const dc = obterDatasCicloEfetivas(ano, cN, estado.atividadeAtiva); const pA = obterPeriodoDaSemana(estado.semanaAtiva, ano, cN, estado.atividadeAtiva);
+        const mesAutoCiclo = ehCiclo ? (obterMesDaSemana(s, pA) || obterNomeMesDeData(pA.inicioISO) || cab?.mes || "") : "";
+        const agentesTrabCiclo = ehCiclo ? obterAgentesQueTrabalharamNaSemana(s).join(", ") : "";
+        if (cab && ehCiclo) {
+          if (!s._cabMesManual && mesAutoCiclo) cab.mes = mesAutoCiclo;
+          if (!s._cabAgentesManual) cab.agentesEquipe = agentesTrabCiclo;
+        }
         document.querySelectorAll("[data-cab]").forEach(i => {
           const k = i.dataset.cab;
           if (k === "ciclo") i.value = formatarCicloTexto(cN);
           else if (k === "cicloInicio") i.value = formatarDataBR(dc.inicio) || cab?.cicloInicio || "";
           else if (k === "cicloTermino") i.value = formatarDataBR(dc.termino) || cab?.cicloTermino || "";
-          else if (k === "mes") i.value = cab?.mes || obterNomeMesDeData(pA.inicioISO);
+          else if (k === "mes") {
+            const valMes = ehCiclo ? ((s?._cabMesManual && cab?.mes) ? cab.mes : mesAutoCiclo) : (cab?.mes || obterNomeMesDeData(pA.inicioISO));
+            if (document.activeElement !== i) i.value = valMes;
+          }
           else if (k === "semana") i.value = pad2(cab?.semana || "");
           else if (k === "semanaInicio") i.value = pA.inicioBR;
           else if (k === "semanaTermino") i.value = pA.terminoBR;
-          else if (k === "agentesEquipe") { const t = (cab && cab.agentesEquipe !== undefined && cab.agentesEquipe !== "") ? cab.agentesEquipe : obterTextoAgentesEquipe(s); i.value = t; if (cab && !cab.agentesEquipe) cab.agentesEquipe = t; }
+          else if (k === "agentesEquipe") {
+            if (ehCiclo) {
+              const tCiclo = (s?._cabAgentesManual && cab?.agentesEquipe !== undefined && cab.agentesEquipe !== "") ? cab.agentesEquipe : agentesTrabCiclo;
+              if (document.activeElement !== i) i.value = tCiclo;
+            } else {
+              const t = (cab && cab.agentesEquipe !== undefined && cab.agentesEquipe !== "") ? cab.agentesEquipe : obterTextoAgentesEquipe(s);
+              if (document.activeElement !== i) i.value = t;
+              if (cab && !cab.agentesEquipe) cab.agentesEquipe = t;
+            }
+          }
           else { const vd = (estado.configEquipe && estado.configEquipe[k]) ? estado.configEquipe[k] : ""; i.value = cab && cab[k] ? cab[k] : vd; if (cab && !cab[k] && vd) cab[k] = vd; }
         });
       }
@@ -10414,6 +10489,7 @@
         { nome: "Vermelho", icone: "🔴" },
         { nome: "Branco", icone: "⚪" }
       ];
+      const OCORRENCIA_PE_LABEL = "Ponto Estratégico (PE)";
       const OCORRENCIAS_DIA_OPCOES = [
         "Chuva",
         "Feriado",
@@ -10428,8 +10504,16 @@
         "Reunião Administrativa",
         "Paralisação",
         "Greve de Ônibus",
-        "Equipamento Indisponível"
+        "Equipamento Indisponível",
+        OCORRENCIA_PE_LABEL
       ];
+      function obterOpcoesOcorrenciasDia(at = null) {
+        const ativ = at || (estado && estado.atividadeAtiva) || "ciclo";
+        if (ativ === "liraa") {
+          return OCORRENCIAS_DIA_OPCOES.filter(op => op !== OCORRENCIA_PE_LABEL);
+        }
+        return OCORRENCIAS_DIA_OPCOES;
+      }
       const _ocorrenciasDiaAbertas = new Set();
       function chaveToggleOcorrenciasDia(agId) {
         return `${estado?.atividadeAtiva || "ciclo"}:${estado?.semanaAtiva || ""}:${estado?.diaAtivo || ""}:${agId || ""}`;
@@ -10469,6 +10553,83 @@
         if (!ag || !ag.valores) return [];
         return normalizarListaOcorrenciasDia(ag.valores.ocorrenciasDia);
       }
+      function lerQtdOcorrenciaPEAgenteDia(ag) {
+        if (!ag || ag._deleted || !ag.valores) return 0;
+        const ocorr = lerOcorrenciasAgenteDia(ag);
+        if (!ocorr.some(o => o.toLowerCase() === OCORRENCIA_PE_LABEL.toLowerCase())) return 0;
+        const raw = String(ag.valores.peOcorrenciaQtd ?? "").trim();
+        if (!raw) return 0;
+        const n = Math.trunc(Number(raw));
+        return (!isNaN(n) && n > 0) ? n : 0;
+      }
+      function obterQtdOcorrenciaPEDia(dia) {
+        if (!dia || !Array.isArray(dia.agentes)) return 0;
+        return dia.agentes
+          .filter(a => a && !a._deleted && a.ativo !== false)
+          .reduce((acc, ag) => acc + lerQtdOcorrenciaPEAgenteDia(ag), 0);
+      }
+      function agenteTrabalhouNoDia(ag) {
+        if (!ag || ag._deleted || ag.ativo === false) return false;
+        const v = ag.valores || {};
+        for (let c = 1; c <= 7; c++) {
+          if (String(v[`b1-r0-c${c}`] || "").trim() !== "") return true;
+          if (String(v[`b1-r1-c${c}`] || "").trim() !== "") return true;
+          if (num(v[`b1-r2-c${c}`]) > 0 || num(v[`b1-r3-c${c}`]) > 0 || num(v[`b1-r4-c${c}`]) > 0 || num(v[`b1-r5-c${c}`]) > 0 || num(v[`b1-r6-c${c}`]) > 0) return true;
+          if (num(v[`b2-r0-c${c}`]) > 0 || num(v[`b2-r1-c${c}`]) > 0 || num(v[`b2-r2-c${c}`]) > 0 || num(v[`b2-r3-c${c}`]) > 0) return true;
+          if (num(v[`bTratados-r0-c${c}`]) > 0) return true;
+          if (num(v[`b4-r0-c${c}`]) > 0) return true;
+        }
+        for (let r = 0; r < TIPOS_DEPOSITOS.length; r++) {
+          for (let c = 0; c < COLUNAS_DEPOSITOS.length; c++) {
+            if (c === COL_INSP) continue;
+            if (num(v[`b5-r${r}-c${c}`]) > 0) return true;
+          }
+        }
+        const ocorrs = lerOcorrenciasAgenteDia(ag);
+        if (ocorrs.some(o => o.toLowerCase() === OCORRENCIA_PE_LABEL.toLowerCase())) return true;
+        return false;
+      }
+      function obterAgentesQueTrabalharamNaSemana(semObj) {
+        const s = semObj || semana();
+        if (!s || !s.dias) return [];
+        const trabalharamPorChave = new Map();
+        DIAS_SEMANA.forEach(dk => {
+          const d = s.dias[dk];
+          if (!d || !Array.isArray(d.agentes)) return;
+          d.agentes.forEach(ag => {
+            if (!agenteTrabalhouNoDia(ag)) return;
+            const nome = String(ag.nome || "").trim();
+            if (!nome) return;
+            const chaveNome = `nm:${nome.toLowerCase()}`;
+            if (!trabalharamPorChave.has(chaveNome)) {
+              trabalharamPorChave.set(chaveNome, { id: ag.id || "", nome, chaveNome });
+            }
+          });
+        });
+        if (trabalharamPorChave.size === 0) return [];
+        const resultado = [];
+        const usados = new Set();
+        if (Array.isArray(estado.configEquipe?.agentes)) {
+          estado.configEquipe.agentes.forEach(cfgAg => {
+            if (!cfgAg || cfgAg._deleted) return;
+            const nomeCfg = String(cfgAg.nome || "").trim();
+            if (!nomeCfg) return;
+            const chaveNome = `nm:${nomeCfg.toLowerCase()}`;
+            const achado = trabalharamPorChave.get(chaveNome) || Array.from(trabalharamPorChave.values()).find(x => cfgAg.id && x.id === cfgAg.id);
+            if (achado && !usados.has(achado.chaveNome)) {
+              resultado.push(achado.nome);
+              usados.add(achado.chaveNome);
+            }
+          });
+        }
+        trabalharamPorChave.forEach((info, k) => {
+          if (!usados.has(k)) {
+            resultado.push(info.nome);
+            usados.add(k);
+          }
+        });
+        return resultado;
+      }
       function salvarOcorrenciasAgenteDia(ag, lista) {
         if (!ag) return [];
         const norm = normalizarListaOcorrenciasDia(lista);
@@ -10478,12 +10639,40 @@
         const agora = agoraSyncMs();
         ag.valores.ocorrenciasDia = novoVal;
         ag._valoresTs.ocorrenciasDia = agora;
+        const temPE = norm.some(o => o.toLowerCase() === OCORRENCIA_PE_LABEL.toLowerCase());
+        if (!temPE && ag.valores.peOcorrenciaQtd) {
+          ag.valores.peOcorrenciaQtd = "";
+          ag._valoresTs.peOcorrenciaQtd = agora;
+        }
         ag._ts = agora;
+        atualizarObservacaoSupervisaoSemana();
         salvar("semana");
+        renderizarCabecalhoResumo();
+        renderizarRodape();
         if (document.getElementById("aba-producao-individual")?.classList.contains("ativo")) {
           try { renderizarProducaoIndividual(); } catch (e) {}
         }
         return norm;
+      }
+      function salvarQtdPEOcorrenciaAgenteDia(ag, rawQtd) {
+        if (!ag) return "";
+        if (!ag.valores) ag.valores = {};
+        if (!ag._valoresTs) ag._valoresTs = {};
+        const digitos = String(rawQtd ?? "").replace(/\D+/g, "");
+        const n = digitos ? Math.max(0, Math.trunc(Number(digitos) || 0)) : 0;
+        const valFinal = n > 0 ? String(n) : "";
+        const agora = agoraSyncMs();
+        ag.valores.peOcorrenciaQtd = valFinal;
+        ag._valoresTs.peOcorrenciaQtd = agora;
+        ag._ts = agora;
+        atualizarObservacaoSupervisaoSemana();
+        salvar("semana");
+        renderizarCabecalhoResumo();
+        renderizarRodape();
+        if (document.getElementById("aba-producao-individual")?.classList.contains("ativo")) {
+          try { renderizarProducaoIndividual(); } catch (e) {}
+        }
+        return valFinal;
       }
       function encontrarAgenteNoDia(diaObj, ag) {
         if (!diaObj || !Array.isArray(diaObj.agentes) || !ag) return null;
@@ -10516,10 +10705,17 @@
             ? `${diaSemanaNome}, ${dataBR}`
             : (dataBR || diaSemanaNome || dk);
           lista.forEach(desc => {
+            let descFinal = desc;
+            if (desc.toLowerCase() === OCORRENCIA_PE_LABEL.toLowerCase()) {
+              const qtdPE = lerQtdOcorrenciaPEAgenteDia(aD);
+              if (qtdPE > 0) {
+                descFinal = `${desc} — ${qtdPE} ${qtdPE === 1 ? "PE" : "PE's"}`;
+              }
+            }
             const chaveUnica = `${dk}::${dataISO}::${desc.toLowerCase()}`;
             if (chavesVistas.has(chaveUnica)) return;
             chavesVistas.add(chaveUnica);
-            registros.push({ diaKey: dk, dataISO, dataBR, diaSemana: diaSemanaNome, dataExibida, descricao: desc });
+            registros.push({ diaKey: dk, dataISO, dataBR, diaSemana: diaSemanaNome, dataExibida, descricao: descFinal });
           });
         });
         return registros;
@@ -10561,10 +10757,41 @@
         const grid = document.createElement("div");
         grid.className = "ocorrencias-dia-grid";
 
+        const peBox = document.createElement("div");
+        peBox.className = "ocorrencias-pe-qtd-box";
+        const peTitulo = document.createElement("span");
+        peTitulo.className = "ocorrencias-pe-qtd-titulo";
+        peTitulo.textContent = "📍 Ponto Estratégico (PE):";
+        const peInputId = `pe-qtd-${ag.id || "ag"}-${estado?.diaAtivo || "dia"}`;
+        const peLabel = document.createElement("label");
+        peLabel.className = "ocorrencias-pe-qtd-label";
+        peLabel.setAttribute("for", peInputId);
+        peLabel.textContent = "Quantos?";
+        const inpPEQtd = document.createElement("input");
+        inpPEQtd.type = "number";
+        inpPEQtd.min = "1";
+        inpPEQtd.step = "1";
+        inpPEQtd.inputMode = "numeric";
+        inpPEQtd.id = peInputId;
+        inpPEQtd.className = "ocorrencias-pe-qtd-input";
+        inpPEQtd.placeholder = "0";
+        const qtdInicialPE = lerQtdOcorrenciaPEAgenteDia(ag);
+        inpPEQtd.value = qtdInicialPE > 0 ? String(qtdInicialPE) : "";
+        if (estaModoLeitura()) inpPEQtd.readOnly = true;
+        const peUnidade = document.createElement("span");
+        peUnidade.className = "ocorrencias-pe-qtd-unidade";
+        peUnidade.textContent = "PE's inspecionados";
+        peBox.appendChild(peTitulo);
+        peBox.appendChild(peLabel);
+        peBox.appendChild(inpPEQtd);
+        peBox.appendChild(peUnidade);
+
         const footer = document.createElement("div");
         footer.className = "ocorrencias-dia-footer";
         const infoTxt = document.createElement("span");
-        infoTxt.textContent = "Registradas automaticamente em Produção Individual → Observação.";
+        infoTxt.textContent = ((estado?.atividadeAtiva || "ciclo") === "ciclo")
+          ? "Registradas em Produção Individual e, para PE, em Resumo da Semana → Observação."
+          : "Registradas automaticamente em Produção Individual → Observação.";
         const btnLimpar = document.createElement("button");
         btnLimpar.type = "button";
         btnLimpar.className = "ocorrencias-dia-limpar";
@@ -10574,12 +10801,23 @@
 
         const atualizarResumoVisual = (lista) => {
           const qtd = lista.length;
+          const temPE = lista.some(o => o.toLowerCase() === OCORRENCIA_PE_LABEL.toLowerCase());
+          const ehCicloAt = (estado?.atividadeAtiva || "ciclo") === "ciclo";
+          peBox.classList.toggle("visivel", temPE && ehCicloAt);
+          if (!temPE) inpPEQtd.value = "";
+          const qtdPE = temPE ? lerQtdOcorrenciaPEAgenteDia(ag) : 0;
           box.classList.toggle("tem-selecao", qtd > 0);
           if (qtd > 0) {
             badge.className = "ocorrencias-dia-badge";
             badge.textContent = qtd === 1 ? "1 selecionada" : `${qtd} selecionadas`;
-            resumo.textContent = lista.join(", ");
-            resumo.title = lista.join(", ");
+            const textoResumo = lista.map(o => {
+              if (o.toLowerCase() === OCORRENCIA_PE_LABEL.toLowerCase() && qtdPE > 0) {
+                return `${o} (${qtdPE} ${qtdPE === 1 ? "PE" : "PE's"})`;
+              }
+              return o;
+            }).join(", ");
+            resumo.textContent = textoResumo;
+            resumo.title = textoResumo;
             btnLimpar.style.display = estaModoLeitura() ? "none" : "inline-block";
           } else {
             badge.className = "ocorrencias-dia-badge vazio";
@@ -10591,7 +10829,7 @@
         };
 
         const checkboxes = [];
-        OCORRENCIAS_DIA_OPCOES.forEach(opcao => {
+        obterOpcoesOcorrenciasDia().forEach(opcao => {
           const lbl = document.createElement("label");
           const marcado = selecionadas.includes(opcao);
           lbl.className = "ocorrencias-dia-item" + (marcado ? " selecionado" : "");
@@ -10608,6 +10846,9 @@
             selecionadas = salvarOcorrenciasAgenteDia(ag, novas);
             checkboxes.forEach(x => x.lbl.classList.toggle("selecionado", selecionadas.includes(x.opcao)));
             atualizarResumoVisual(selecionadas);
+            if (opcao === OCORRENCIA_PE_LABEL && cb.checked) {
+              setTimeout(() => inpPEQtd.focus(), 20);
+            }
           });
           const sp = document.createElement("span");
           sp.textContent = opcao;
@@ -10617,9 +10858,28 @@
           checkboxes.push({ opcao, cb, lbl });
         });
 
+        inpPEQtd.addEventListener("input", () => {
+          if (estaModoLeitura()) {
+            const qtdAtual = lerQtdOcorrenciaPEAgenteDia(ag);
+            inpPEQtd.value = qtdAtual > 0 ? String(qtdAtual) : "";
+            return;
+          }
+          const limpo = String(inpPEQtd.value || "").replace(/\D+/g, "");
+          if (inpPEQtd.value !== limpo) inpPEQtd.value = limpo;
+          salvarQtdPEOcorrenciaAgenteDia(ag, limpo);
+          atualizarResumoVisual(selecionadas);
+        });
+        inpPEQtd.addEventListener("blur", () => {
+          if (estaModoLeitura()) return;
+          const salvo = salvarQtdPEOcorrenciaAgenteDia(ag, inpPEQtd.value);
+          inpPEQtd.value = salvo;
+          atualizarResumoVisual(selecionadas);
+        });
+
         btnLimpar.addEventListener("click", () => {
           if (estaModoLeitura()) return;
           checkboxes.forEach(x => { x.cb.checked = false; x.lbl.classList.remove("selecionado"); });
+          inpPEQtd.value = "";
           selecionadas = salvarOcorrenciasAgenteDia(ag, []);
           atualizarResumoVisual(selecionadas);
         });
@@ -10634,6 +10894,7 @@
 
         atualizarResumoVisual(selecionadas);
         painel.appendChild(grid);
+        painel.appendChild(peBox);
         painel.appendChild(footer);
         box.appendChild(painel);
         return box;
@@ -10722,7 +10983,7 @@
         const dA = diaAtual(); const dS = dA ? dA.data : hojeISO(); const th = document.createElement("thead"); const trId = document.createElement("tr"); trId.className = "linha-identificacao";
         trId.innerHTML = `<th colspan="2">📅 ${formatarDataBR(dS)}</th><th colspan="2">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th><th colspan="2" class="th-nome-agente" title="Agente do lançamento"><div class="wrap-nome-agente"><span class="icone-lancando-agente">✍️</span><input type="text" class="nome-agente" value="${ag.nome}" /></div></th><th colspan="3" style="padding:2px 3px;"><div class="sup-cab"><span class="sup-rotulo">👁️ Supervisão? <strong style="color:#dc2626;" title="Obrigatório">*</strong></span><select class="sup-sim-nao" required aria-required="true"><option value="">Selecione...</option><option value="Sim">Sim</option><option value="Não">Não</option></select><div class="sup-detalhes" style="display:none;"><label>D:</label><input type="text" inputmode="numeric" class="sup-input sup-direta" placeholder="0" /><label>I:</label><input type="text" inputmode="numeric" class="sup-input sup-indireta" placeholder="0" /><span class="sup-total-wrap"><strong>T:</strong> <span class="sup-total">0</span></span></div></div></th>`;
         th.appendChild(trId);
-        trId.querySelector("input.nome-agente").addEventListener("input", e => { const agora = agoraSyncMs(); ag.nome = e.target.value; ag._ts = agora; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(a => a.id === ag.id); if (c) { c.nome = ag.nome; c.atualizadoEm = agora; } } const s = semana(); if (s?.cabecalho) { s.cabecalho.agentesEquipe = obterTextoAgentesEquipe(s); if (!s._cabTs) s._cabTs = {}; s._cabTs.agentesEquipe = agora; const eq = document.querySelector('[data-cab="agentesEquipe"]'); if (eq) eq.value = s.cabecalho.agentesEquipe; } salvar("tudo"); const h = document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"] .cabecalho-agente h3`); if (h) h.textContent = ag.nome || "Agente"; });
+        trId.querySelector("input.nome-agente").addEventListener("input", e => { const agora = agoraSyncMs(); ag.nome = e.target.value; ag._ts = agora; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(a => a.id === ag.id); if (c) { c.nome = ag.nome; c.atualizadoEm = agora; } } const s = semana(); if (s?.cabecalho) { const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo"; s.cabecalho.agentesEquipe = ehCicloSem ? obterAgentesQueTrabalharamNaSemana(s).join(", ") : obterTextoAgentesEquipe(s); if (!s._cabTs) s._cabTs = {}; s._cabTs.agentesEquipe = agora; const eq = document.querySelector('[data-cab="agentesEquipe"]'); if (eq) eq.value = s.cabecalho.agentesEquipe; } salvar("tudo"); const h = document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"] .cabecalho-agente h3`); if (h) h.textContent = ag.nome || "Agente"; });
 
         (function () {
           const sel = trId.querySelector(".sup-sim-nao");
@@ -11064,6 +11325,7 @@
         document.querySelectorAll("[data-total-equipe-sup-indireta-cab]").forEach(el => el.textContent = fmtIntCell(totSupInd));
         document.querySelectorAll("[data-total-equipe-sup-total-cab]").forEach(el => el.textContent = fmtIntCell(totSupGeral));
         atualizarObservacaoSupervisaoSemana();
+        renderizarCabecalhoResumo();
         try { if (document.getElementById("aba-quarteiroes-designados")?.classList.contains("ativo")) renderizarQuarteiroesDesignados(); } catch(e) {}
       }
       function calcularSomasDia(diaKey, sk = null, repoA = null) {
@@ -11188,8 +11450,11 @@
           if (!dataBR) return;
           const nomeDia = (diaSemanaDeISO(dataISO) || NOMES_DIAS[dk] || "").toLowerCase();
 
-          if (sd.PE > 0) {
-            const frasePE = formatarFrasePEDia(dataBR, nomeDia, sd.PE);
+          const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
+          const qtdOcorrenciaPE = ehCicloSem ? obterQtdOcorrenciaPEDia(dia) : 0;
+          const totalPEDia = (sd.PE || 0) + qtdOcorrenciaPE;
+          if (totalPEDia > 0) {
+            const frasePE = formatarFrasePEDia(dataBR, nomeDia, totalPEDia);
             if (frasePE) novasFrases.push(frasePE);
           }
 
@@ -12612,9 +12877,12 @@
             d._ts = agora;
           });
           if (semObj.cabecalho) {
-            semObj.cabecalho.agentesEquipe = obterTextoAgentesEquipe(semObj);
-            if (!semObj._cabTs) semObj._cabTs = {};
-            semObj._cabTs.agentesEquipe = agora;
+            const ehCicloSem = (semObj.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
+            if (!ehCicloSem || !semObj._cabAgentesManual) {
+              semObj.cabecalho.agentesEquipe = ehCicloSem ? obterAgentesQueTrabalharamNaSemana(semObj).join(", ") : obterTextoAgentesEquipe(semObj);
+              if (!semObj._cabTs) semObj._cabTs = {};
+              semObj._cabTs.agentesEquipe = agora;
+            }
           }
         };
         const s = semana();
@@ -12705,8 +12973,11 @@
           if (s?.cabecalho && estado.configEquipe) {
             if (!s._cabTs) s._cabTs = {};
             ["bairro","estrato","equipe","supervisor"].forEach(k => { s.cabecalho[k] = estado.configEquipe[k] || ""; s._cabTs[k] = agora; });
-            s.cabecalho.agentesEquipe = obterTextoAgentesEquipe(s);
-            s._cabTs.agentesEquipe = agora;
+            const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
+            if (!ehCicloSem || !s._cabAgentesManual) {
+              s.cabecalho.agentesEquipe = ehCicloSem ? obterAgentesQueTrabalharamNaSemana(s).join(", ") : obterTextoAgentesEquipe(s);
+              s._cabTs.agentesEquipe = agora;
+            }
           }
           if (s?.rodape && estado.configEquipe) {
             if (!s._rodTs) s._rodTs = {};
@@ -13029,9 +13300,12 @@
         }
         const s = semana();
         if (s?.cabecalho) {
-          s.cabecalho.agentesEquipe = obterTextoAgentesEquipe(s);
-          if (!s._cabTs) s._cabTs = {};
-          s._cabTs.agentesEquipe = agora;
+          const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
+          if (!ehCicloSem || !s._cabAgentesManual) {
+            s.cabecalho.agentesEquipe = ehCicloSem ? obterAgentesQueTrabalharamNaSemana(s).join(", ") : obterTextoAgentesEquipe(s);
+            if (!s._cabTs) s._cabTs = {};
+            s._cabTs.agentesEquipe = agora;
+          }
         }
         salvar("tudo"); renderizar(); atualizarTotais(); renderizarConfigEquipe();
       }
@@ -13886,7 +14160,7 @@
             document.querySelectorAll(".menu-dropdown-opcao").forEach(o => { if (o.dataset.aba === id) o.classList.add("ativa"); else o.classList.remove("ativa"); });
             document.querySelectorAll(".conteudo-aba").forEach(c => c.classList.remove("ativo"));
             const sec = document.getElementById("aba-" + id); if (sec) sec.classList.add("ativo");
-            if (id === "resumo") { renderizarResumo(); renderizarCabecalhoResumo(); sincronizarFontesAssinatura(); atualizarTextoGeracao(); }
+            if (id === "resumo") { renderizarResumo(); renderizarCabecalhoResumo(); renderizarRodape(); sincronizarFontesAssinatura(); atualizarTextoGeracao(); }
             if (id === "ciclo") { definirFiltroConsolidadoAtivo(identificarCicloAtivo()); sincronizarPeriodosSemanasCiclo(); renderizarCiclo(); sincronizarFontesAssinatura(); atualizarTextoGeracao(); }
             if (id === "indices-liraa") { renderizarIndicesLiraa(); }
             if (id === "sugarbo") { renderizarTabelaProgramacao(); atualizarPreviewPeriodoCiclo(); }
@@ -13967,7 +14241,7 @@
           document.querySelectorAll(".aba-dia").forEach(b => b.addEventListener("click", () => { estado.diaAtivo = b.dataset.dia; salvarPreferenciaLocal(); renderizar(); atualizarTotais(); }));
           const eA = document.getElementById("anoLancamento"); if (eA) eA.addEventListener("change", e => { const s = semana(); const a = Number(e.target.value) || new Date().getFullYear(); if (s) { s.ano = a; s._ts = agoraSyncMs(); } atualizarLimitesSemanas(a); ajustarSemanaAtivaParaProgramacao(false); salvar("semana"); renderizar(); atualizarTotais(); });
           const sCL = document.getElementById("cicloLancamentoCiclo"); if (sCL) sCL.addEventListener("change", e => { const c = normalizarNumeroCiclo(e.target.value); const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.ciclo = c; if (!s._cabTs) s._cabTs = {}; s._cabTs.ciclo = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); renderizarCiclo(); });
-          const eM = document.getElementById("mesLancamento"); if (eM) eM.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.mes = e.target.value; if (!s._cabTs) s._cabTs = {}; s._cabTs.mes = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); });
+          const eM = document.getElementById("mesLancamento"); if (eM) eM.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.mes = e.target.value; s._cabMesManual = String(e.target.value || "").trim() !== ""; if (!s._cabTs) s._cabTs = {}; s._cabTs.mes = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); });
           const eSL = document.getElementById("semanaLancamento"); if (eSL) eSL.addEventListener("change", e => { const v = Number(e.target.value); const mx = obterTotalSemanasEpidemiologicas(obterAnoSemana(semana())); if (v >= 1 && v <= mx) { if (!irParaSemana(v)) e.target.value = estado.semanaAtiva; } else e.target.value = estado.semanaAtiva; });
           const eSI2 = document.getElementById("semanaDataInicio"); if (eSI2) eSI2.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.semanaInicio = formatarDataBR(e.target.value); if (!s._cabTs) s._cabTs = {}; s._cabTs.semanaInicio = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); });
           const eSF2 = document.getElementById("semanaDataTermino"); if (eSF2) eSF2.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.semanaTermino = formatarDataBR(e.target.value); if (!s._cabTs) s._cabTs = {}; s._cabTs.semanaTermino = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); });
@@ -14032,7 +14306,12 @@
             const k = inp.dataset.cab;
             const s = semana();
             const ehLiraa = estado?.atividadeAtiva === "liraa";
-            if (s?.cabecalho) { s.cabecalho[k] = inp.value; if (!s._cabTs) s._cabTs = {}; s._cabTs[k] = agora; s._ts = agora; }
+            if (s?.cabecalho) {
+              s.cabecalho[k] = inp.value;
+              if (!ehLiraa && k === "mes") s._cabMesManual = String(inp.value || "").trim() !== "";
+              if (!ehLiraa && k === "agentesEquipe") s._cabAgentesManual = String(inp.value || "").trim() !== "";
+              if (!s._cabTs) s._cabTs = {}; s._cabTs[k] = agora; s._ts = agora;
+            }
             const tocouEquipe = !ehLiraa && estado.configEquipe && ["bairro","estrato","equipe","supervisor"].includes(k) && String(inp.value || "").trim() !== "";
             if (tocouEquipe) {
               estado.configEquipe[k] = inp.value;
