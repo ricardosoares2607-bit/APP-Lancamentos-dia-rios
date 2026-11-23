@@ -3935,26 +3935,7 @@
                 <!-- QUARTEIRÕES -->
                 <div class="quarteiroes-container" id="quarteiroesContainerDiario">
                   <div style="font-weight:bold; color:#1e5a3a; font-size:13.5px; margin-bottom:5px;">QUARTEIRÕES</div>
-                  <div id="quarteiroesTabelaContainer">
-                    <div class="quarteirao-linha">
-                      <span class="label-pequeno">Quarteirão</span>
-                      <select class="input-field">
-                        <option value="">Selecione</option>
-                        <option value="256">256</option>
-                        <option value="258">258</option>
-                        <option value="259">259</option>
-                        <option value="260">260</option>
-                      </select>
-                      <span class="label-pequeno">Concluído</span>
-                      <select style="width:78px; padding:3px 7px; font-size:12.5px; border:1px solid #1e5a3a; border-radius:4px;">
-                        <option value="SIM">Sim</option>
-                        <option value="NAO" selected>Não</option>
-                      </select>
-                      <button type="button" class="btn-remover" onclick="removerQuarteirao(this)">✕</button>
-                    </div>
-                  </div>
-                  <button type="button" class="btn-adicionar" onclick="adicionarQuarteiraoTabela()">➕ ADICIONAR QUARTEIRÃO</button>
-                  <div class="quarteiroes-concluidos-painel">
+                  <div class="quarteiroes-concluidos-painel" style="margin-top: 2px;">
                     <div class="titulo">📋 Quarteirões Concluídos</div>
                     <div id="quarteiroesConcluidosPainel" class="itens">
                       <span style="color: #6b7280; font-size: 12.5px;">Nenhum quarteirão concluído</span>
@@ -6575,7 +6556,7 @@
         else if (elementoId === "areaQuarteiroesDesignados") { fw = 1050; }
         else if (elementoId === "areaConfigEstrato") { fw = 1100; }
         else if (elementoId === "areaResumoReconhecimento") { fw = 860; }
-        else if (elementoId === "areaIndicesLiraa" || elementoId === "formularioDiario") { fw = 980; }
+        else if (elementoId === "areaIndicesLiraa" || elementoId === "formularioDiario") { fw = 1020; }
         else if (ehRetrato) { fw = 1000; }
         else { fw = 1580; }
         el.style.width = fw + "px"; el.style.maxWidth = "none"; el.style.minWidth = fw + "px";
@@ -6600,23 +6581,37 @@
               c.querySelectorAll('.resumo-wrapper').forEach(w => { w.style.overflow = 'visible'; w.style.maxHeight = 'none'; });
             }
             const cont = c || cd;
+            const ehFormDiario = elementoId === "formularioDiario";
             cont.querySelectorAll('.qd-badge-auto, .badge-auto, .badge-legado, .btn-adicionar, .btn-remover, .font-assinatura-select').forEach(rm => rm.remove());
             cont.querySelectorAll('input').forEach(inp => {
               if (inp.type === "checkbox") {
                 const rep = cd.createElement('div');
-                rep.textContent = inp.checked ? "☑" : "☐";
-                rep.style.cssText = "font-size:1.1rem;line-height:1;text-align:center;color:#166534;display:inline-block;";
-                const ptd = inp.closest('td');
-                if (ptd) {
-                  ptd.style.padding = '3.5px 2px';
-                  ptd.style.textAlign = 'center';
-                  ptd.style.verticalAlign = 'middle';
+                if (ehFormDiario || inp.closest('.ocorrencias-item')) {
+                  rep.textContent = inp.checked ? "✓" : "";
+                  rep.style.cssText = inp.checked
+                    ? "display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex-shrink:0;border:1.5px solid #2d7d4a;background:#2d7d4a;color:#ffffff;border-radius:2.5px;font-size:10px;font-weight:900;line-height:1;"
+                    : "display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex-shrink:0;border:1.5px solid #6b7280;background:#ffffff;border-radius:2.5px;";
+                } else {
+                  rep.textContent = inp.checked ? "☑" : "☐";
+                  rep.style.cssText = "font-size:1.1rem;line-height:1;text-align:center;color:#166534;display:inline-block;";
+                  const ptd = inp.closest('td');
+                  if (ptd) {
+                    ptd.style.padding = '3.5px 2px';
+                    ptd.style.textAlign = 'center';
+                    ptd.style.verticalAlign = 'middle';
+                  }
                 }
                 inp.parentNode.replaceChild(rep, inp);
                 return;
               }
               const ehProdObs = inp.classList.contains("prod-obs-input");
-              const v = (inp.value !== undefined && inp.value !== null && inp.value !== "") ? inp.value : (ehProdObs ? "" : (inp.placeholder || ""));
+              const ehDateInput = inp.type === "date";
+              let rawVal = (inp.value !== undefined && inp.value !== null) ? String(inp.value) : "";
+              if (ehDateInput && /^\d{4}-\d{2}-\d{2}$/.test(rawVal.trim())) {
+                rawVal = (typeof formatarDataBR === "function") ? formatarDataBR(rawVal.trim()) : rawVal.trim().split("-").reverse().join("/");
+              }
+              const temValor = rawVal !== "";
+              const v = temValor ? rawVal : (ehProdObs || ehDateInput ? "" : (inp.placeholder || ""));
               if (ehProdObs && !v) {
                 inp.remove();
                 return;
@@ -6626,7 +6621,16 @@
               const ptd = inp.closest('td');
               if (ptd) {
                 const ehRec = ptd.closest('.reconhecimento-tabela');
-                if (ehRec) {
+                if (ehFormDiario) {
+                  if (inp.classList.contains("input-numero")) {
+                    const ehTot = inp.classList.contains("total");
+                    rep.style.cssText = `width:100%;max-width:56px;margin:0 auto;background:${ehTot ? "#d9e1ec" : "transparent"};text-align:center;font-weight:bold;font-size:12.5px;padding:2px 3px;border-radius:2px;color:${ehTot ? "#1e5a3a" : "#0f172a"};display:block;line-height:1.3;`;
+                  } else if (inp.classList.contains("input-numero-dep-inspec")) {
+                    rep.style.cssText = `width:100%;max-width:64px;margin:0 auto;background:#f3f4f6;text-align:center;font-weight:bold;font-size:12.5px;padding:2px 3px;border-radius:2px;color:#374151;display:block;line-height:1.3;`;
+                  } else {
+                    rep.style.cssText = `width:100%;max-width:64px;margin:0 auto;background:transparent;text-align:center;font-weight:bold;font-size:12.5px;padding:2px 3px;border-radius:2px;color:#0f172a;display:block;line-height:1.3;`;
+                  }
+                } else if (ehRec) {
                   rep.style.cssText = `width:100%;text-align:center;font-weight:700;font-size:0.65rem;line-height:1.2;padding:0;color:#14532d;display:block;`;
                   ptd.style.padding = '1.5px 1px';
                   ptd.style.verticalAlign = 'middle';
@@ -6639,7 +6643,19 @@
                   ptd.style.verticalAlign = 'middle';
                 }
               }
-              else if (inp.classList.contains("input-pequeno")) { rep.style.cssText = `display:inline-block;border:1.5px solid #1e5a3a;border-radius:4px;padding:3px 8px;font-size:15px;font-weight:800;color:${inp.classList.contains("larvicida") ? "#1e40af" : "#0f172a"};background:${inp.classList.contains("larvicida") ? "#dbeafe" : "#ffffff"};min-width:68px;text-align:center;line-height:1.25;`; }
+              else if (inp.classList.contains("input-pequeno")) {
+                const bgPeq = inp.classList.contains("larvicida") ? "#dbeafe" : (inp.disabled ? "#f3f4f6" : "#ffffff");
+                rep.style.cssText = `display:inline-block;border:1.5px solid #1e5a3a;border-radius:4px;padding:3px 8px;font-size:15px;font-weight:800;color:${inp.classList.contains("larvicida") ? "#1e40af" : "#0f172a"};background:${bgPeq};min-width:68px;text-align:center;line-height:1.25;`;
+              }
+              else if (ehFormDiario && inp.closest('.campo-cab')) {
+                rep.style.cssText = `flex:1;min-width:0;width:100%;background-color:#ffffff;border:1px solid #1e5a3a;padding:3px 7px;font-weight:normal;font-size:12px;line-height:1.35;border-radius:3px;min-height:24px;box-sizing:border-box;white-space:normal;word-break:break-word;color:${temValor ? "#0f172a" : "#9ca3af"};`;
+              }
+              else if (ehFormDiario && inp.closest('.campo-rodape')) {
+                rep.style.cssText = `flex:1;min-width:0;width:100%;background-color:#ffffff;border:1px solid #1e5a3a;padding:4px 8px;font-weight:normal;font-size:12.5px;line-height:1.35;border-radius:3px;min-height:26px;box-sizing:border-box;white-space:normal;word-break:break-word;color:${temValor ? "#0f172a" : "#9ca3af"};`;
+              }
+              else if (ehFormDiario && inp.closest('.campo-supervisao-item')) {
+                rep.style.cssText = `display:inline-block;background-color:#ffffff;border:1px solid #1e5a3a;padding:1px 6px;width:50px;font-weight:bold;font-size:11px;border-radius:3px;text-align:center;color:#0f172a;line-height:1.3;box-sizing:border-box;`;
+              }
               else { rep.style.cssText = `display:inline-block;border-bottom:1.5px solid #94a3b8;padding:1px 6px 3px;font-size:0.82rem;font-weight:600;color:#1e293b;min-height:20px;`; }
               if (ff) rep.style.setProperty("font-family", ff, "important");
               if (fs) rep.style.setProperty("font-size", fs, "important");
@@ -6647,7 +6663,26 @@
               inp.parentNode.replaceChild(rep, inp);
             });
             cont.querySelectorAll('textarea').forEach(tx => { const rep = cd.createElement('div'); rep.textContent = tx.value || tx.placeholder || ""; rep.style.cssText = `width:100%;min-height:55px;font-size:0.82rem;padding:6px 10px;border:1.5px solid #94a3b8;border-radius:6px;background:#fff;line-height:1.4;white-space:pre-wrap;box-sizing:border-box;`; tx.parentNode.replaceChild(rep, tx); });
-            cont.querySelectorAll("select").forEach(s => { if (s.classList.contains("font-assinatura-select")) return; const rep = cd.createElement('div'); rep.textContent = s.options[s.selectedIndex]?.text || ""; rep.style.cssText = `display:inline-block;border-bottom:1.5px solid #94a3b8;padding:1px 6px 3px;font-size:0.82rem;font-weight:600;color:#1e293b;`; s.parentNode.replaceChild(rep, s); });
+            cont.querySelectorAll("select").forEach(s => {
+              if (s.classList.contains("font-assinatura-select")) return;
+              const txtSel = s.options[s.selectedIndex]?.text || "";
+              const rep = cd.createElement('div');
+              if (ehFormDiario && s.closest('.campo-cab')) {
+                rep.style.cssText = `flex:1;min-width:0;width:100%;background-color:#ffffff;border:1px solid #1e5a3a;padding:3px 7px;font-weight:normal;font-size:12px;line-height:1.35;border-radius:3px;color:#0f172a;min-height:24px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:6px;`;
+                const spTxt = cd.createElement('span'); spTxt.textContent = txtSel;
+                const spSeta = cd.createElement('span'); spSeta.textContent = "▾"; spSeta.style.cssText = "font-size:10px;color:#475569;flex-shrink:0;";
+                rep.appendChild(spTxt); rep.appendChild(spSeta);
+              } else if (ehFormDiario && s.closest('.supervisao-container')) {
+                rep.style.cssText = `display:inline-flex;align-items:center;justify-content:space-between;gap:8px;background-color:#ffffff;border:1px solid #1e5a3a;padding:3px 10px;border-radius:3px;font-size:12px;font-weight:bold;color:#0f172a;line-height:1.3;box-sizing:border-box;`;
+                const spTxt = cd.createElement('span'); spTxt.textContent = txtSel;
+                const spSeta = cd.createElement('span'); spSeta.textContent = "▾"; spSeta.style.cssText = "font-size:10px;color:#475569;flex-shrink:0;";
+                rep.appendChild(spTxt); rep.appendChild(spSeta);
+              } else {
+                rep.textContent = txtSel;
+                rep.style.cssText = `display:inline-block;border-bottom:1.5px solid #94a3b8;padding:1px 6px 3px;font-size:0.82rem;font-weight:600;color:#1e293b;`;
+              }
+              s.parentNode.replaceChild(rep, s);
+            });
           } catch(e) { console.warn('[clone]', e); }
         };
         const direto = () => {
@@ -12038,30 +12073,15 @@
           }
           setVal("campoAmostrasColetadas", formatarInteiroFormularioLiraa(dados.amostrasColetadas));
 
-          const qCont = document.getElementById("quarteiroesTabelaContainer");
-          if (qCont) {
-            const extras = Array.from(dados.quarteiroes.keys());
-            const opcoes = obterOpcoesQuarteiroesLiraa(extras);
-            qCont.innerHTML = "";
+          const selCabConc = document.getElementById("cabConcluido");
+          if (selCabConc) {
             if (dados.quarteiroes.size > 0) {
-              dados.quarteiroes.forEach((conc, q) => {
-                qCont.appendChild(construirLinhaQuarteiraoIndices(opcoes, q, conc ? "SIM" : "NAO"));
-              });
-              const selCabConc = document.getElementById("cabConcluido");
-              if (selCabConc) {
-                const todosConc = Array.from(dados.quarteiroes.values()).every(Boolean);
-                selCabConc.value = todosConc ? "SIM" : "NAO";
-              }
-            } else if (Array.isArray(salvoSem?.quarteiroesManuais) && salvoSem.quarteiroesManuais.length > 0) {
-              salvoSem.quarteiroesManuais.forEach(item => {
-                qCont.appendChild(construirLinhaQuarteiraoIndices(opcoes, item.q || "", item.concluido === "SIM" ? "SIM" : "NAO"));
-              });
-              const selCabConc = document.getElementById("cabConcluido");
-              if (selCabConc && salvoSem.concluidoManual) selCabConc.value = salvoSem.concluidoManual;
+              const todosConc = Array.from(dados.quarteiroes.values()).every(Boolean);
+              selCabConc.value = todosConc ? "SIM" : "NAO";
+            } else if (salvoSem?.concluidoManual) {
+              selCabConc.value = salvoSem.concluidoManual;
             } else {
-              qCont.appendChild(construirLinhaQuarteiraoIndices(opcoes, "", "NAO"));
-              const selCabConc = document.getElementById("cabConcluido");
-              if (selCabConc) selCabConc.value = "NAO";
+              selCabConc.value = "NAO";
             }
           }
 
@@ -12114,6 +12134,10 @@
           form.querySelectorAll("input[id], select[id]").forEach(el => {
             campos[el.id] = el.value;
           });
+          const { sk } = obterSemanaLiraaAtiva();
+          const porSemanaPrev = (estado?.indicesLiraaForm?.porSemana && typeof estado.indicesLiraaForm.porSemana === "object")
+            ? { ...estado.indicesLiraaForm.porSemana }
+            : {};
           const quarteiroes = [];
           const qCont = document.getElementById("quarteiroesTabelaContainer");
           if (qCont) {
@@ -12123,6 +12147,8 @@
                 quarteiroes.push({ q: sels[0].value, concluido: sels[1].value });
               }
             });
+          } else if (sk && Array.isArray(porSemanaPrev[sk]?.quarteiroesManuais)) {
+            quarteiroes.push(...porSemanaPrev[sk].quarteiroesManuais);
           }
           const ocorrencias = [];
           const oCont = document.getElementById("campoOcorrencias");
@@ -12133,10 +12159,6 @@
           }
           const detEl = document.getElementById("campoDetalhamento");
           const detalhamento = detEl ? detEl.innerHTML : "";
-          const { sk } = obterSemanaLiraaAtiva();
-          const porSemanaPrev = (estado?.indicesLiraaForm?.porSemana && typeof estado.indicesLiraaForm.porSemana === "object")
-            ? { ...estado.indicesLiraaForm.porSemana }
-            : {};
           if (sk) {
             porSemanaPrev[sk] = {
               ocorrencias,
@@ -12418,39 +12440,52 @@
       }
 
       function adicionarQuarteiraoTabela() {
-        const container = document.getElementById("quarteiroesTabelaContainer");
-        if (!container) return;
-
-        const opcoes = obterOpcoesQuarteiroesLiraa();
-        const novaLinha = construirLinhaQuarteiraoIndices(opcoes, "", "NAO");
-        container.appendChild(novaLinha);
-
-        salvarFormularioIndicesLiraa();
-        PMCD.toast.info("📋 Novo quarteirão adicionado");
+        atualizarPainelConcluidos(false);
       }
 
       function removerQuarteirao(btn) {
         const linha = btn?.closest(".quarteirao-linha");
         if (linha) linha.remove();
         atualizarPainelConcluidos(true);
-        PMCD.toast.info("Quarteirão removido");
       }
 
       function atualizarPainelConcluidos(imediato = false, silencioso = false) {
         const painel = document.getElementById("quarteiroesConcluidosPainel");
         const total = document.getElementById("totalQuarteiroesConcluidos");
-        const container = document.getElementById("quarteiroesTabelaContainer");
-        if (!painel || !total || !container) return;
+        if (!painel || !total) return;
 
-        const linhas = container.querySelectorAll(".quarteirao-linha");
-        const concluidos = [];
-        linhas.forEach(linha => {
-          const selects = linha.querySelectorAll("select");
-          if (selects.length >= 2) {
-            const quarteirao = selects[0].value;
-            const concluido = selects[1].value;
-            if (quarteirao && concluido === "SIM") concluidos.push(quarteirao);
+        const concluidosSet = new Set();
+        const consolidado = window._liraaConsolidadoSemana;
+        if (consolidado && consolidado.quarteiroes instanceof Map && consolidado.quarteiroes.size > 0) {
+          consolidado.quarteiroes.forEach((conc, q) => {
+            if (conc && q) concluidosSet.add(String(q));
+          });
+        } else {
+          const container = document.getElementById("quarteiroesTabelaContainer");
+          if (container) {
+            container.querySelectorAll(".quarteirao-linha").forEach(linha => {
+              const selects = linha.querySelectorAll("select");
+              if (selects.length >= 2) {
+                const quarteirao = selects[0].value;
+                const concluido = selects[1].value;
+                if (quarteirao && concluido === "SIM") concluidosSet.add(String(quarteirao));
+              }
+            });
+          } else {
+            const { sk } = obterSemanaLiraaAtiva();
+            const salvoSem = (sk && estado?.indicesLiraaForm?.porSemana?.[sk]) || null;
+            if (Array.isArray(salvoSem?.quarteiroesManuais)) {
+              salvoSem.quarteiroesManuais.forEach(item => {
+                if (item?.q && item?.concluido === "SIM") concluidosSet.add(String(item.q));
+              });
+            }
           }
+        }
+
+        const concluidos = Array.from(concluidosSet).sort((a, b) => {
+          const na = Number(a), nb = Number(b);
+          if (!isNaN(na) && !isNaN(nb)) return na - nb;
+          return String(a).localeCompare(String(b));
         });
 
         painel.innerHTML = concluidos.length === 0
