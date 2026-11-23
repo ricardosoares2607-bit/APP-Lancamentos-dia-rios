@@ -6351,6 +6351,7 @@
       const DIAS_SEMANA_PT = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
       const NOMES_MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
       const CAMPOS_SUPERVISAO = new Set(["supSimNao","supDireta","supIndireta","supTotal"]);
+      const CAMPOS_NAO_PRODUCAO_DIA = new Set(["ocorrenciasDia","peOcorrenciaQtd"]);
       const TABELA_BTI_GRAMAS = [
         0.5,1,1.5,1.5,2,2.5,3,3.5,3.5,4,4.5,5,5.5,6,6,6.5,7,7.5,7.5,8,
         8.5,9,9.5,9.5,10,10.5,11,11.5,11.5,12,12.5,13,13.5,14,14,14.5,15,15.5,15.5,16,
@@ -9430,6 +9431,17 @@
         const v = String(dia.programados ?? "").trim();
         return v !== "" && !isNaN(Number(v)) && Number(v) >= 0;
       }
+      function diaTemOcorrenciaSemExpediente(dia) {
+        if (!dia || !Array.isArray(dia.agentes)) return false;
+        return dia.agentes.some(a => {
+          if (!a || a._deleted || a.ativo === false) return false;
+          const ocorrs = lerOcorrenciasAgenteDia(a);
+          return ocorrs.some(o => {
+            const l = String(o || "").toLowerCase();
+            return l === "feriado" || l === "ponto facultativo";
+          });
+        });
+      }
       function atualizarEstadoCampoProg() {
         const d = diaAtual();
         const inp = document.getElementById("programadosDia");
@@ -9437,7 +9449,15 @@
         if (!inp || !d) return;
         const dataConf = diaEstaConfirmado();
         const ok = progDiaPreenchido(d);
-        if (!dataConf) {
+        const semExp = !ok && !temDadosProducaoReais(d) && diaTemOcorrenciaSemExpediente(d);
+        if (semExp) {
+          inp.classList.remove("campo-preenchido", "campo-invalido");
+          inp.title = "Dia com Feriado/Ponto Facultativo (sem expediente)";
+          if (aviso) {
+            aviso.innerHTML = "ℹ️ Dia marcado como <strong>Feriado / Ponto Facultativo</strong> (sem expediente). Não é obrigatório preencher 👥 Prog. quando não há produção.";
+            aviso.classList.add("ativo");
+          }
+        } else if (!dataConf) {
           inp.classList.remove("campo-preenchido");
           inp.classList.add("campo-invalido");
           inp.title = "Confirme a data antes de preencher o campo 👥 Prog.";
@@ -9463,9 +9483,9 @@
       function temDadosProducaoReais(dia) {
         if (!dia || !Array.isArray(dia.agentes)) return false;
         return dia.agentes.some(a => {
-          if (!a || !a.valores) return false;
+          if (!a || a._deleted || a.ativo === false || !a.valores) return false;
           return Object.keys(a.valores).some(k => {
-            if (CAMPOS_SUPERVISAO.has(k)) return false;
+            if (CAMPOS_SUPERVISAO.has(k) || CAMPOS_NAO_PRODUCAO_DIA.has(k)) return false;
             const v = a.valores[k];
             return v !== undefined && v !== null && String(v).trim() !== "";
           });
@@ -10649,6 +10669,7 @@
         salvar("semana");
         renderizarCabecalhoResumo();
         renderizarRodape();
+        atualizarEstadoCampoProg();
         if (document.getElementById("aba-producao-individual")?.classList.contains("ativo")) {
           try { renderizarProducaoIndividual(); } catch (e) {}
         }
