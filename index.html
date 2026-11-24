@@ -189,10 +189,23 @@
       .btn-semana:hover:not(:disabled) { background: #15803d; }
       .btn-semana:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; opacity: 0.7; }
       .label-semana { font-weight: 700; color: #166534; font-size: 0.95rem; min-width: 150px; text-align: center; }
-      .abas-dias { display: flex; gap: 5px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 5px; margin-bottom: 10px; overflow-x: auto; }
+      .abas-dias { display: flex; gap: 5px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 5px; margin-bottom: 10px; overflow-x: auto; align-items: stretch; }
       .aba-dia { flex: 1; min-width: 88px; background: #f3f4f6; border: 2px solid transparent; border-radius: 6px; padding: 6px 8px; font-size: 0.82rem; font-weight: 600; color: #374151; cursor: pointer; text-align: center; }
       .aba-dia:hover { background: #e5e7eb; }
       .aba-dia.ativa { background: #16a34a; color: #fff; border-color: #15803d; }
+      .aba-dia.extra { flex: 0 0 auto; min-width: 108px; background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+      .aba-dia.extra:hover { background: #dbeafe; }
+      .aba-dia.extra.ativa { background: #1d4ed8; color: #fff; border-color: #1e3a8a; }
+      .btn-add-dia-extra { flex: 0 0 auto; white-space: nowrap; background: #fffbeb; border: 1.5px dashed #f59e0b; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; font-weight: 700; color: #b45309; cursor: pointer; }
+      .btn-add-dia-extra:hover { background: #fef3c7; border-style: solid; }
+      .btn-rm-dia-extra { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 5px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+      .btn-rm-dia-extra:hover { background: #fecaca; }
+      .linha-extra-resumo td { background: #f8fafc; }
+      .sublabel-dia-extra { display: block; font-size: 0.66rem; font-weight: 700; color: #1d4ed8; line-height: 1.2; margin-top: 1px; }
+      .prod-th-dia-extra-tag { display: block; font-size: 0.62rem; font-weight: 700; color: #fde68a; letter-spacing: 0.2px; }
+      .chip-sugestao-extra { background: #eff6ff; color: #1e40af; border: 1.5px solid #93c5fd; border-radius: 6px; padding: 5px 9px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+      .chip-sugestao-extra:hover { background: #dbeafe; }
+      .chip-sugestao-extra.selecionado { background: #1d4ed8; color: #fff; border-color: #1e3a8a; }
       .barra-acoes { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
       .grupo-data { display: flex; align-items: center; gap: 5px; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px; flex-wrap: wrap; }
       .grupo-data label { font-weight: 700; color: #166534; font-size: 0.8rem; }
@@ -3735,7 +3748,7 @@
         </div>
         <div class="barra-lancamento-dia">
           <div class="grupo-campos">
-            <div class="grupo-data"><label for="dataDia">📅 Data:</label><input type="date" id="dataDia" /><span id="diaSemanaPreview">—</span><button type="button" id="btnAutoPreencherSemana" class="btn-mini">⚡ Auto-datas</button></div>
+            <div class="grupo-data"><label for="dataDia">📅 Data:</label><input type="date" id="dataDia" /><span id="diaSemanaPreview">—</span><button type="button" id="btnAutoPreencherSemana" class="btn-mini">⚡ Auto-datas</button><button type="button" id="btnRemoverDiaExtra" class="btn-rm-dia-extra" style="display: none;" title="Remover este dia extra da semana">🗑️ Remover dia extra</button></div>
             <div class="grupo-data campo-obrigatorio" id="grupoProgramadosDia">
               <label for="programadosDia">👥 Prog.:</label>
               <input type="number" id="programadosDia" min="0" placeholder="0" style="width: 65px;" required />
@@ -4982,6 +4995,27 @@
           <div id="confAvisoRetroativo" class="confirmacao-aviso" style="display: none;"></div>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;"><button type="button" class="btn btn-cinza" id="btnCancelarConfirmacaoData">Cancelar</button><button type="button" class="btn btn-verde" id="btnExecutarConfirmacaoData">✓ Confirmar</button></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="modalDiaExtra">
+      <div class="modal-conteudo" style="max-width: 520px;">
+        <div class="modal-header"><h3>➕ Adicionar Dia Extra (Ciclo pós-LIRAa)</h3><button type="button" class="btn-fechar-modal" id="btnFecharModalDiaExtra">&times;</button></div>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem; color: #334155;">
+          <div id="infoSemanaAlvoDiaExtra" style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 8px 10px; font-size: 0.8rem; color: #166534; font-weight: 600;"></div>
+          <div id="blocoSugestoesDiaExtra" style="display: none;">
+            <label style="display: block; font-weight: 700; color: #1e40af; margin-bottom: 6px; font-size: 0.8rem;">📅 Sugestões rápidas da semana anterior (LIRAa):</label>
+            <div id="chipsSugestoesDiaExtra" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+          </div>
+          <div>
+            <label for="inputDataDiaExtra" style="display: block; font-weight: 700; color: #14532d; margin-bottom: 4px;">Data real em que o trabalho foi realizado:</label>
+            <input type="date" id="inputDataDiaExtra" style="width: 100%; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; font-weight: 700; color: #0f172a;" />
+          </div>
+          <div id="avisoModalDiaExtra" class="confirmacao-aviso" style="display: none;"></div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+          <button type="button" class="btn btn-cinza" id="btnCancelarModalDiaExtra">Cancelar</button>
+          <button type="button" class="btn btn-verde" id="btnConfirmarAdicionarDiaExtra">+ Adicionar Dia Extra</button>
+        </div>
       </div>
     </div>
     <div class="modal-overlay" id="modalDiagnostico">
@@ -6551,7 +6585,7 @@
         let fw;
         if (elementoId === "areaImpressao") { const baseW = Math.round(el.getBoundingClientRect().width); const wrapEl = el.querySelector(".resumo-wrapper"); const tableW = wrapEl ? wrapEl.scrollWidth : 0; const padH = 44; fw = Math.max(baseW, tableW + padH); }
         else if (elementoId === "areaImpressaoCiclo") { fw = 1680; }
-        else if (elementoId === "areaProducaoIndividual") { fw = 1400; }
+        else if (elementoId === "areaProducaoIndividual") { const wrapEl = el.querySelector(".resumo-wrapper"); const tableW = wrapEl ? wrapEl.scrollWidth : 0; fw = Math.max(1400, tableW + 44); }
         else if (elementoId === "areaRelatorioCampo") { fw = 1400; }
         else if (elementoId === "areaQuarteiroesDesignados") { fw = 1050; }
         else if (elementoId === "areaConfigEstrato") { fw = 1100; }
@@ -6765,7 +6799,48 @@
         return estado[chave];
       }
       function semana() { const r = repoAtivo(); if (!r[estado.semanaAtiva]) { const k = Object.keys(r); if (k.length > 0) estado.semanaAtiva = k[0]; else { const s = String(semanaAtualDoAno()); r[s] = criarSemana(null, s, estado.atividadeAtiva || "ciclo", "1"); estado.semanaAtiva = s; } } return r[estado.semanaAtiva]; }
-      function diaAtual() { const s = semana(); if (!s || !s.dias) return null; if (!s.dias[estado.diaAtivo]) estado.diaAtivo = "segunda"; return s.dias[estado.diaAtivo]; }
+      function ehChaveDiaExtra(dk) { return typeof dk === "string" && dk.startsWith("extra_"); }
+      function chaveDiaExtraDeISO(iso) { return `extra_${String(iso || "").trim()}`; }
+      function obterObjetoDiaSemana(semObj, dk) {
+        if (!semObj || !dk) return null;
+        if (semObj.dias && semObj.dias[dk]) return semObj.dias[dk];
+        if (ehChaveDiaExtra(dk) && semObj.diasExtras && semObj.diasExtras[dk] && !semObj.diasExtras[dk]._deleted) {
+          return semObj.diasExtras[dk];
+        }
+        return null;
+      }
+      function obterDiasExtrasOrdenados(semObj) {
+        if (!semObj || (semObj.atividade || "ciclo") === "liraa" || !semObj.diasExtras || typeof semObj.diasExtras !== "object") return [];
+        return Object.keys(semObj.diasExtras)
+          .map(k => ({ key: k, dia: semObj.diasExtras[k] }))
+          .filter(x => x.dia && !x.dia._deleted)
+          .sort((a, b) => {
+            const da = String(a.dia.data || a.key.replace(/^extra_/, ""));
+            const db = String(b.dia.data || b.key.replace(/^extra_/, ""));
+            return da.localeCompare(db);
+          });
+      }
+      function obterTodosDiasSemanaOrdenados(semObj) {
+        if (!semObj) return [];
+        const extras = obterDiasExtrasOrdenados(semObj).map(x => ({ key: x.key, dia: x.dia, isExtra: true }));
+        const regulares = DIAS_SEMANA.map(dk => ({ key: dk, dia: semObj.dias?.[dk] || null, isExtra: false }));
+        return extras.concat(regulares);
+      }
+      function obterRotuloDiaSimples(diaObj, dk) {
+        const nomeBase = nomeDiaExibido(diaObj?.data || "", dk) || NOMES_DIAS[dk] || dk;
+        if (ehChaveDiaExtra(dk) && diaObj?.data) {
+          return `${nomeBase} (${formatarDataBR(diaObj.data)})`;
+        }
+        return nomeBase;
+      }
+      function diaAtual() {
+        const s = semana();
+        if (!s || !s.dias) return null;
+        const encontrado = obterObjetoDiaSemana(s, estado.diaAtivo);
+        if (encontrado) return encontrado;
+        estado.diaAtivo = "segunda";
+        return s.dias.segunda || null;
+      }
       function valoresDoDia(ag) { if (!ag) return {}; if (!ag.valores) ag.valores = {}; return ag.valores; }
       function normalizarNumeroCiclo(c) { if (!c) return "1"; const n = Number(String(c).replace(/\D/g,"")); return (n >= 1 && n <= 6) ? String(n) : "1"; }
       function formatarCicloTexto(c, at = null) {
@@ -7410,6 +7485,14 @@
         if (!rd[ns]) rd[ns] = criarSemana(nd, ns, na, nc);
         const sd = rd[ns];
         DIAS_SEMANA.forEach((d, i) => { if (!sd.dias) sd.dias = {}; if (!sd.dias[d]) sd.dias[d] = { data: "", programados: "", agentes: [] }; if (so?.dias?.[d]) { sd.dias[d].programados = so.dias[d].programados; sd.dias[d].agentes = JSON.parse(JSON.stringify(so.dias[d].agentes || [])); sd.dias[d]._ts = agora; } sd.dias[d].data = adicionarDiasISO(nd, i); sd.dias[d]._fieldTs = { ...(sd.dias[d]._fieldTs || {}), data: agora, programados: agora }; });
+        if (so?.diasExtras && typeof so.diasExtras === "object" && Object.keys(so.diasExtras).length > 0) {
+          if (!sd.diasExtras) sd.diasExtras = {};
+          Object.keys(so.diasExtras).forEach(ek => {
+            if (!so.diasExtras[ek]) return;
+            sd.diasExtras[ek] = JSON.parse(JSON.stringify(so.diasExtras[ek]));
+            sd.diasExtras[ek]._ts = agora;
+          });
+        }
         if (so?.resumo?.valores) { if (!sd.resumo) sd.resumo = { valores: {} }; Object.assign(sd.resumo.valores, so.resumo.valores); sd.resumo._ts = agora; }
         if (so?.rodape) { sd.rodape = JSON.parse(JSON.stringify(so.rodape)); sd._rodTs = { observacao: agora, responsavel: agora, data: agora, fontResponsavel: agora }; }
         const dc = obterDatasCicloEfetivas(ano, nc, na); const pd = obterPeriodoDaSemana(ns, ano, nc, na);
@@ -7443,25 +7526,28 @@
       function contarTotalLancamentos(dados) {
         if (!dados || typeof dados !== "object") return 0;
         let total = 0;
+        const contarDia = (d) => {
+          if (!d || d._deleted || !Array.isArray(d.agentes)) return;
+          d.agentes.forEach(ag => {
+            if (!ag || ag._deleted) return;
+            const vals = ag.valores || {};
+            Object.keys(vals).forEach(k => {
+              const v = vals[k];
+              if (v === undefined || v === null || String(v).trim() === "" || k === "supTotal" || k === "supSimNao") return;
+              if ((k === "supDireta" || k === "supIndireta") && vals.supSimNao !== "Sim" && Number(v) === 0) return;
+              total++;
+            });
+          });
+        };
         [dados.semanas, dados.semanasLiraa].forEach(col => {
           if (!col || typeof col !== "object") return;
           Object.keys(col).forEach(sk => {
             const sem = col[sk];
-            if (!sem || sem._deleted || !sem.dias) return;
-            DIAS_SEMANA.forEach(dk => {
-              const d = sem.dias[dk];
-              if (!d || !Array.isArray(d.agentes)) return;
-              d.agentes.forEach(ag => {
-                if (!ag || ag._deleted) return;
-                const vals = ag.valores || {};
-                Object.keys(vals).forEach(k => {
-                  const v = vals[k];
-                  if (v === undefined || v === null || String(v).trim() === "" || k === "supTotal" || k === "supSimNao") return;
-                  if ((k === "supDireta" || k === "supIndireta") && vals.supSimNao !== "Sim" && Number(v) === 0) return;
-                  total++;
-                });
-              });
-            });
+            if (!sem || sem._deleted) return;
+            if (sem.dias) DIAS_SEMANA.forEach(dk => contarDia(sem.dias[dk]));
+            if (sem.diasExtras && typeof sem.diasExtras === "object") {
+              Object.keys(sem.diasExtras).forEach(ek => contarDia(sem.diasExtras[ek]));
+            }
           });
         });
         return total;
@@ -9534,8 +9620,8 @@
         if (!s || !s.dias) return false;
         let temDados = false;
         let algumSemProg = false;
-        DIAS_SEMANA.forEach(d => {
-          const dd = s.dias[d]; if (!dd) return;
+        obterTodosDiasSemanaOrdenados(s).forEach(({ dia: dd }) => {
+          if (!dd) return;
           if (temDadosProducaoReais(dd)) {
             temDados = true;
             if (!progDiaPreenchido(dd)) algumSemProg = true;
@@ -9609,11 +9695,13 @@
           const sAno = obterAnoSemana(sem);
           if (sCiclo !== ctx.ciclo || sAno !== ctx.ano) return;
           if (semanaEstaInativa(sk, sAno)) return;
-          DIAS_SEMANA.forEach(dk => {
-            const dia = sem.dias?.[dk]; if (!dia) return;
+          obterTodosDiasSemanaOrdenados(sem).forEach(({ dia, isExtra }) => {
+            if (!dia) return;
             const iso = dia.data || ""; if (!iso) return;
-            if (iniCiclo && iso < iniCiclo) return;
-            if (fimCiclo && iso > fimCiclo) return;
+            if (!isExtra) {
+              if (iniCiclo && iso < iniCiclo) return;
+              if (fimCiclo && iso > fimCiclo) return;
+            }
             const agentes = (dia.agentes || []).filter(a => a && !a._deleted && a.ativo !== false && a.nome);
             agentes.forEach(ag => {
               const v = ag.valores || {};
@@ -9756,8 +9844,8 @@
             agg.porSemana.push({ semana: sk, total: tS.TOTAL, r: tS.R || 0, c: tS.C || 0, tb: tS.TB || 0, pe: tS.PE || 0, o: tS.O || 0, programados: tS.PROGRAMADOS, trabalhado: tS.TRABALHADO, recuperados: (tS.RECUPERADOS || 0), rendimento: tS.RENDIMENTO, ip: tS.IP, pend: tS.PENDENCIAS, depTotal: tS.DEP_TOTAL || 0, depFocados: tS.DEP_FOCADOS || 0, depAmostras: tS.DEP_AMOSTRAS || 0, gramas: tS.DEP_GRAMAS || 0, iip: iipSem, ib: ibSem });
           }
           const s = col?.[sk];
-          DIAS_SEMANA.forEach(dk => {
-            const d = s?.dias?.[dk]; if (!d?.agentes) return;
+          obterTodosDiasSemanaOrdenados(s).forEach(({ dia: d }) => {
+            if (!d?.agentes) return;
             d.agentes.forEach(ag => {
               if (!ag || ag._deleted) return;
               const nome = (ag.nome || "Agente").trim();
@@ -9799,6 +9887,16 @@
         const at = (estado && estado.atividadeAtiva) || "ciclo";
         const y = Number(ano) || new Date().getFullYear();
         const c = normalizarNumeroCiclo(ciclo || "1");
+        const col = repoAtivo(at) || {};
+        // 0. Priorizar correspondência em dias extras (pós-LIRAa) atribuídos a alguma semana do ciclo
+        for (const sk of Object.keys(col)) {
+          const s = col[sk];
+          if (!s || s._deleted) continue;
+          if (normalizarNumeroCiclo(s.cabecalho?.ciclo) !== c) continue;
+          if (semanaEstaInativa(sk, obterAnoSemana(s), at)) continue;
+          const extras = obterDiasExtrasOrdenados(s);
+          if (extras.some(ex => ex.dia?.data === iso)) return String(sk);
+        }
         // 1. Programação cadastrada na aba SUGARBO (referência primária de semanas)
         let p = (estado.programacao || []).find(x => x && Number(x.ano) === y && normalizarNumeroCiclo(x.ciclo) === c && progCorrespondeAtividade(x, at));
         if (!p) p = (estado.programacao || []).find(x => x && Number(x.ano) === y && progCorrespondeAtividade(x, at) && (x.cicloSemanaInicio || x.semana) && (x.cicloDataInicio || x.dataInicio));
@@ -9819,7 +9917,6 @@
           }
         }
         // 2. Verificar correspondência direta de data nos dias das semanas lançadas
-        const col = repoAtivo(at) || {};
         for (const sk of Object.keys(col)) {
           const s = col[sk];
           if (!s || !s.dias) continue;
@@ -10464,6 +10561,253 @@
           }
         });
       }
+      function renderizarBotoesDias() {
+        const cont = document.getElementById("abasDias");
+        if (!cont) return;
+        const s = semana();
+        const at = (estado && estado.atividadeAtiva) || "ciclo";
+        const rotulosCurto = { segunda: "Segunda", terca: "Terça", quarta: "Quarta", quinta: "Quinta", sexta: "Sexta" };
+        const diasCurtoPT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        const obterAbrevDia = (iso) => {
+          if (!iso) return "Extra";
+          const p = String(iso).split("-").map(Number);
+          if (p.length !== 3 || p.some(isNaN)) return "Extra";
+          const dt = new Date(p[0], p[1] - 1, p[2]);
+          return isNaN(dt.getTime()) ? "Extra" : (diasCurtoPT[dt.getDay()] || "Extra");
+        };
+        if (s && !obterObjetoDiaSemana(s, estado.diaAtivo)) {
+          estado.diaAtivo = "segunda";
+        }
+        cont.innerHTML = "";
+        if (at !== "liraa" && s) {
+          obterDiasExtrasOrdenados(s).forEach(({ key, dia }) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "aba-dia extra" + (estado.diaAtivo === key ? " ativa" : "");
+            btn.dataset.dia = key;
+            const brCurto = dia?.data ? formatarDataBR(dia.data).slice(0, 5) : "";
+            btn.textContent = `📌 ${obterAbrevDia(dia?.data)} ${brCurto}`.trim();
+            btn.title = `Dia extra pós-LIRAa: ${obterRotuloDiaSimples(dia, key)}`;
+            btn.addEventListener("click", () => {
+              estado.diaAtivo = key;
+              salvarPreferenciaLocal();
+              renderizar();
+              atualizarTotais();
+            });
+            cont.appendChild(btn);
+          });
+        }
+        DIAS_SEMANA.forEach(dk => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "aba-dia" + (estado.diaAtivo === dk ? " ativa" : "");
+          btn.dataset.dia = dk;
+          btn.textContent = rotulosCurto[dk] || dk;
+          btn.addEventListener("click", () => {
+            estado.diaAtivo = dk;
+            salvarPreferenciaLocal();
+            renderizar();
+            atualizarTotais();
+          });
+          cont.appendChild(btn);
+        });
+        if (at !== "liraa") {
+          const btnAdd = document.createElement("button");
+          btnAdd.type = "button";
+          btnAdd.id = "btnAdicionarDiaExtra";
+          btnAdd.className = "btn-add-dia-extra";
+          btnAdd.textContent = "+ Dia Extra (pós-LIRAa)";
+          btnAdd.title = "Registrar dia de Ciclo de Visita trabalhado após término antecipado do LIRAa";
+          btnAdd.addEventListener("click", abrirModalDiaExtra);
+          cont.appendChild(btnAdd);
+        }
+      }
+      function obterDatasSugeridasPosLiraa(semCiclo) {
+        const at = (estado && estado.atividadeAtiva) || "ciclo";
+        if (at === "liraa" || !semCiclo) return { datas: [], origemLiraa: false };
+        const anoS = obterAnoSemana(semCiclo);
+        const cA = normalizarNumeroCiclo(semCiclo.cabecalho?.ciclo || "1");
+        const pS = obterPeriodoDaSemana(estado.semanaAtiva, anoS, cA, "ciclo");
+        const iniSemISO = pS?.inicioISO || "";
+        if (!iniSemISO) return { datas: [], origemLiraa: false };
+        const usadas = new Set();
+        obterTodosDiasSemanaOrdenados(semCiclo).forEach(({ dia }) => {
+          if (dia?.data) usadas.add(dia.data);
+        });
+        const limiteInf = adicionarDiasISO(iniSemISO, -14);
+        const progsLiraa = (estado.programacao || [])
+          .filter(p => p && progCorrespondeAtividade(p, "liraa"))
+          .filter(p => {
+            const pIni = p.cicloDataInicio || p.dataInicio || "";
+            const pFim = p.cicloDataTermino || p.dataTermino || pIni;
+            return pIni && pFim && pIni < iniSemISO && pFim >= limiteInf;
+          })
+          .sort((a, b) => String(b.cicloDataTermino || b.dataTermino || "").localeCompare(String(a.cicloDataTermino || a.dataTermino || "")));
+        let candidatas = [];
+        let origemLiraa = false;
+        if (progsLiraa.length > 0) {
+          const pL = progsLiraa[0];
+          const dI = pL.cicloDataInicio || pL.dataInicio;
+          const dF = pL.cicloDataTermino || pL.dataTermino || dI;
+          const fimCap = dF < iniSemISO ? dF : adicionarDiasISO(iniSemISO, -1);
+          candidatas = listarDatasEntre(dI, fimCap).filter(x => {
+            const p = x.iso.split("-").map(Number);
+            const dw = new Date(p[0], p[1] - 1, p[2]).getDay();
+            return dw >= 1 && dw <= 5 && !usadas.has(x.iso);
+          });
+          origemLiraa = true;
+        } else {
+          const segAnt = adicionarDiasISO(iniSemISO, -7);
+          const sexAnt = adicionarDiasISO(iniSemISO, -3);
+          candidatas = listarDatasEntre(segAnt, sexAnt).filter(x => !usadas.has(x.iso));
+        }
+        return { datas: candidatas, origemLiraa };
+      }
+      function validarDataDiaExtraNaSemana(semCiclo, iso, ignorarKey = null) {
+        if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+          return { ok: false, msg: "Informe uma data válida." };
+        }
+        if (!semCiclo) return { ok: false, msg: "Nenhuma semana selecionada." };
+        const duplicado = obterTodosDiasSemanaOrdenados(semCiclo).find(x => x.key !== ignorarKey && x.dia && !x.dia._deleted && x.dia.data === iso);
+        if (duplicado) {
+          return { ok: false, msg: `A data ${formatarDataBR(iso)} já existe nesta semana (${obterRotuloDiaSimples(duplicado.dia, duplicado.key)}).` };
+        }
+        return { ok: true, msg: "" };
+      }
+      function abrirModalDiaExtra() {
+        if (estaModoLeitura()) return;
+        const at = (estado && estado.atividadeAtiva) || "ciclo";
+        if (at === "liraa") return;
+        const s = semana(); if (!s) return;
+        const m = document.getElementById("modalDiaExtra");
+        const info = document.getElementById("infoSemanaAlvoDiaExtra");
+        const blocoSug = document.getElementById("blocoSugestoesDiaExtra");
+        const chipsEl = document.getElementById("chipsSugestoesDiaExtra");
+        const inp = document.getElementById("inputDataDiaExtra");
+        const aviso = document.getElementById("avisoModalDiaExtra");
+        const anoS = obterAnoSemana(s);
+        const cA = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1");
+        const pS = obterPeriodoDaSemana(estado.semanaAtiva, anoS, cA, "ciclo");
+        if (info) {
+          info.textContent = `Será contabilizado na SE ${pad2(estado.semanaAtiva)} (${pS.texto}), mantendo o período oficial no cabeçalho e detalhando a data real nas observações.`;
+        }
+        const { datas, origemLiraa } = obterDatasSugeridasPosLiraa(s);
+        const atualizarAviso = () => {
+          if (!inp || !aviso) return;
+          const v = validarDataDiaExtraNaSemana(s, inp.value);
+          if (!v.ok && inp.value) {
+            aviso.style.display = "block";
+            aviso.textContent = "⚠️ " + v.msg;
+          } else {
+            aviso.style.display = "none";
+            aviso.textContent = "";
+          }
+          if (chipsEl) {
+            chipsEl.querySelectorAll(".chip-sugestao-extra").forEach(ch => {
+              ch.classList.toggle("selecionado", ch.dataset.iso === inp.value);
+            });
+          }
+        };
+        if (blocoSug && chipsEl) {
+          chipsEl.innerHTML = "";
+          if (datas.length > 0) {
+            const lbl = blocoSug.querySelector("label");
+            if (lbl) lbl.textContent = origemLiraa ? "📅 Dias da semana LIRAa anterior disponíveis:" : "📅 Sugestões da semana anterior:";
+            datas.forEach(item => {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "chip-sugestao-extra";
+              btn.dataset.iso = item.iso;
+              btn.textContent = `${item.diaSemana.replace("-feira", "")} ${item.br.slice(0, 5)}`;
+              btn.addEventListener("click", () => {
+                if (inp) inp.value = item.iso;
+                atualizarAviso();
+              });
+              chipsEl.appendChild(btn);
+            });
+            blocoSug.style.display = "block";
+          } else {
+            blocoSug.style.display = "none";
+          }
+        }
+        if (inp) {
+          inp.value = datas.length > 0 ? datas[datas.length - 1].iso : adicionarDiasISO(pS.inicioISO, -3);
+          inp.oninput = atualizarAviso;
+          inp.onchange = atualizarAviso;
+        }
+        atualizarAviso();
+        if (m) m.classList.add("ativo");
+      }
+      function fecharModalDiaExtra() {
+        document.getElementById("modalDiaExtra")?.classList.remove("ativo");
+      }
+      function criarObjetoDiaExtra(iso) {
+        const agora = agoraSyncMs();
+        const base = (estado.configEquipe?.agentes?.length > 0) ? estado.configEquipe.agentes.filter(a => a && !a._deleted) : NOMES_AGENTES_PADRAO.map(n => criarAgente(n));
+        const agentes = base.map(a => ({
+          id: a.id || ("ag_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6)),
+          nome: a.nome || "Agente",
+          ativo: a.ativo !== false,
+          valores: {},
+          _valoresTs: {},
+          _ts: agora
+        }));
+        return {
+          data: iso,
+          programados: "",
+          origem: "pos_liraa",
+          _deleted: false,
+          agentes,
+          _ts: agora,
+          _fieldTs: { data: agora, origem: agora }
+        };
+      }
+      function confirmarAdicionarDiaExtra() {
+        const s = semana(); if (!s) return;
+        const inp = document.getElementById("inputDataDiaExtra");
+        const aviso = document.getElementById("avisoModalDiaExtra");
+        const iso = String(inp?.value || "").trim();
+        const check = validarDataDiaExtraNaSemana(s, iso);
+        if (!check.ok) {
+          if (aviso) { aviso.style.display = "block"; aviso.textContent = "⚠️ " + check.msg; }
+          return;
+        }
+        if (!s.diasExtras || typeof s.diasExtras !== "object") s.diasExtras = {};
+        const key = chaveDiaExtraDeISO(iso);
+        s.diasExtras[key] = criarObjetoDiaExtra(iso);
+        s._ts = agoraSyncMs();
+        estado.diaAtivo = key;
+        salvarPreferenciaLocal();
+        atualizarObservacaoSupervisaoSemana();
+        salvar("semana");
+        fecharModalDiaExtra();
+        renderizar();
+        atualizarTotais();
+      }
+      function removerDiaExtraAtivo() {
+        if (estaModoLeitura()) return;
+        const s = semana();
+        const dk = estado.diaAtivo;
+        if (!s || !ehChaveDiaExtra(dk) || !s.diasExtras?.[dk]) return;
+        const d = s.diasExtras[dk];
+        const rotulo = obterRotuloDiaSimples(d, dk);
+        const temProd = temDadosProducaoReais(d);
+        const msg = temProd
+          ? `O dia extra "${rotulo}" possui lançamentos registrados.\n\nDeseja realmente removê-lo desta semana?`
+          : `Remover o dia extra "${rotulo}" desta semana?`;
+        if (!confirm(msg)) return;
+        const agora = agoraSyncMs();
+        d._deleted = true;
+        d._deletedAtMs = agora;
+        d._ts = agora;
+        s._ts = agora;
+        estado.diaAtivo = "segunda";
+        salvarPreferenciaLocal();
+        atualizarObservacaoSupervisaoSemana();
+        salvar("semana", { imediato: true });
+        renderizar();
+        atualizarTotais();
+      }
       function renderizar() {
         const at = (estado && estado.atividadeAtiva) || "ciclo";
         const s = semana(); if (!s) return;
@@ -10478,7 +10822,10 @@
         const inA = document.getElementById("anoLancamento"), seC = document.getElementById("cicloLancamentoCiclo"), inM = document.getElementById("mesLancamento"), inS = document.getElementById("semanaLancamento"), inI = document.getElementById("semanaDataInicio"), inF = document.getElementById("semanaDataTermino");
         if (inA) inA.value = ano; if (seC) seC.value = cA; if (inM) inM.value = mes; if (inS) inS.value = estado.semanaAtiva; if (inI) inI.value = pS.inicioISO; if (inF) inF.value = pS.terminoISO;
         if (s.cabecalho) { s.cabecalho.semanaInicio = pS.inicioBR; s.cabecalho.semanaTermino = pS.terminoBR; }
-        document.querySelectorAll(".aba-dia").forEach(b => { b.classList.toggle("ativa", b.dataset.dia === estado.diaAtivo); });
+        renderizarBotoesDias();
+        const ehExtraAtivo = at !== "liraa" && ehChaveDiaExtra(estado.diaAtivo);
+        const bAuto = document.getElementById("btnAutoPreencherSemana"); if (bAuto) bAuto.style.display = ehExtraAtivo ? "none" : "";
+        const bRmEx = document.getElementById("btnRemoverDiaExtra"); if (bRmEx) bRmEx.style.display = ehExtraAtivo ? "" : "none";
         const dA = diaAtual(); const inp = document.getElementById("dataDia"); if (inp && dA) inp.value = dA.data || hojeISO();
         const pv = document.getElementById("diaSemanaPreview"); if (pv && dA) pv.textContent = nomeDiaExibido(dA.data, estado.diaAtivo) || "—";
         const pr = document.getElementById("programadosDia"); if (pr && dA) pr.value = dA.programados || "";
@@ -10648,8 +10995,7 @@
         if (!s || !s.dias) return [];
         const atSem = s.atividade || estado?.atividadeAtiva || "ciclo";
         const trabalharamPorChave = new Map();
-        DIAS_SEMANA.forEach(dk => {
-          const d = s.dias[dk];
+        obterTodosDiasSemanaOrdenados(s).forEach(({ dia: d }) => {
           if (!d || !Array.isArray(d.agentes)) return;
           d.agentes.forEach(ag => {
             if (!agenteTrabalhouNoDia(ag, atSem)) return;
@@ -10747,8 +11093,7 @@
         if (!semObj || !semObj.dias || !ag) return [];
         const registros = [];
         const chavesVistas = new Set();
-        DIAS_SEMANA.forEach(dk => {
-          const d = semObj.dias[dk];
+        obterTodosDiasSemanaOrdenados(semObj).forEach(({ key: dk, dia: d }) => {
           if (!d) return;
           const aD = encontrarAgenteNoDia(d, ag);
           if (!aD) return;
@@ -11398,8 +11743,9 @@
       }
       function calcularSomasDia(diaKey, sk = null, repoA = null) {
         const repo = repoA || repoAtivo(); const s = sk ? repo[sk] : semana();
-        if (!s || !s.dias || !s.dias[diaKey]) return null;
-        const dia = s.dias[diaKey]; const ativos = (dia.agentes || []).filter(a => a && !a._deleted && a.ativo);
+        const dia = obterObjetoDiaSemana(s, diaKey);
+        if (!s || !dia) return null;
+        const ativos = (dia.agentes || []).filter(a => a && !a._deleted && a.ativo);
         const somas = { R: 0, C: 0, TB: 0, PE: 0, PE_CONTABILIZADO: 0, O: 0, TOTAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, IP: 0, RENDIMENTO: null, TRABALHADO: 0, QUARTEIRAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, ELIMINADOS: 0, TRATADOS_REAIS: 0, SUPERVISAO_REAL: 0, SUPERVISAO_DIRETA: 0, SUPERVISAO_INDIRETA: 0 };
         TIPOS_DEPOSITOS.forEach(t => { somas.DEP[t] = 0; somas.DEP_FOCADOS_TIPO[t] = 0; });
         let qT = 0, qQ = 0;
@@ -11469,7 +11815,14 @@
         const t = { semana: sk, ciclo: normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"), periodo: "", diasComProducao: 0, PROGRAMADOS: 0, TRABALHADO: 0, QUARTEIRAO: 0, R: 0, C: 0, TB: 0, PE: 0, PE_CONTABILIZADO: 0, O: 0, TOTAL: 0, TRATADOS_GERAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, IP: 0, RENDIMENTO: null, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, ELIMINADOS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, SUPERVISAO: 0 };
         TIPOS_DEPOSITOS.forEach(x => { t.DEP[x] = 0; t.DEP_FOCADOS_TIPO[x] = 0; });
         const anoS = obterAnoSemana(s); const cS = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"); const pI = obterPeriodoDaSemana(sk, anoS, cS, s.atividade || estado.atividadeAtiva); t.periodo = pI.texto;
-        DIAS_SEMANA.forEach(d => { const sd = calcularSomasDia(d, sk, c); if (!sd) return; t.PROGRAMADOS += num(s.dias?.[d]?.programados || 0); if (sd.TOTAL > 0) t.diasComProducao++; t.TRABALHADO += sd.TRABALHADO; t.QUARTEIRAO += sd.QUARTEIRAO; t.R += sd.R; t.C += sd.C; t.TB += sd.TB; t.PE += sd.PE; t.O += sd.O; t.TOTAL += sd.TOTAL; t.TRATADOS_GERAL += sd.TRATADOS_REAIS; t.FECHADOS += sd.FECHADOS; t.RECUPERADOS += sd.RECUPERADOS; t.RECUSADOS += sd.RECUSADOS; t.ABANDONADOS += sd.ABANDONADOS; t.INFORMADOS += sd.INFORMADOS; t.PENDENCIAS += sd.PENDENCIAS; TIPOS_DEPOSITOS.forEach(x => { t.DEP[x] += sd.DEP[x]; t.DEP_FOCADOS_TIPO[x] += (sd.DEP_FOCADOS_TIPO && sd.DEP_FOCADOS_TIPO[x]) || 0; }); t.DEP_TRATADOS += sd.DEP_TRATADOS; t.DEP_LITROS += sd.DEP_LITROS; t.DEP_GRAMAS += sd.DEP_GRAMAS; t.ELIMINADOS += sd.ELIMINADOS; t.DEP_FOCADOS += sd.DEP_FOCADOS; t.DEP_AMOSTRAS += sd.DEP_AMOSTRAS || 0; t.SUPERVISAO += sd.SUPERVISAO_REAL; });
+        obterTodosDiasSemanaOrdenados(s).forEach(({ key: d, dia: diaObj }) => {
+          const sd = calcularSomasDia(d, sk, c); if (!sd) return;
+          t.PROGRAMADOS += num(diaObj?.programados || 0);
+          if (sd.TOTAL > 0) t.diasComProducao++;
+          t.TRABALHADO += sd.TRABALHADO; t.QUARTEIRAO += sd.QUARTEIRAO; t.R += sd.R; t.C += sd.C; t.TB += sd.TB; t.PE += sd.PE; t.O += sd.O; t.TOTAL += sd.TOTAL; t.TRATADOS_GERAL += sd.TRATADOS_REAIS; t.FECHADOS += sd.FECHADOS; t.RECUPERADOS += sd.RECUPERADOS; t.RECUSADOS += sd.RECUSADOS; t.ABANDONADOS += sd.ABANDONADOS; t.INFORMADOS += sd.INFORMADOS; t.PENDENCIAS += sd.PENDENCIAS;
+          TIPOS_DEPOSITOS.forEach(x => { t.DEP[x] += sd.DEP[x]; t.DEP_FOCADOS_TIPO[x] += (sd.DEP_FOCADOS_TIPO && sd.DEP_FOCADOS_TIPO[x]) || 0; });
+          t.DEP_TRATADOS += sd.DEP_TRATADOS; t.DEP_LITROS += sd.DEP_LITROS; t.DEP_GRAMAS += sd.DEP_GRAMAS; t.ELIMINADOS += sd.ELIMINADOS; t.DEP_FOCADOS += sd.DEP_FOCADOS; t.DEP_AMOSTRAS += sd.DEP_AMOSTRAS || 0; t.SUPERVISAO += sd.SUPERVISAO_REAL;
+        });
         t.DEP_TOTAL = TIPOS_DEPOSITOS.reduce((a, x) => a + t.DEP[x], 0);
         if (t.INFORMADOS !== 0) t.IP = (100 / t.INFORMADOS) * t.PENDENCIAS;
         if (t.TRABALHADO !== 0) t.RENDIMENTO = t.TOTAL / t.TRABALHADO;
@@ -11477,6 +11830,24 @@
       }
       const REGEX_LINHA_SUPERVISAO = /^Dia\s+\d{2}\/\d{2}\/\d{4},\s+[^,]+,\s+fo(?:i|ram)\s+realizada/i;
       const REGEX_LINHA_PE = /^N[ao]\s+[^,]+,\s+dia\s+\d{2}\/\d{2}\/\d{4},\s+fo(?:i|ram)\s+realizada/i;
+      const REGEX_LINHA_DIAS_EXTRAS = /^Inclui trabalhos de Ciclo de Visita realizados após conclusão antecipada do LIRAa/i;
+      function formatarFraseDiasExtrasSemana(extras) {
+        if (!Array.isArray(extras) || extras.length === 0) return "";
+        const itens = extras
+          .map(({ key, dia }) => {
+            const dataISO = dia?.data || "";
+            const dataBR = formatarDataBR(dataISO);
+            if (!dataBR) return "";
+            const nomeDia = (diaSemanaDeISO(dataISO) || nomeDiaExibido(dataISO, key) || "").toLowerCase();
+            return nomeDia ? `${dataBR} (${nomeDia})` : dataBR;
+          })
+          .filter(Boolean);
+        if (itens.length === 0) return "";
+        const listaTxt = itens.length === 1
+          ? `no dia ${itens[0]}`
+          : `nos dias ${itens.slice(0, -1).join(", ")} e ${itens[itens.length - 1]}`;
+        return `Inclui trabalhos de Ciclo de Visita realizados após conclusão antecipada do LIRAa ${listaTxt}.`;
+      }
       function formatarFrasePEDia(dataBR, nomeDiaMinusculo, qtd) {
         if (qtd <= 0) return "";
         const dMinusculo = (nomeDiaMinusculo || "").toLowerCase();
@@ -11507,12 +11878,20 @@
 
         const textoAtual = String(s.rodape.observacao || "");
         const linhas = textoAtual.split("\n");
-        const linhasManuais = linhas.filter(l => !REGEX_LINHA_SUPERVISAO.test(l.trim()) && !REGEX_LINHA_PE.test(l.trim()));
+        const linhasManuais = linhas.filter(l => {
+          const lt = l.trim();
+          return !REGEX_LINHA_SUPERVISAO.test(lt) && !REGEX_LINHA_PE.test(lt) && !REGEX_LINHA_DIAS_EXTRAS.test(lt);
+        });
         const textoManual = linhasManuais.join("\n").replace(/\s+$/, "");
 
         const novasFrases = [];
-        DIAS_SEMANA.forEach(dk => {
-          const dia = s.dias?.[dk];
+        const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
+        if (ehCicloSem) {
+          const extrasObs = obterDiasExtrasOrdenados(s);
+          const fraseExtras = formatarFraseDiasExtrasSemana(extrasObs);
+          if (fraseExtras) novasFrases.push(fraseExtras);
+        }
+        obterTodosDiasSemanaOrdenados(s).forEach(({ key: dk, dia }) => {
           if (!dia) return;
           const sd = calcularSomasDia(dk, sk, repo);
           if (!sd) return;
@@ -11521,7 +11900,6 @@
           if (!dataBR) return;
           const nomeDia = (diaSemanaDeISO(dataISO) || NOMES_DIAS[dk] || "").toLowerCase();
 
-          const ehCicloSem = (s.atividade || estado?.atividadeAtiva || "ciclo") === "ciclo";
           const qtdOcorrenciaPE = ehCicloSem ? obterQtdOcorrenciaPEDia(dia) : 0;
           const totalPEDia = (sd.PE || 0) + qtdOcorrenciaPE;
           if (totalPEDia > 0) {
@@ -11558,8 +11936,7 @@
       function obterPendenciasSupervisaoSemana(s) {
         if (!s || !s.dias) return [];
         const pendencias = [];
-        DIAS_SEMANA.forEach(dk => {
-          const d = s.dias[dk];
+        obterTodosDiasSemanaOrdenados(s).forEach(({ key: dk, dia: d }) => {
           if (!d || !Array.isArray(d.agentes)) return;
           d.agentes.filter(a => a && !a._deleted && a.ativo).forEach(ag => {
             const v = ag.valores || {};
@@ -11575,7 +11952,7 @@
               }
             }
             if (temLancamento && (!v["supSimNao"] || v["supSimNao"].trim() === "")) {
-              const diaNome = (nomeDiaExibido(d.data, dk) || NOMES_DIAS[dk]);
+              const diaNome = obterRotuloDiaSimples(d, dk);
               pendencias.push(`${ag.nome || "Agente"} (${diaNome})`);
             }
           });
@@ -11617,15 +11994,17 @@
         const tot = { R: 0, C: 0, TB: 0, PE: 0, PE_CONTABILIZADO: 0, O: 0, TOTAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, TRABALHADO: 0, QUARTEIRAO: 0, DEP: {}, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, ELIMINADOS: 0, SUPERVISAO: 0, PROGRAMADOS: 0, TRATADOS_GERAL: 0 };
         TIPOS_DEPOSITOS.forEach(x => tot.DEP[x] = 0);
         let dP = 0; const sA = semana();
-        DIAS_SEMANA.forEach(d => {
-          const s = calcularSomasDia(d); const pr = (sA?.dias?.[d]) ? sA.dias[d].programados : ""; tot.PROGRAMADOS += num(pr); if (s && s.TOTAL > 0) dP++;
+        obterTodosDiasSemanaOrdenados(sA).forEach(({ key: d, dia: diaObj, isExtra }) => {
+          const s = calcularSomasDia(d); const pr = diaObj ? diaObj.programados : ""; tot.PROGRAMADOS += num(pr); if (s && s.TOTAL > 0) dP++;
           if (s) { tot.TRABALHADO += s.TRABALHADO; tot.QUARTEIRAO += s.QUARTEIRAO; tot.R += s.R; tot.C += s.C; tot.TB += s.TB; tot.PE += s.PE; tot.O += s.O; tot.TOTAL += s.TOTAL; tot.FECHADOS += s.FECHADOS; tot.RECUPERADOS += s.RECUPERADOS; tot.RECUSADOS += s.RECUSADOS; tot.ABANDONADOS += s.ABANDONADOS; tot.INFORMADOS += s.INFORMADOS; tot.PENDENCIAS += s.PENDENCIAS; TIPOS_DEPOSITOS.forEach(x => { tot.DEP[x] += s.DEP[x]; }); tot.DEP_TRATADOS += s.DEP_TRATADOS; tot.DEP_LITROS += s.DEP_LITROS; tot.DEP_GRAMAS += s.DEP_GRAMAS; tot.ELIMINADOS += s.ELIMINADOS; tot.DEP_FOCADOS += s.DEP_FOCADOS; tot.TRATADOS_GERAL += s.TRATADOS_REAIS; tot.SUPERVISAO += s.SUPERVISAO_REAL; }
-          const dS = sA?.dias?.[d]?.data || ""; const nd = (nomeDiaExibido(dS, d) || "").toLowerCase(); const tx = dS ? `${formatarDataBR(dS)} (${nd})` : (nd ? `— (${nd})` : "—");
+          const dS = diaObj?.data || ""; const nd = (nomeDiaExibido(dS, d) || "").toLowerCase(); const tx = dS ? `${formatarDataBR(dS)} (${nd})` : (nd ? `— (${nd})` : "—");
+          const subExtra = isExtra ? `<span class="sublabel-dia-extra">(Pós-LIRAa)</span>` : "";
           const colsPendFec = ehLiraa
             ? `<td>${fmtIntCell(s?.TRATADOS_REAIS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.INFORMADOS || 0)}</td><td class="col-calculada">${s ? fmtRendimento(s.RENDIMENTO) : "—"}</td>`
             : `<td>${fmtIntCell(s?.TRATADOS_REAIS || 0)}</td><td>${fmtIntCell(s?.FECHADOS || 0)}</td><td>${fmtIntCell(s?.RECUPERADOS || 0)}</td><td>${fmtIntCell(s?.RECUSADOS || 0)}</td><td>${fmtIntCell(s?.ABANDONADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.INFORMADOS || 0)}</td><td class="col-calculada">${fmtIntCell(s?.PENDENCIAS || 0)}</td><td class="col-calculada">${s ? fmtPct(s.IP) : "0,0%"}</td><td class="col-calculada">${s ? fmtRendimento(s.RENDIMENTO) : "—"}</td>`;
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td class="celula-data">${tx}</td><td>${pr ? fmtIntCell(pr) : "—"}</td><td>${fmtIntCell(s?.TRABALHADO || 0)}</td><td>${fmtIntCell(s?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(s?.R || 0)}</td><td>${fmtIntCell(s?.C || 0)}</td><td>${fmtIntCell(s?.TB || 0)}</td><td>${fmtIntCell(s?.PE_CONTABILIZADO || 0)}</td><td>${fmtIntCell(s?.O || 0)}</td><td class="col-total">${fmtIntCell(s?.TOTAL || 0)}</td>${colsPendFec}${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(s?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(s?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(s?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(s?.DEP_LITROS || 0)}</td><td>${fmtDecCell(s?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(s?.ELIMINADOS || 0)}</td><td>${fmtIntCell(s?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(s?.SUPERVISAO_REAL || 0)}</td>`;
+          if (isExtra) tr.className = "linha-extra-resumo";
+          tr.innerHTML = `<td class="celula-data">${tx}${subExtra}</td><td>${pr ? fmtIntCell(pr) : "—"}</td><td>${fmtIntCell(s?.TRABALHADO || 0)}</td><td>${fmtIntCell(s?.QUARTEIRAO || 0)}</td><td>${fmtIntCell(s?.R || 0)}</td><td>${fmtIntCell(s?.C || 0)}</td><td>${fmtIntCell(s?.TB || 0)}</td><td>${fmtIntCell(s?.PE_CONTABILIZADO || 0)}</td><td>${fmtIntCell(s?.O || 0)}</td><td class="col-total">${fmtIntCell(s?.TOTAL || 0)}</td>${colsPendFec}${TIPOS_DEPOSITOS.map(x => `<td>${fmtIntCell(s?.DEP[x] || 0)}</td>`).join("")}<td class="col-total">${fmtIntCell(s?.DEP_TOTAL || 0)}</td><td>${fmtIntCell(s?.DEP_TRATADOS || 0)}</td><td>${fmtIntCell(s?.DEP_LITROS || 0)}</td><td>${fmtDecCell(s?.DEP_GRAMAS || 0)}</td><td>${fmtIntCell(s?.ELIMINADOS || 0)}</td><td>${fmtIntCell(s?.DEP_FOCADOS || 0)}</td><td>${fmtIntCell(s?.SUPERVISAO_REAL || 0)}</td>`;
           tb.appendChild(tr);
         });
         const dTG = TIPOS_DEPOSITOS.reduce((a, x) => a + tot.DEP[x], 0); const ipT = tot.INFORMADOS !== 0 ? (100 / tot.INFORMADOS) * tot.PENDENCIAS : 0; const rT = tot.TRABALHADO !== 0 ? tot.TOTAL / tot.TRABALHADO : null;
@@ -12610,33 +12989,62 @@
         const b = document.getElementById("badgeProdIndAtividade"); if (b) { b.textContent = ehLiraa ? "🔬 LIRAa" : "🏡 Ciclo de Visita"; b.className = `badge-aviso-atividade ${ehLiraa ? "liraa" : "ciclo"}`; }
         let ags = [];
         if (estado.configEquipe?.agentes?.length > 0) ags = estado.configEquipe.agentes.filter(a => a && !a._deleted).map(a => ({ id: a.id, nome: (a.nome || "Agente").trim(), ativo: a.ativo !== false }));
-        else { const u = new Map(); DIAS_SEMANA.forEach(dk => { const d = s.dias?.[dk]; if (d?.agentes) d.agentes.forEach(a => { if (!a || a._deleted || !a.nome) return; const ch = String(a.nome).trim().toLowerCase(); if (!u.has(ch)) u.set(ch, { id: a.id, nome: a.nome.trim(), ativo: a.ativo !== false }); }); }); ags = Array.from(u.values()); }
+        else { const u = new Map(); obterTodosDiasSemanaOrdenados(s).forEach(({ dia: d }) => { if (d?.agentes) d.agentes.forEach(a => { if (!a || a._deleted || !a.nome) return; const ch = String(a.nome).trim().toLowerCase(); if (!u.has(ch)) u.set(ch, { id: a.id, nome: a.nome.trim(), ativo: a.ativo !== false }); }); }); ags = Array.from(u.values()); }
         if (ags.length === 0) { w.innerHTML = `<p style="text-align:center; padding: 30px; color: #64748b; font-weight: 600;">Nenhum agente cadastrado.</p>`; return; }
-        const LP = ["160px","78px","78px","78px","78px","78px","64px","320px"]; const MP = "934px";
-        const acg = (t) => { const c = document.createElement("colgroup"); LP.forEach(x => { const cc = document.createElement("col"); cc.style.width = x; c.appendChild(cc); }); t.appendChild(c); };
         const pSem = obterPeriodoDaSemana(estado.semanaAtiva, obterAnoSemana(s), normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"), at);
         const rotulosDiasCurto = { segunda: "Segunda", terca: "Terça", quarta: "Quarta", quinta: "Quinta", sexta: "Sexta" };
+        const diasCurtoPorIdx = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        const obterRotuloCurtoPorISO = (iso, fallbackKey) => {
+          if (iso) {
+            const p = String(iso).split("-").map(Number);
+            if (p.length === 3 && !p.some(isNaN)) {
+              const dt = new Date(p[0], p[1] - 1, p[2]);
+              if (!isNaN(dt.getTime())) return diasCurtoPorIdx[dt.getDay()] || fallbackKey;
+            }
+          }
+          return rotulosDiasCurto[fallbackKey] || fallbackKey;
+        };
+        const colunasDias = [];
+        if (!ehLiraa) {
+          obterDiasExtrasOrdenados(s).forEach(({ key, dia }) => {
+            const dISO = dia?.data || "";
+            colunasDias.push({ key, diaObj: dia, dataISO: dISO, rotulo: obterRotuloCurtoPorISO(dISO, key), isExtra: true });
+          });
+        }
+        DIAS_SEMANA.forEach((dk, idxDia) => {
+          const dObj = s.dias?.[dk] || null;
+          const dISO = dObj?.data || adicionarDiasISO(pSem.inicioISO, idxDia);
+          colunasDias.push({ key: dk, diaObj: dObj, dataISO: dISO, rotulo: rotulosDiasCurto[dk] || dk, isExtra: false });
+        });
+        const LP = ["160px", ...colunasDias.map(() => "78px"), "64px", "320px"];
+        const MP = `${160 + colunasDias.length * 78 + 64 + 320}px`;
+        const acg = (t) => { const c = document.createElement("colgroup"); LP.forEach(x => { const cc = document.createElement("col"); cc.style.width = x; c.appendChild(cc); }); t.appendChild(c); };
         const criarTheadProd = () => {
           const thEl = document.createElement("thead");
           const trEl = document.createElement("tr");
           const thAg = document.createElement("th"); thAg.className = "cabecalho-titulo"; thAg.textContent = "Agente"; trEl.appendChild(thAg);
-          DIAS_SEMANA.forEach((dk, idxDia) => {
+          colunasDias.forEach((colDia) => {
             const thDia = document.createElement("th");
-            thDia.className = "cabecalho-titulo";
-            const dObj = s.dias?.[dk];
-            const dISO = dObj?.data || adicionarDiasISO(pSem.inicioISO, idxDia);
-            const dBR = formatarDataBR(dISO);
+            thDia.className = "cabecalho-titulo" + (colDia.isExtra ? " th-dia-extra" : "");
+            if (colDia.isExtra) thDia.style.background = "#1e40af";
+            const dBR = formatarDataBR(colDia.dataISO);
             const boxDia = document.createElement("div");
             boxDia.className = "prod-th-dia";
             const spNome = document.createElement("span");
             spNome.className = "prod-th-dia-nome";
-            spNome.textContent = rotulosDiasCurto[dk] || dk;
+            spNome.textContent = colDia.rotulo;
             boxDia.appendChild(spNome);
             if (dBR) {
               const spData = document.createElement("span");
               spData.className = "prod-th-dia-data";
               spData.textContent = dBR;
               boxDia.appendChild(spData);
+            }
+            if (colDia.isExtra) {
+              const spExtra = document.createElement("span");
+              spExtra.className = "prod-th-dia-extra-tag";
+              spExtra.textContent = "Pós-LIRAa";
+              boxDia.appendChild(spExtra);
             }
             thDia.appendChild(boxDia);
             trEl.appendChild(thDia);
@@ -12648,11 +13056,22 @@
         };
         const t = document.createElement("table"); t.className = "resumo-tabela"; t.style.minWidth = MP; t.style.width = "100%"; t.style.tableLayout = "fixed"; acg(t);
         t.appendChild(criarTheadProd());
-        const tb = document.createElement("tbody"); const tD = { segunda: 0, terca: 0, quarta: 0, quinta: 0, sexta: 0 }; let tg = 0;
+        const tb = document.createElement("tbody"); const tD = {}; colunasDias.forEach(c => { tD[c.key] = 0; }); let tg = 0;
         ags.forEach(ag => {
           const tr = document.createElement("tr"); const tN = document.createElement("td"); tN.style.textAlign = "left"; tN.style.paddingLeft = "10px"; tN.style.fontWeight = "700"; tN.style.color = "#14532d"; tN.textContent = ag.nome; tr.appendChild(tN);
           let tA = 0;
-          DIAS_SEMANA.forEach(dk => { const d = s.dias?.[dk]; const aD = encontrarAgenteNoDia(d, ag); const p = aD ? calcularProducaoAgenteDia(aD) : 0; tD[dk] += p; tA += p; const td = document.createElement("td"); td.textContent = p > 0 ? fmtIntCell(p) : "—"; td.style.textAlign = "center"; tr.appendChild(td); });
+          colunasDias.forEach(colDia => {
+            const d = colDia.diaObj;
+            const aD = encontrarAgenteNoDia(d, ag);
+            const p = aD ? calcularProducaoAgenteDia(aD) : 0;
+            tD[colDia.key] += p;
+            tA += p;
+            const td = document.createElement("td");
+            td.textContent = p > 0 ? fmtIntCell(p) : "—";
+            td.style.textAlign = "center";
+            if (colDia.isExtra) td.style.background = "#eff6ff";
+            tr.appendChild(td);
+          });
           const tT = document.createElement("td"); tT.className = "col-total"; tT.style.fontWeight = "800"; tT.textContent = fmtIntCell(tA); tr.appendChild(tT); tg += tA;
           const tO = document.createElement("td"); tO.className = "td-prod-obs";
           const ocorrSem = obterOcorrenciasSemanaAgente(s, ag);
@@ -12678,7 +13097,7 @@
           const inp = document.createElement("input"); inp.type = "text"; inp.className = "prod-obs-input"; inp.placeholder = ocorrSem.length > 0 ? "Observação adicional..." : "Observação..."; const ok = `prod-obs-${ag.id}`; inp.value = getResumoValor(ok, ""); inp.addEventListener("input", () => setResumoValor(ok, inp.value)); inp.addEventListener("focus", () => { inp.style.background = "#fef9c3"; }); inp.addEventListener("blur", () => { inp.style.background = "transparent"; }); tO.appendChild(inp); tr.appendChild(tO);
           tb.appendChild(tr);
         });
-        const trT = document.createElement("tr"); trT.className = "linha-total-resumo"; const tl = document.createElement("td"); tl.className = "celula-rotulo-dia"; tl.textContent = "TOTAL DA EQUIPE"; trT.appendChild(tl); DIAS_SEMANA.forEach(dk => { const td = document.createElement("td"); td.textContent = fmtIntCell(tD[dk]); td.style.fontWeight = "800"; trT.appendChild(td); }); const ttd = document.createElement("td"); ttd.className = "col-total"; ttd.style.fontWeight = "800"; ttd.textContent = fmtIntCell(tg); trT.appendChild(ttd); trT.appendChild(document.createElement("td")); tb.appendChild(trT);
+        const trT = document.createElement("tr"); trT.className = "linha-total-resumo"; const tl = document.createElement("td"); tl.className = "celula-rotulo-dia"; tl.textContent = "TOTAL DA EQUIPE"; trT.appendChild(tl); colunasDias.forEach(colDia => { const td = document.createElement("td"); td.textContent = fmtIntCell(tD[colDia.key]); td.style.fontWeight = "800"; trT.appendChild(td); }); const ttd = document.createElement("td"); ttd.className = "col-total"; ttd.style.fontWeight = "800"; ttd.textContent = fmtIntCell(tg); trT.appendChild(ttd); trT.appendChild(document.createElement("td")); tb.appendChild(trT);
         t.appendChild(tb); w.appendChild(t);
         const tA = document.createElement("table"); tA.className = "resumo-tabela"; tA.style.minWidth = MP; tA.style.width = "100%"; tA.style.tableLayout = "fixed"; tA.style.marginTop = "20px"; acg(tA);
         tA.appendChild(criarTheadProd());
@@ -12694,13 +13113,15 @@
           inpNome.addEventListener("blur", () => { inpNome.style.background = "transparent"; });
           tdNome.appendChild(inpNome); tr.appendChild(tdNome);
           let celulaTotal = null;
-          DIAS_SEMANA.forEach(dk => {
+          colunasDias.forEach(colDia => {
+            const dk = colDia.key;
             const td = document.createElement("td"); td.style.padding = "0";
+            if (colDia.isExtra) td.style.background = "#eff6ff";
             const inp = document.createElement("input"); inp.type = "text"; inp.inputMode = "numeric";
             inp.style.cssText = "width:100%; border:none; background:transparent; padding:10px 2px; font-size:0.8rem; outline:none; text-align:center; font-weight:700; color:#14532d;";
             const ch = `${key}-${dk}`;
             inp.value = getResumoValor(ch, "");
-            const recalcularTotal = () => { let soma = 0; DIAS_SEMANA.forEach(d => { soma += num(getResumoValor(`${key}-${d}`, "")); }); if (celulaTotal) celulaTotal.textContent = fmtIntCell(soma); setResumoValor(`${key}-total`, String(soma)); };
+            const recalcularTotal = () => { let soma = 0; colunasDias.forEach(cd => { soma += num(getResumoValor(`${key}-${cd.key}`, "")); }); if (celulaTotal) celulaTotal.textContent = fmtIntCell(soma); setResumoValor(`${key}-total`, String(soma)); };
             inp.addEventListener("input", () => { setResumoValor(ch, inp.value); recalcularTotal(); });
             inp.addEventListener("blur", () => { const v = getResumoValor(ch, ""); if (v !== "" && v !== undefined) { const f = fmtIntCell(v); setResumoValor(ch, f); inp.value = f; } recalcularTotal(); inp.style.background = "transparent"; });
             inp.addEventListener("focus", () => { inp.style.background = "#fef9c3"; });
@@ -13008,8 +13429,8 @@
         const nms = new Set(ativosCfg.map(a => String(a.nome || "").trim().toLowerCase()).filter(Boolean));
         const sincronizarSemanaObj = (semObj, incluirAdicoes) => {
           if (!semObj || !semObj.dias) return;
-          DIAS_SEMANA.forEach(dk => {
-            const d = semObj.dias[dk]; if (!d) return;
+          obterTodosDiasSemanaOrdenados(semObj).forEach(({ dia: d }) => {
+            if (!d) return;
             if (!Array.isArray(d.agentes)) d.agentes = [];
             if (incluirAdicoes) {
               ativosCfg.forEach(a => {
@@ -13535,8 +13956,8 @@
         if (isNaN(nS) || nS <= 0) { alert("Número de semana inválido."); return; }
         irParaSemana(nS);
       }
-      function autoPreencherDatasSemana() { const d = diaAtual(); if (!d?.data) return; const o = { segunda: 0, terca: 1, quarta: 2, quinta: 3, sexta: 4 }[estado.diaAtivo] || 0; const seg = adicionarDiasISO(d.data, -o); const s = semana(); if (s?.dias) { const agora = agoraSyncMs(); DIAS_SEMANA.forEach((dia, i) => { if (s.dias[dia]) { s.dias[dia].data = adicionarDiasISO(seg, i); if (!s.dias[dia]._fieldTs) s.dias[dia]._fieldTs = {}; s.dias[dia]._fieldTs.data = agora; s.dias[dia]._ts = agora; } }); if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio(); if (!s._cabTs) s._cabTs = {}; s.cabecalho.semanaInicio = formatarDataBR(seg); s._cabTs.semanaInicio = agora; s.cabecalho.semanaTermino = formatarDataBR(adicionarDiasISO(seg, 4)); s._cabTs.semanaTermino = agora; } salvar("semana"); renderizar(); atualizarTotais(); }
-      function haInformadosExcedidosSemana(sR) { const s = sR || semana(); if (!s?.dias) return false; const atSem = s?.atividade || estado?.atividadeAtiva || "ciclo"; for (const dk of DIAS_SEMANA) { const d = s.dias[dk]; if (!d) continue; const a = (d.agentes || []).filter(x => x && !x._deleted && x.ativo); for (const ag of a) { const v = ag.valores || {}; for (let c = 1; c <= 7; c++) { if (calcularInformadoColuna(v, c, atSem) > 19) return true; } } } return false; }
+      function autoPreencherDatasSemana() { if (ehChaveDiaExtra(estado.diaAtivo)) return; const d = diaAtual(); if (!d?.data) return; const o = { segunda: 0, terca: 1, quarta: 2, quinta: 3, sexta: 4 }[estado.diaAtivo] || 0; const seg = adicionarDiasISO(d.data, -o); const s = semana(); if (s?.dias) { const agora = agoraSyncMs(); DIAS_SEMANA.forEach((dia, i) => { if (s.dias[dia]) { s.dias[dia].data = adicionarDiasISO(seg, i); if (!s.dias[dia]._fieldTs) s.dias[dia]._fieldTs = {}; s.dias[dia]._fieldTs.data = agora; s.dias[dia]._ts = agora; } }); if (!s.cabecalho) s.cabecalho = criarCabecalhoVazio(); if (!s._cabTs) s._cabTs = {}; s.cabecalho.semanaInicio = formatarDataBR(seg); s._cabTs.semanaInicio = agora; s.cabecalho.semanaTermino = formatarDataBR(adicionarDiasISO(seg, 4)); s._cabTs.semanaTermino = agora; } salvar("semana"); renderizar(); atualizarTotais(); }
+      function haInformadosExcedidosSemana(sR) { const s = sR || semana(); if (!s?.dias) return false; const atSem = s?.atividade || estado?.atividadeAtiva || "ciclo"; for (const { dia: d } of obterTodosDiasSemanaOrdenados(s)) { if (!d) continue; const a = (d.agentes || []).filter(x => x && !x._deleted && x.ativo); for (const ag of a) { const v = ag.valores || {}; for (let c = 1; c <= 7; c++) { if (calcularInformadoColuna(v, c, atSem) > 19) return true; } } } return false; }
       function haInformadosExcedidosGlobal() { const col = repoAtivo(); if (!col) return false; for (const k of Object.keys(col)) { if (haInformadosExcedidosSemana(col[k])) return true; } return false; }
       function instalarNavegacaoSetas() {
         const teclas = new Set(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"]); const ign = new Set(["checkbox","radio","date","time","file","submit","button","range","color","hidden","reset"]);
@@ -14389,14 +14810,18 @@
           const bModInat = document.getElementById("btnModalInativarSE"); if (bModInat) bModInat.addEventListener("click", () => { definirSemanaInativa(document.getElementById("modalInativarSE")?.value, document.getElementById("modalInativarAno")?.value, true); });
           const bModReat = document.getElementById("btnModalReativarSE"); if (bModReat) bModReat.addEventListener("click", () => { definirSemanaInativa(document.getElementById("modalInativarSE")?.value, document.getElementById("modalInativarAno")?.value, false); });
           const inModAno = document.getElementById("modalInativarAno"); if (inModAno) inModAno.addEventListener("change", renderizarListaModalSemanasCiclo);
-          document.querySelectorAll(".aba-dia").forEach(b => b.addEventListener("click", () => { estado.diaAtivo = b.dataset.dia; salvarPreferenciaLocal(); renderizar(); atualizarTotais(); }));
+          const bRmExtra = document.getElementById("btnRemoverDiaExtra"); if (bRmExtra) bRmExtra.addEventListener("click", removerDiaExtraAtivo);
+          const bFDE = document.getElementById("btnFecharModalDiaExtra"); if (bFDE) bFDE.addEventListener("click", fecharModalDiaExtra);
+          const bCDE = document.getElementById("btnCancelarModalDiaExtra"); if (bCDE) bCDE.addEventListener("click", fecharModalDiaExtra);
+          const bADEC = document.getElementById("btnConfirmarAdicionarDiaExtra"); if (bADEC) bADEC.addEventListener("click", confirmarAdicionarDiaExtra);
+          const mDE = document.getElementById("modalDiaExtra"); if (mDE) mDE.addEventListener("click", (e) => { if (e.target === mDE) fecharModalDiaExtra(); });
           const eA = document.getElementById("anoLancamento"); if (eA) eA.addEventListener("change", e => { const s = semana(); const a = Number(e.target.value) || new Date().getFullYear(); if (s) { s.ano = a; s._ts = agoraSyncMs(); } atualizarLimitesSemanas(a); ajustarSemanaAtivaParaProgramacao(false); salvar("semana"); renderizar(); atualizarTotais(); });
           const sCL = document.getElementById("cicloLancamentoCiclo"); if (sCL) sCL.addEventListener("change", e => { const c = normalizarNumeroCiclo(e.target.value); const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.ciclo = c; if (!s._cabTs) s._cabTs = {}; s._cabTs.ciclo = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); renderizarCiclo(); });
           const eM = document.getElementById("mesLancamento"); if (eM) eM.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.mes = e.target.value; s._cabMesManual = String(e.target.value || "").trim() !== ""; if (!s._cabTs) s._cabTs = {}; s._cabTs.mes = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); });
           const eSL = document.getElementById("semanaLancamento"); if (eSL) eSL.addEventListener("change", e => { const v = Number(e.target.value); const mx = obterTotalSemanasEpidemiologicas(obterAnoSemana(semana())); if (v >= 1 && v <= mx) { if (!irParaSemana(v)) e.target.value = estado.semanaAtiva; } else e.target.value = estado.semanaAtiva; });
           const eSI2 = document.getElementById("semanaDataInicio"); if (eSI2) eSI2.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.semanaInicio = formatarDataBR(e.target.value); if (!s._cabTs) s._cabTs = {}; s._cabTs.semanaInicio = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); });
           const eSF2 = document.getElementById("semanaDataTermino"); if (eSF2) eSF2.addEventListener("change", e => { const s = semana(); if (s?.cabecalho) { const agora = agoraSyncMs(); s.cabecalho.semanaTermino = formatarDataBR(e.target.value); if (!s._cabTs) s._cabTs = {}; s._cabTs.semanaTermino = agora; s._ts = agora; } salvar("semana"); renderizarCabecalhoResumo(); });
-          const eDD = document.getElementById("dataDia"); if (eDD) eDD.addEventListener("change", e => { const d = diaAtual(); if (d) { const agora = agoraSyncMs(); d.data = e.target.value; if (!d._fieldTs) d._fieldTs = {}; d._fieldTs.data = agora; d._ts = agora; if (!autoDetectarProgramacaoPorData(e.target.value, true)) { salvar("semana"); renderizar(); atualizarTotais(); } } });
+          const eDD = document.getElementById("dataDia"); if (eDD) eDD.addEventListener("change", e => { const d = diaAtual(); if (!d) return; const s = semana(); const novaData = String(e.target.value || "").trim(); if (ehChaveDiaExtra(estado.diaAtivo)) { const v = validarDataDiaExtraNaSemana(s, novaData, estado.diaAtivo); if (!v.ok) { alert("⚠️ " + v.msg); e.target.value = d.data || ""; return; } const agora = agoraSyncMs(); d.data = novaData; if (!d._fieldTs) d._fieldTs = {}; d._fieldTs.data = agora; d._ts = agora; atualizarObservacaoSupervisaoSemana(); salvar("semana"); renderizar(); atualizarTotais(); return; } const agora = agoraSyncMs(); d.data = novaData; if (!d._fieldTs) d._fieldTs = {}; d._fieldTs.data = agora; d._ts = agora; if (!autoDetectarProgramacaoPorData(novaData, true)) { salvar("semana"); renderizar(); atualizarTotais(); } });
           const ePD = document.getElementById("programadosDia");
           if (ePD) {
             ePD.addEventListener("click", () => {
@@ -14561,7 +14986,7 @@
             const sAtiva = semana(); const chaveAtiva = String(estado.semanaAtiva);
             if (haInformadosExcedidosSemana(sAtiva)) { alert("⚠️ Corrija 'Informados' > 19 antes do PDF."); return; }
             if (sAtiva && semanaTemProgPendente(sAtiva)) {
-              const dias = DIAS_SEMANA.filter(d => { const dd = sAtiva.dias?.[d]; return dd && temDadosProducaoReais(dd) && !progDiaPreenchido(dd); }).map(d => NOMES_DIAS[d]);
+              const dias = obterTodosDiasSemanaOrdenados(sAtiva).filter(({ dia: dd }) => dd && temDadosProducaoReais(dd) && !progDiaPreenchido(dd)).map(({ key: d, dia: dd }) => obterRotuloDiaSimples(dd, d));
               alert(`⚠️ A semana ${pad2(chaveAtiva)} tem produção lançada sem 👥 Prog. nos dias: ${dias.join(", ")}. Preencha antes de gerar o PDF.`);
               return;
             }
@@ -14581,7 +15006,7 @@
             const semanasDoCiclo = dashSemanasDoCiclo(obterAnoSemana(semana()), c);
             const pend = semanasComProgPendente(repo, semanasDoCiclo);
             if (pend.length > 0) {
-              const detalhes = pend.map(k => { const s = repo[k]; const dias = DIAS_SEMANA.filter(d => { const dd = s?.dias?.[d]; return dd && temDadosProducaoReais(dd) && !progDiaPreenchido(dd); }).map(d => NOMES_DIAS[d]); return `SE ${pad2(k)} (${dias.join(", ")})`; });
+              const detalhes = pend.map(k => { const s = repo[k]; const dias = obterTodosDiasSemanaOrdenados(s).filter(({ dia: dd }) => dd && temDadosProducaoReais(dd) && !progDiaPreenchido(dd)).map(({ key: d, dia: dd }) => obterRotuloDiaSimples(dd, d)); return `SE ${pad2(k)} (${dias.join(", ")})`; });
               alert("⚠️ Semanas com 👥 Prog. pendente:\n" + detalhes.join("\n") + "\n\nPreencha antes de gerar o PDF.");
               return;
             }

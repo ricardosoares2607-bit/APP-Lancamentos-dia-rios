@@ -132,16 +132,21 @@
         const s = col[sk];
         if (!s || isRecordDeleted(s)) return `${sk}:DEL`;
         let nonEmpty = 0;
-        if (s.dias) {
-          Object.keys(s.dias).forEach((dk) => {
-            const ags = s.dias[dk]?.agentes || [];
-            ags.forEach((a) => {
-              if (!a || isRecordDeleted(a) || !a.valores) return;
-              Object.keys(a.valores).forEach((vk) => {
-                if (hasNonEmptyValue(a.valores[vk])) nonEmpty++;
-              });
+        const contarDia = (d) => {
+          if (!d || isRecordDeleted(d)) return;
+          const ags = d.agentes || [];
+          ags.forEach((a) => {
+            if (!a || isRecordDeleted(a) || !a.valores) return;
+            Object.keys(a.valores).forEach((vk) => {
+              if (hasNonEmptyValue(a.valores[vk])) nonEmpty++;
             });
           });
+        };
+        if (s.dias) {
+          Object.keys(s.dias).forEach((dk) => contarDia(s.dias[dk]));
+        }
+        if (s.diasExtras && typeof s.diasExtras === 'object') {
+          Object.keys(s.diasExtras).forEach((dk) => contarDia(s.diasExtras[dk]));
         }
         return `${sk}:${nonEmpty}`;
       });
@@ -397,22 +402,25 @@
     if (sem._rodTs && typeof sem._rodTs === 'object') {
       Object.values(sem._rodTs).forEach((t) => { maxT = Math.max(maxT, toMs(t, 0)); });
     }
-    if (sem.dias && typeof sem.dias === 'object') {
-      Object.keys(sem.dias).forEach((dk) => {
-        const d = sem.dias[dk];
-        if (!d) return;
-        maxT = Math.max(maxT, toMs(d._ts, 0));
-        if (d._fieldTs) {
-          Object.values(d._fieldTs).forEach((t) => { maxT = Math.max(maxT, toMs(t, 0)); });
+    const acumularTsDia = (d) => {
+      if (!d || typeof d !== 'object') return;
+      maxT = Math.max(maxT, toMs(d._ts, 0), toMs(d._deletedAtMs, 0));
+      if (d._fieldTs && typeof d._fieldTs === 'object') {
+        Object.values(d._fieldTs).forEach((t) => { maxT = Math.max(maxT, toMs(t, 0)); });
+      }
+      (d.agentes || []).forEach((ag) => {
+        if (!ag) return;
+        maxT = Math.max(maxT, toMs(ag._ts, 0), toMs(ag._deletedAtMs, 0));
+        if (ag._valoresTs) {
+          Object.values(ag._valoresTs).forEach((t) => { maxT = Math.max(maxT, toMs(t, 0)); });
         }
-        (d.agentes || []).forEach((ag) => {
-          if (!ag) return;
-          maxT = Math.max(maxT, toMs(ag._ts, 0), toMs(ag._deletedAtMs, 0));
-          if (ag._valoresTs) {
-            Object.values(ag._valoresTs).forEach((t) => { maxT = Math.max(maxT, toMs(t, 0)); });
-          }
-        });
       });
+    };
+    if (sem.dias && typeof sem.dias === 'object') {
+      Object.keys(sem.dias).forEach((dk) => acumularTsDia(sem.dias[dk]));
+    }
+    if (sem.diasExtras && typeof sem.diasExtras === 'object') {
+      Object.keys(sem.diasExtras).forEach((dk) => acumularTsDia(sem.diasExtras[dk]));
     }
     if (sem.resumo && typeof sem.resumo === 'object') {
       maxT = Math.max(maxT, toMs(sem.resumo._ts, 0));
@@ -489,36 +497,59 @@
       }
     });
 
-    // 3. Dias da semana
-    const dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
-    res.dias = res.dias || {};
-    const locDias = localSem.dias || {};
-    dias.forEach((dk) => {
-      const dL = locDias[dk];
-      const dR = res.dias[dk];
-      if (!dL) return;
-      if (!dR) {
-        res.dias[dk] = cloneDeep(dL);
-        return;
+    // 3. Dias da semana e dias extras (mesma lógica granular por campo e célula)
+    const maxTsDiaObj = (d, baseFallback) => {
+      if (!d || typeof d !== 'object') return 0;
+      let m = Math.max(toMs(d._ts, baseFallback), toMs(d._deletedAtMs, 0));
+      if (d._fieldTs && typeof d._fieldTs === 'object') {
+        Object.values(d._fieldTs).forEach((t) => { m = Math.max(m, toMs(t, 0)); });
       }
-      dR._fieldTs = { ...(dR._fieldTs || {}) };
+      (d.agentes || []).forEach((ag) => {
+        if (!ag) return;
+        m = Math.max(m, toMs(ag._ts, 0), toMs(ag._deletedAtMs, 0));
+        if (ag._valoresTs) {
+          Object.values(ag._valoresTs).forEach((t) => { m = Math.max(m, toMs(t, 0)); });
+        }
+      });
+      return m;
+    };
+    const mergeDiaObj = (dL, dR, suportarTombstone = false) => {
+      if (!dL) return cloneDeep(dR);
+      if (!dR) return cloneDeep(dL);
       const dLBase = toMs(dL._ts, locBaseTs);
       const dRBase = toMs(dR._ts, remBaseTs);
-      ['data', 'programados', '_dataConfirmada'].forEach((fk) => {
+      if (suportarTombstone) {
+        const lDel = isRecordDeleted(dL);
+        const rDel = isRecordDeleted(dR);
+        const lDelTs = lDel ? toMs(dL._deletedAtMs || dL._ts, dLBase) : 0;
+        const rDelTs = rDel ? toMs(dR._deletedAtMs || dR._ts, dRBase) : 0;
+        const lDataTs = maxTsDiaObj(dL, locBaseTs);
+        const rDataTs = maxTsDiaObj(dR, remBaseTs);
+        if (lDel && rDel) return lDelTs >= rDelTs ? cloneDeep(dL) : cloneDeep(dR);
+        if (lDel && lDelTs >= rDataTs) return cloneDeep(dL);
+        if (rDel && rDelTs >= lDataTs) return cloneDeep(dR);
+      }
+      const out = cloneDeep(dR);
+      if (suportarTombstone) {
+        out._deleted = false;
+        delete out._deletedAtMs;
+      }
+      out._fieldTs = { ...(out._fieldTs || {}) };
+      ['data', 'programados', '_dataConfirmada', 'origem'].forEach((fk) => {
         if (dL[fk] === undefined) return;
         const tL = toMs(dL._fieldTs?.[fk], dLBase);
-        const hasR = dR[fk] !== undefined || dR._fieldTs?.[fk] !== undefined;
-        const tR = hasR ? toMs(dR._fieldTs?.[fk], dRBase) : 0;
+        const hasR = out[fk] !== undefined || out._fieldTs?.[fk] !== undefined;
+        const tR = hasR ? toMs(out._fieldTs?.[fk], dRBase) : 0;
         const temL = hasNonEmptyValue(dL[fk]) || dL[fk] === true;
-        const temR = hasNonEmptyValue(dR[fk]) || dR[fk] === true;
+        const temR = hasNonEmptyValue(out[fk]) || out[fk] === true;
         if (tL > tR || (tL === tR && temL && !temR)) {
-          dR[fk] = dL[fk];
-          dR._fieldTs[fk] = tL;
+          out[fk] = dL[fk];
+          out._fieldTs[fk] = tL;
         }
       });
 
       // Agentes no dia: merge por ID/nome + timestamp por célula
-      const agsR = Array.isArray(dR.agentes) ? dR.agentes : [];
+      const agsR = Array.isArray(out.agentes) ? out.agentes : [];
       const agsL = Array.isArray(dL.agentes) ? dL.agentes : [];
       agsL.forEach((agL) => {
         if (!agL) return;
@@ -564,9 +595,38 @@
           }
         });
       });
-      dR.agentes = agsR;
-      dR._ts = Math.max(dLBase, dRBase);
+      out.agentes = agsR;
+      out._ts = Math.max(dLBase, dRBase);
+      return out;
+    };
+
+    const dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
+    res.dias = res.dias || {};
+    const locDias = localSem.dias || {};
+    dias.forEach((dk) => {
+      const dL = locDias[dk];
+      const dR = res.dias[dk];
+      if (!dL) return;
+      res.dias[dk] = mergeDiaObj(dL, dR, false);
     });
+
+    if ((localSem.diasExtras && typeof localSem.diasExtras === 'object') || (res.diasExtras && typeof res.diasExtras === 'object')) {
+      const nowMs = serverNowMs();
+      const locExtras = localSem.diasExtras || {};
+      const remExtras = res.diasExtras || {};
+      const outExtras = {};
+      const chavesExtras = new Set([...Object.keys(locExtras), ...Object.keys(remExtras)]);
+      chavesExtras.forEach((ek) => {
+        const mergedExtra = mergeDiaObj(locExtras[ek], remExtras[ek], true);
+        if (!mergedExtra) return;
+        if (isRecordDeleted(mergedExtra)) {
+          const delAt = toMs(mergedExtra._deletedAtMs || mergedExtra._ts, nowMs);
+          if ((nowMs - delAt) >= TOMBSTONE_RETENTION_MS) return;
+        }
+        outExtras[ek] = mergedExtra;
+      });
+      res.diasExtras = outExtras;
+    }
 
     if (localSem.resumo && typeof localSem.resumo === 'object') {
       if (!res.resumo || typeof res.resumo !== 'object') {
