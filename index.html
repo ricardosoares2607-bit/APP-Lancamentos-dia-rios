@@ -6395,7 +6395,12 @@
       ];
       const LINHAS_BLOCO_2 = [{ rotulo: "Fechados" }, { rotulo: "Recuperados" }, { rotulo: "Recusados" }, { rotulo: "Abandonados" }];
       const LINHAS_BLOCO_4 = [{ rotulo: "Eliminados" }];
+      const LINHAS_BLOCO_FOCADOS = [{ rotulo: "Imóveis focados" }];
       const LINHAS_BLOCO_TRATADOS = [{ rotulo: "Imóveis Tratados" }];
+      const LINHAS_BLOCO_FOCADOS_TRATADOS = [
+        { bId: "bFocados", rIdx: 0, rotulo: "Imóveis focados" },
+        { bId: "bTratados", rIdx: 0, rotulo: "Imóveis Tratados" }
+      ];
       const TIPOS_DEPOSITOS = ["A1","A2","B","C","D1","D2","E"];
       const COLUNAS_DEPOSITOS = ["Encontrado","Não inspecionados","Inspecionados","Focados","Tratados","Litros","Gramas","Amostras Coletadas"];
       const COL_ENCONTRADO = 0, COL_NAO_INSP = 1, COL_INSP = 2, COL_FOCADOS = 3, COL_TRATADOS = 4, COL_LITROS = 5, COL_GRAMAS = 6, COL_TOTAL_DEP = 7;
@@ -9815,14 +9820,14 @@
         const at = (estado && estado.atividadeAtiva) || "ciclo";
         const col = repoAtivo(at);
         const semanas = dashSemanasDoCiclo(ano, ciclo);
-        const agg = { semanas: semanas.length, diasProd: 0, PROGRAMADOS: 0, TRABALHADO: 0, R: 0, C: 0, TB: 0, PE: 0, O: 0, TOTAL: 0, INFORMADOS: 0, PENDENCIAS: 0, RECUPERADOS: 0, TRATADOS_GERAL: 0, SUPERVISAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, porSemana: [], porAgente: {} };
+        const agg = { semanas: semanas.length, diasProd: 0, PROGRAMADOS: 0, TRABALHADO: 0, R: 0, C: 0, TB: 0, PE: 0, O: 0, TOTAL: 0, INFORMADOS: 0, PENDENCIAS: 0, RECUPERADOS: 0, FOCADOS_GERAL: 0, TRATADOS_GERAL: 0, SUPERVISAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, porSemana: [], porAgente: {} };
         TIPOS_DEPOSITOS.forEach(t => { agg.DEP[t] = 0; agg.DEP_FOCADOS_TIPO[t] = 0; });
         semanas.forEach(sk => {
           const tS = calcularTotaisSemana(sk, col);
           if (tS) {
             agg.diasProd += tS.diasComProducao; agg.PROGRAMADOS += tS.PROGRAMADOS; agg.TRABALHADO += tS.TRABALHADO;
             agg.R += tS.R || 0; agg.C += tS.C || 0; agg.TB += tS.TB || 0; agg.PE += tS.PE || 0; agg.O += tS.O || 0;
-            agg.TOTAL += tS.TOTAL; agg.INFORMADOS += tS.INFORMADOS; agg.PENDENCIAS += tS.PENDENCIAS; agg.RECUPERADOS += (tS.RECUPERADOS || 0); agg.TRATADOS_GERAL += tS.TRATADOS_GERAL; agg.SUPERVISAO += tS.SUPERVISAO;
+            agg.TOTAL += tS.TOTAL; agg.INFORMADOS += tS.INFORMADOS; agg.PENDENCIAS += tS.PENDENCIAS; agg.RECUPERADOS += (tS.RECUPERADOS || 0); agg.FOCADOS_GERAL += (tS.FOCADOS_GERAL || 0); agg.TRATADOS_GERAL += tS.TRATADOS_GERAL; agg.SUPERVISAO += tS.SUPERVISAO;
             TIPOS_DEPOSITOS.forEach(t => {
               agg.DEP[t] += tS.DEP[t] || 0;
               agg.DEP_FOCADOS_TIPO[t] += (tS.DEP_FOCADOS_TIPO && tS.DEP_FOCADOS_TIPO[t]) || 0;
@@ -10967,6 +10972,7 @@
           if (String(v[`b1-r1-c${c}`] || "").trim() !== "") return true;
           if (num(v[`b1-r2-c${c}`]) > 0 || num(v[`b1-r3-c${c}`]) > 0 || num(v[`b1-r4-c${c}`]) > 0 || num(v[`b1-r5-c${c}`]) > 0 || num(v[`b1-r6-c${c}`]) > 0) return true;
           if (!ehLiraaAt && (num(v[`b2-r0-c${c}`]) > 0 || num(v[`b2-r1-c${c}`]) > 0 || num(v[`b2-r2-c${c}`]) > 0 || num(v[`b2-r3-c${c}`]) > 0)) return true;
+          if (num(v[`bFocados-r0-c${c}`]) > 0) return true;
           if (num(v[`bTratados-r0-c${c}`]) > 0) return true;
           if (num(v[`b4-r0-c${c}`]) > 0) return true;
         }
@@ -11309,7 +11315,7 @@
         if (!ehLiraa) {
           corpo.appendChild(criarBlocoSimples(ag, "b2", LINHAS_BLOCO_2)); corpo.appendChild(criarSeparador());
         }
-        corpo.appendChild(criarBlocoSimples(ag, "bTratados", LINHAS_BLOCO_TRATADOS)); corpo.appendChild(criarSeparador());
+        corpo.appendChild(criarBlocoMulti(ag, LINHAS_BLOCO_FOCADOS_TRATADOS)); corpo.appendChild(criarSeparador());
         corpo.appendChild(criarBlocoCalculado(ag, "Informados")); corpo.appendChild(criarSeparador());
         corpo.appendChild(criarBlocoSimples(ag, "b4", LINHAS_BLOCO_4)); corpo.appendChild(criarSeparador());
         corpo.appendChild(criarBlocoDepositos(ag));
@@ -11497,6 +11503,11 @@
         linhas.forEach((l, rIdx) => { const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinhaBloco = `${ag.id}-${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.className = "celula-input"; const ch = `${bId}-r${rIdx}-c${c}`; td.appendChild(criarInputInteiro(ag, v, ch, atualizarTotais)); } tr.appendChild(td); } tb.appendChild(tr); });
         t.appendChild(tb); w.appendChild(t); return w;
       }
+      function criarBlocoMulti(ag, itens) {
+        const w = document.createElement("div"); w.className = "bloco-tabela"; const v = valoresDoDia(ag); const t = document.createElement("table"); aplicarColgroupBloco(t); const tb = document.createElement("tbody");
+        itens.forEach(({ bId, rIdx, rotulo }) => { const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinhaBloco = `${ag.id}-${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.className = "celula-input"; const ch = `${bId}-r${rIdx}-c${c}`; td.appendChild(criarInputInteiro(ag, v, ch, atualizarTotais)); } tr.appendChild(td); } tb.appendChild(tr); });
+        t.appendChild(tb); w.appendChild(t); return w;
+      }
       function calcularInformadoColuna(v, c, atParam = null) {
         const base = num(v[`b1-r2-c${c}`]) + num(v[`b1-r3-c${c}`]) + num(v[`b1-r4-c${c}`]) + num(v[`b1-r6-c${c}`]);
         if ((atParam || estado?.atividadeAtiva || "ciclo") === "liraa") return base;
@@ -11558,7 +11569,7 @@
         if (!ehLiraa) {
           c.appendChild(criarTotalBlocoSimples("b2", LINHAS_BLOCO_2)); c.appendChild(criarSeparador());
         }
-        c.appendChild(criarTotalBlocoSimples("bTratados", LINHAS_BLOCO_TRATADOS)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoInformados()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b4", LINHAS_BLOCO_4)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoDepositos()); return c;
+        c.appendChild(criarTotalBlocoMulti(LINHAS_BLOCO_FOCADOS_TRATADOS)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoInformados()); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoSimples("b4", LINHAS_BLOCO_4)); c.appendChild(criarSeparador()); c.appendChild(criarTotalBlocoDepositos()); return c;
       }
       function criarTotalBlocoQuarteirao() {
         const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t);
@@ -11584,6 +11595,7 @@
       }
       function criarTotalBlocoImoveis() { const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const th = document.createElement("thead"); th.innerHTML = `<tr><th colspan="9" class="titulo-producao">Produção</th></tr>`; t.appendChild(th); const tb = document.createElement("tbody"); [2,3,4,5,6].forEach(rIdx => { const l = LINHAS_BLOCO_1[rIdx]; const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeLinha = `b1-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDia = `b1-r${rIdx}-c${c}`; td.textContent = fmtIntCell(0); } tr.appendChild(td); } tb.appendChild(tr); }); const trT = document.createElement("tr"); trT.className = "linha-total-final"; for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = "TOTAL"; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeGeral = "1"; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDiaFinal = `c${c}`; td.textContent = fmtIntCell(0); } trT.appendChild(td); } tb.appendChild(trT); t.appendChild(tb); w.appendChild(t); return w; }
       function criarTotalBlocoSimples(bId, linhas) { const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const tb = document.createElement("tbody"); linhas.forEach((l, rIdx) => { const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeLinhaBloco = `${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDiaBloco = `${bId}-r${rIdx}-c${c}`; td.textContent = fmtIntCell(0); } tr.appendChild(td); } tb.appendChild(tr); }); t.appendChild(tb); w.appendChild(t); return w; }
+      function criarTotalBlocoMulti(itens) { const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const tb = document.createElement("tbody"); itens.forEach(({ bId, rIdx, rotulo }) => { const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalEquipeLinhaBloco = `${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.dataset.totalEquipeDiaBloco = `${bId}-r${rIdx}-c${c}`; td.textContent = fmtIntCell(0); } tr.appendChild(td); } tb.appendChild(tr); }); t.appendChild(tb); w.appendChild(t); return w; }
       function criarTotalBlocoInformados() { const w = document.createElement("div"); w.className = "bloco-tabela"; const t = document.createElement("table"); aplicarColgroupBloco(t); const tb = document.createElement("tbody"); const tr = document.createElement("tr"); tr.innerHTML = `<td class="celula-rotulo">Informados</td>`; for (let c = 1; c <= 7; c++) tr.innerHTML += `<td class="col-calculada" data-informado-equipe-dia="c${c}">${fmtIntCell(0)}</td>`; tr.innerHTML += `<td class="col-total" data-informado-equipe-total="1">${fmtIntCell(0)}</td>`; tb.appendChild(tr); t.appendChild(tb); w.appendChild(t); return w; }
       function criarTotalBlocoDepositos() {
         const w = document.createElement("div"); w.className = "bloco-tabela bloco-depositos"; const t = document.createElement("table"); aplicarColgroupBloco(t);
@@ -11633,7 +11645,7 @@
           });
           for (let c = 1; c <= 7; c++) { let s = 0; LINHAS_BLOCO_1.forEach((l, rIdx) => { if (l.somaNoTotal) s += num(v[`b1-r${rIdx}-c${c}`]); }); const cel = document.querySelector(`[data-total-dia-agente="${ag.id}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); }
           let tg = 0; for (let c = 1; c <= 7; c++) tg += num(document.querySelector(`[data-total-dia-agente="${ag.id}-c${c}"]`)?.textContent); const celG = document.querySelector(`[data-total-geral="${ag.id}"]`); if (celG) celG.textContent = fmtIntCell(tg);
-          [{ id: "b2", l: LINHAS_BLOCO_2 }, { id: "bTratados", l: LINHAS_BLOCO_TRATADOS }, { id: "b4", l: LINHAS_BLOCO_4 }].forEach(b => { b.l.forEach((_, rIdx) => { let s = 0; for (let c = 1; c <= 7; c++) s += num(v[`${b.id}-r${rIdx}-c${c}`]); const cel = document.querySelector(`[data-total-linha-bloco="${ag.id}-${b.id}-r${rIdx}"]`); if (cel) cel.textContent = fmtIntCell(s); }); });
+          [{ id: "b2", l: LINHAS_BLOCO_2 }, { id: "bFocados", l: LINHAS_BLOCO_FOCADOS }, { id: "bTratados", l: LINHAS_BLOCO_TRATADOS }, { id: "b4", l: LINHAS_BLOCO_4 }].forEach(b => { b.l.forEach((_, rIdx) => { let s = 0; for (let c = 1; c <= 7; c++) s += num(v[`${b.id}-r${rIdx}-c${c}`]); const cel = document.querySelector(`[data-total-linha-bloco="${ag.id}-${b.id}-r${rIdx}"]`); if (cel) cel.textContent = fmtIntCell(s); }); });
           let ti = 0; let ex = false;
           for (let c = 1; c <= 7; c++) { const r = calcularInformadoColuna(v, c); ti += r; const cel = document.querySelector(`[data-informado-dia="${ag.id}-c${c}"]`); if (cel) { cel.textContent = fmtIntCell(r); if (r > 19) { cel.classList.add("celula-informados-excedida"); ex = true; } else cel.classList.remove("celula-informados-excedida"); } }
           const ci = document.querySelector(`[data-informado-total="${ag.id}"]`); if (ci) ci.textContent = fmtIntCell(ti);
@@ -11700,7 +11712,7 @@
         });
         for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { LINHAS_BLOCO_1.forEach((l, rIdx) => { if (l.somaNoTotal) s += num(valoresDoDia(a)[`b1-r${rIdx}-c${c}`]); }); }); const cel = document.querySelector(`[data-total-equipe-dia-final="c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); }
         let g = 0; for (let c = 1; c <= 7; c++) g += num(document.querySelector(`[data-total-equipe-dia-final="c${c}"]`)?.textContent); const cG = document.querySelector(`[data-total-equipe-geral="1"]`); if (cG) cG.textContent = fmtIntCell(g);
-        [{ id: "b2", l: LINHAS_BLOCO_2 }, { id: "bTratados", l: LINHAS_BLOCO_TRATADOS }, { id: "b4", l: LINHAS_BLOCO_4 }].forEach(b => { b.l.forEach((_, rIdx) => { for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { s += num(valoresDoDia(a)[`${b.id}-r${rIdx}-c${c}`]); }); const cel = document.querySelector(`[data-total-equipe-dia-bloco="${b.id}-r${rIdx}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); } let tl = 0; for (let c = 1; c <= 7; c++) tl += num(document.querySelector(`[data-total-equipe-dia-bloco="${b.id}-r${rIdx}-c${c}"]`)?.textContent); const celL = document.querySelector(`[data-total-equipe-linha-bloco="${b.id}-r${rIdx}"]`); if (celL) celL.textContent = fmtIntCell(tl); }); });
+        [{ id: "b2", l: LINHAS_BLOCO_2 }, { id: "bFocados", l: LINHAS_BLOCO_FOCADOS }, { id: "bTratados", l: LINHAS_BLOCO_TRATADOS }, { id: "b4", l: LINHAS_BLOCO_4 }].forEach(b => { b.l.forEach((_, rIdx) => { for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { s += num(valoresDoDia(a)[`${b.id}-r${rIdx}-c${c}`]); }); const cel = document.querySelector(`[data-total-equipe-dia-bloco="${b.id}-r${rIdx}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); } let tl = 0; for (let c = 1; c <= 7; c++) tl += num(document.querySelector(`[data-total-equipe-dia-bloco="${b.id}-r${rIdx}-c${c}"]`)?.textContent); const celL = document.querySelector(`[data-total-equipe-linha-bloco="${b.id}-r${rIdx}"]`); if (celL) celL.textContent = fmtIntCell(tl); }); });
         let tie = 0; for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { s += calcularInformadoColuna(valoresDoDia(a), c); }); tie += s; const cel = document.querySelector(`[data-informado-equipe-dia="c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); } const ciT = document.querySelector(`[data-informado-equipe-total="1"]`); if (ciT) ciT.textContent = fmtIntCell(tie);
         TIPOS_DEPOSITOS.forEach((_, rIdx) => {
           let sE = 0, sN = 0, sT = 0;
@@ -11736,7 +11748,7 @@
         const dia = obterObjetoDiaSemana(s, diaKey);
         if (!s || !dia) return null;
         const ativos = (dia.agentes || []).filter(a => a && !a._deleted && a.ativo);
-        const somas = { R: 0, C: 0, TB: 0, PE: 0, PE_CONTABILIZADO: 0, O: 0, TOTAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, IP: 0, RENDIMENTO: null, TRABALHADO: 0, QUARTEIRAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, ELIMINADOS: 0, TRATADOS_REAIS: 0, SUPERVISAO_REAL: 0, SUPERVISAO_DIRETA: 0, SUPERVISAO_INDIRETA: 0 };
+        const somas = { R: 0, C: 0, TB: 0, PE: 0, PE_CONTABILIZADO: 0, O: 0, TOTAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, IP: 0, RENDIMENTO: null, TRABALHADO: 0, QUARTEIRAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, ELIMINADOS: 0, FOCADOS_REAIS: 0, TRATADOS_REAIS: 0, SUPERVISAO_REAL: 0, SUPERVISAO_DIRETA: 0, SUPERVISAO_INDIRETA: 0 };
         TIPOS_DEPOSITOS.forEach(t => { somas.DEP[t] = 0; somas.DEP_FOCADOS_TIPO[t] = 0; });
         let qT = 0, qQ = 0;
         ativos.forEach(ag => {
@@ -11757,6 +11769,7 @@
                 somas.ABANDONADOS += num(v[`b2-r3-c${c}`]);
               }
               somas.ELIMINADOS += num(v[`b4-r0-c${c}`]);
+              somas.FOCADOS_REAIS += num(v[`bFocados-r0-c${c}`]);
               somas.TRATADOS_REAIS += num(v[`bTratados-r0-c${c}`]);
               const cQ = extrairQuarteiroesConcluidosColuna(v[`b1-r0-c${c}`], v[`b1-r1-c${c}`]);
               qQ += cQ.length;
@@ -11802,14 +11815,14 @@
       }
       function calcularTotaisSemana(sk, repo = null) {
         const c = repo || repoAtivo(); const s = c[sk]; if (!s) return null;
-        const t = { semana: sk, ciclo: normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"), periodo: "", diasComProducao: 0, PROGRAMADOS: 0, TRABALHADO: 0, QUARTEIRAO: 0, R: 0, C: 0, TB: 0, PE: 0, PE_CONTABILIZADO: 0, O: 0, TOTAL: 0, TRATADOS_GERAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, IP: 0, RENDIMENTO: null, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, ELIMINADOS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, SUPERVISAO: 0 };
+        const t = { semana: sk, ciclo: normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"), periodo: "", diasComProducao: 0, PROGRAMADOS: 0, TRABALHADO: 0, QUARTEIRAO: 0, R: 0, C: 0, TB: 0, PE: 0, PE_CONTABILIZADO: 0, O: 0, TOTAL: 0, FOCADOS_GERAL: 0, TRATADOS_GERAL: 0, FECHADOS: 0, RECUPERADOS: 0, RECUSADOS: 0, ABANDONADOS: 0, INFORMADOS: 0, PENDENCIAS: 0, IP: 0, RENDIMENTO: null, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_LITROS: 0, DEP_GRAMAS: 0, ELIMINADOS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, SUPERVISAO: 0 };
         TIPOS_DEPOSITOS.forEach(x => { t.DEP[x] = 0; t.DEP_FOCADOS_TIPO[x] = 0; });
         const anoS = obterAnoSemana(s); const cS = normalizarNumeroCiclo(s.cabecalho?.ciclo || "1"); const pI = obterPeriodoDaSemana(sk, anoS, cS, s.atividade || estado.atividadeAtiva); t.periodo = pI.texto;
         obterTodosDiasSemanaOrdenados(s).forEach(({ key: d, dia: diaObj }) => {
           const sd = calcularSomasDia(d, sk, c); if (!sd) return;
           t.PROGRAMADOS += num(diaObj?.programados || 0);
           if (sd.TOTAL > 0) t.diasComProducao++;
-          t.TRABALHADO += sd.TRABALHADO; t.QUARTEIRAO += sd.QUARTEIRAO; t.R += sd.R; t.C += sd.C; t.TB += sd.TB; t.PE += sd.PE; t.O += sd.O; t.TOTAL += sd.TOTAL; t.TRATADOS_GERAL += sd.TRATADOS_REAIS; t.FECHADOS += sd.FECHADOS; t.RECUPERADOS += sd.RECUPERADOS; t.RECUSADOS += sd.RECUSADOS; t.ABANDONADOS += sd.ABANDONADOS; t.INFORMADOS += sd.INFORMADOS; t.PENDENCIAS += sd.PENDENCIAS;
+          t.TRABALHADO += sd.TRABALHADO; t.QUARTEIRAO += sd.QUARTEIRAO; t.R += sd.R; t.C += sd.C; t.TB += sd.TB; t.PE += sd.PE; t.O += sd.O; t.TOTAL += sd.TOTAL; t.FOCADOS_GERAL += (sd.FOCADOS_REAIS || 0); t.TRATADOS_GERAL += sd.TRATADOS_REAIS; t.FECHADOS += sd.FECHADOS; t.RECUPERADOS += sd.RECUPERADOS; t.RECUSADOS += sd.RECUSADOS; t.ABANDONADOS += sd.ABANDONADOS; t.INFORMADOS += sd.INFORMADOS; t.PENDENCIAS += sd.PENDENCIAS;
           TIPOS_DEPOSITOS.forEach(x => { t.DEP[x] += sd.DEP[x]; t.DEP_FOCADOS_TIPO[x] += (sd.DEP_FOCADOS_TIPO && sd.DEP_FOCADOS_TIPO[x]) || 0; });
           t.DEP_TRATADOS += sd.DEP_TRATADOS; t.DEP_LITROS += sd.DEP_LITROS; t.DEP_GRAMAS += sd.DEP_GRAMAS; t.ELIMINADOS += sd.ELIMINADOS; t.DEP_FOCADOS += sd.DEP_FOCADOS; t.DEP_AMOSTRAS += sd.DEP_AMOSTRAS || 0; t.SUPERVISAO += sd.SUPERVISAO_REAL;
         });
@@ -12246,6 +12259,7 @@
           sk: sk || "",
           temSemana: Boolean(sem),
           R: 0, C: 0, TB: 0, PE: 0, O: 0,
+          imoveisFocados: 0,
           imoveisTratados: 0,
           eliminados: 0,
           litrosTratados: 0,
@@ -12308,6 +12322,7 @@
               const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(rawQ || "").trim());
               if (!isColPE) {
                 res.eliminados += num(v[`b4-r0-c${c}`]);
+                res.imoveisFocados += num(v[`bFocados-r0-c${c}`]);
                 res.imoveisTratados += num(v[`bTratados-r0-c${c}`]);
                 const todosQ = extrairQuarteiroesDeTexto(rawQ).map(normalizarQuarteirao).filter(Boolean);
                 const concQ = new Set(extrairQuarteiroesConcluidosColuna(rawQ, rawConc));
@@ -12367,6 +12382,7 @@
         _consolidandoIndicesLiraa = true;
         try {
           window._liraaConsolidadoSemana = dados;
+          window._liraaConsolidadoImoveisFocados = dados.imoveisFocados;
           window._liraaConsolidadoImoveisTratados = dados.imoveisTratados;
           window._liraaConsolidadoLitros = dados.litrosTratados;
           window._liraaConsolidadoGramas = dados.gramasLarvicida;
@@ -12699,7 +12715,10 @@
         const tbFoc = getInt("campoTB_Foc");
         const peFoc = getInt("campoPE_Foc");
         const oFoc = getInt("campoO_Foc");
-        const totalFoc = rFoc + cFoc + tbFoc + peFoc + oFoc;
+        const somaFocBreakdown = rFoc + cFoc + tbFoc + peFoc + oFoc;
+        const totalFoc = somaFocBreakdown > 0
+          ? somaFocBreakdown
+          : (typeof window._liraaConsolidadoImoveisFocados === "number" ? window._liraaConsolidadoImoveisFocados : 0);
         const elTotFc = document.getElementById("campoTotalFoc");
         if (elTotFc) elTotFc.value = totalFoc;
 
@@ -13171,6 +13190,9 @@
                 imoveisFocadosQd += num(fm.R) + num(fm.C) + num(fm.TB) + num(fm.PE) + num(fm.O);
               }
             });
+            if (imoveisFocadosQd === 0 && (agg.FOCADOS_GERAL || 0) > 0) {
+              imoveisFocadosQd = agg.FOCADOS_GERAL;
+            }
           }
           const depFocadosQd = agg.DEP_FOCADOS || 0;
           const amostrasQd = agg.DEP_AMOSTRAS || 0;
