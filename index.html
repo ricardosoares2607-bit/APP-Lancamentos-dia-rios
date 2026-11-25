@@ -5883,7 +5883,7 @@
         const inpImovTotEst = document.getElementById("estratoTotalImoveis");
         if (inpImovTotEst) inpImovTotEst.title = ehLiraa ? "Calculado automaticamente a partir dos Imóveis Estimados (LIRAa)" : "Calculado automaticamente: Livres + Parciais + Conflagrados";
 
-        setTxt("dashPanel1Titulo", ehLiraa ? "🔬 Imóveis Inspecionados por Semana (LIRAa)" : "📊 Produção de Imóveis por Semana");
+        setTxt("dashPanel1Titulo", ehLiraa ? "🔬 Imóveis Inspecionados por Dia (LIRAa)" : "📊 Produção de Imóveis por Semana");
         setTxt("dashPanel2Titulo", ehLiraa ? "🧪 Depósitos Encontrados vs Focados por Tipo (A1–E)" : "📉 Evolução das Pendências por Semana");
         setTxt("dashPanel3Titulo", ehLiraa ? "🎯 Cobertura da Amostra LIRAa (Imóveis)" : "🏠 Situação dos Imóveis");
         setTxt("dashPanel4Titulo", ehLiraa ? "📐 Situação dos Quarteirões — LIRAa" : "🧱 Situação dos Quarteirões");
@@ -9822,7 +9822,7 @@
         const at = (estado && estado.atividadeAtiva) || "ciclo";
         const col = repoAtivo(at);
         const semanas = dashSemanasDoCiclo(ano, ciclo);
-        const agg = { semanas: semanas.length, diasProd: 0, PROGRAMADOS: 0, TRABALHADO: 0, R: 0, C: 0, TB: 0, PE: 0, O: 0, TOTAL: 0, INFORMADOS: 0, PENDENCIAS: 0, RECUPERADOS: 0, FOCADOS_GERAL: 0, TRATADOS_GERAL: 0, SUPERVISAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, porSemana: [], porAgente: {} };
+        const agg = { semanas: semanas.length, diasProd: 0, PROGRAMADOS: 0, TRABALHADO: 0, R: 0, C: 0, TB: 0, PE: 0, O: 0, TOTAL: 0, INFORMADOS: 0, PENDENCIAS: 0, RECUPERADOS: 0, FOCADOS_GERAL: 0, TRATADOS_GERAL: 0, SUPERVISAO: 0, DEP: {}, DEP_FOCADOS_TIPO: {}, DEP_TOTAL: 0, DEP_TRATADOS: 0, DEP_GRAMAS: 0, DEP_FOCADOS: 0, DEP_AMOSTRAS: 0, porSemana: [], porDia: [], porAgente: {} };
         TIPOS_DEPOSITOS.forEach(t => { agg.DEP[t] = 0; agg.DEP_FOCADOS_TIPO[t] = 0; });
         semanas.forEach(sk => {
           const tS = calcularTotaisSemana(sk, col);
@@ -9841,6 +9841,26 @@
             agg.porSemana.push({ semana: sk, total: tS.TOTAL, r: tS.R || 0, c: tS.C || 0, tb: tS.TB || 0, pe: tS.PE || 0, o: tS.O || 0, programados: tS.PROGRAMADOS, trabalhado: tS.TRABALHADO, recuperados: (tS.RECUPERADOS || 0), rendimento: tS.RENDIMENTO, ip: tS.IP, pend: tS.PENDENCIAS, depTotal: tS.DEP_TOTAL || 0, depFocados: tS.DEP_FOCADOS || 0, depAmostras: tS.DEP_AMOSTRAS || 0, gramas: tS.DEP_GRAMAS || 0, iip: iipSem, ib: ibSem });
           }
           const s = col?.[sk];
+          if (tS && s) {
+            const pSemDia = obterPeriodoDaSemana(sk, obterAnoSemana(s), normalizarNumeroCiclo(s?.cabecalho?.ciclo || ciclo), at);
+            DIAS_SEMANA.forEach((dk, idx) => {
+              const diaObj = s.dias?.[dk] || null;
+              const sd = calcularSomasDia(dk, sk, col);
+              const isoDia = diaObj?.data || (pSemDia?.inicioISO ? adicionarDiasISO(pSemDia.inicioISO, idx) : "");
+              const dataCurta = isoDia ? formatarDataBR(isoDia).slice(0, 5) : "";
+              const nomeCurto = (nomeDiaExibido(isoDia, dk) || NOMES_DIAS[dk] || dk).slice(0, 3);
+              const rotulo = semanas.length > 1
+                ? (dataCurta ? `${nomeCurto} ${dataCurta}` : `SE${pad2(sk)} ${nomeCurto}`)
+                : (dataCurta ? `${nomeCurto} (${dataCurta})` : nomeCurto);
+              agg.porDia.push({
+                semana: sk,
+                diaKey: dk,
+                dataISO: isoDia,
+                rotulo,
+                total: sd ? (sd.TOTAL || 0) : 0
+              });
+            });
+          }
           obterTodosDiasSemanaOrdenados(s).forEach(({ dia: d }) => {
             if (!d?.agentes) return;
             d.agentes.forEach(ag => {
@@ -10311,8 +10331,7 @@
                 dashCard("Índice de Infestação Predial (IIP)", agg.TOTAL > 0 ? fmtPct(agg.iip) : "—", descIIP, clIIP),
                 dashCard("Índice de Breteau (IB)", agg.TOTAL > 0 ? fmtPct(agg.ib) : "—", `100 × Dep. Focados (${formatarNumeroMilhar(agg.DEP_FOCADOS)}) / Inspec.`, "azul"),
                 dashCard("Depósitos Focados & Amostras", `${formatarNumeroMilhar(agg.DEP_FOCADOS)} focos`, `Amostras coletadas: <b>${formatarNumeroMilhar(agg.DEP_AMOSTRAS)}</b> • Dep. enc.: ${formatarNumeroMilhar(agg.DEP_TOTAL)}`, "vermelho"),
-                dashCard("Tratamento & Larvicida", `${formatarNumeroMilhar(agg.DEP_TRATADOS)} dep.`, `Larvicida: <b>${fmtDecCell(agg.DEP_GRAMAS)} g</b> • Imóv. trat.: ${formatarNumeroMilhar(agg.TRATADOS_GERAL)}`, "verde"),
-                dashCard("Pendências & IP (LIRAa)", `${formatarNumeroMilhar(agg.PENDENCIAS)} (${fmtPct(agg.ip)})`, `Informados LIRAa: <b>${formatarNumeroMilhar(agg.INFORMADOS)}</b>`, "rosa")
+                dashCard("Tratamento & Larvicida", `${formatarNumeroMilhar(agg.DEP_TRATADOS)} dep.`, `Larvicida: <b>${fmtDecCell(agg.DEP_GRAMAS)} g</b> • Imóv. trat.: ${formatarNumeroMilhar(agg.TRATADOS_GERAL)}`, "verde")
               ].join("");
             }
 
@@ -10332,8 +10351,8 @@
             }
 
             if (gS) {
-              if (!agg.porSemana.length) gS.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;">🔬 Sem lançamentos registrados no LIRAa.</div>`;
-              else gS.innerHTML = dashGraficoLinhas2D(agg.porSemana.map(x => ({ rotulo: "SE " + pad2(x.semana), valor: x.total })), { corTema: "azul" });
+              if (!agg.porDia.length) gS.innerHTML = `<div style="padding:48px 16px;text-align:center;color:#64748b;font-weight:600;">🔬 Sem lançamentos registrados no LIRAa.</div>`;
+              else gS.innerHTML = dashGraficoLinhas2D(agg.porDia.map(x => ({ rotulo: x.rotulo, valor: x.total })), { corTema: "azul" });
             }
 
             if (gPend) {
