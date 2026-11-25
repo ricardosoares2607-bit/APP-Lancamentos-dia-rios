@@ -13400,6 +13400,11 @@
                   <span class="qd-total-valor" style="color:${corIIPQd}">${fmtPct(iipQd)}</span>
                 </div>
               </div>` : "";
+          const naoDesignadosLiraa = Math.max(0, st.programados - st.concluidos - st.emAndamento);
+          const blocoRestantesOuNaoDesignadosQd = ehLiraaQd
+            ? `<div class="qd-total-item" data-qd-campo="quarteiroes-nao-designados"><span class="qd-total-label">Não designados</span><span class="qd-total-valor" style="color:#7c3aed">${fmtIntCell(naoDesignadosLiraa)}</span></div>`
+            : `<div class="qd-total-item" data-qd-campo="quarteiroes-restantes"><span class="qd-total-label">Restantes</span><span class="qd-total-valor" style="color:#7c3aed">${fmtIntCell(st.restantes)}</span></div>
+                <div class="qd-total-item" data-qd-campo="quarteiroes-trabalhados"><span class="qd-total-label">Trabalhados</span><span class="qd-total-valor">${fmtIntCell(st.totalTrabalhados)}</span></div>`;
           cardsEl.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
               <!-- Resumo dos Quarteirões -->
@@ -13410,8 +13415,7 @@
                 <div class="qd-total-item" data-qd-campo="quarteiroes-programados"><span class="qd-total-label">Programados</span><span class="qd-total-valor">${fmtIntCell(st.programados)}</span></div>
                 <div class="qd-total-item" data-qd-campo="quarteiroes-concluidos"><span class="qd-total-label">Concluídos</span><span class="qd-total-valor" style="color:#166534">${fmtIntCell(st.concluidos)}</span></div>
                 <div class="qd-total-item" data-qd-campo="quarteiroes-em-andamento"><span class="qd-total-label">Em andamento</span><span class="qd-total-valor" style="color:#b45309">${fmtIntCell(st.emAndamento)}</span></div>
-                <div class="qd-total-item" data-qd-campo="quarteiroes-restantes"><span class="qd-total-label">Restantes</span><span class="qd-total-valor" style="color:#7c3aed">${fmtIntCell(st.restantes)}</span></div>
-                <div class="qd-total-item" data-qd-campo="quarteiroes-trabalhados"><span class="qd-total-label">Trabalhados</span><span class="qd-total-valor">${fmtIntCell(st.totalTrabalhados)}</span></div>
+                ${blocoRestantesOuNaoDesignadosQd}
                 <div class="qd-total-item" data-qd-campo="quarteiroes-progresso"><span class="qd-total-label">Progresso</span><span class="qd-total-valor">${pct.toFixed(1).replace(".", ",")}%</span></div>
                 ${st.precisaRevisao > 0 ? `<div class="qd-total-item"><span class="qd-total-label">⚠️ Revisão</span><span class="qd-total-valor" style="color:#b45309">${fmtIntCell(st.precisaRevisao)}</span></div>` : ""}
               </div>
