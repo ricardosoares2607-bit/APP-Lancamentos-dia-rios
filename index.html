@@ -464,9 +464,41 @@
       .celula-rotulo { background: #f8fafc; font-weight: 700; color: #14532d; text-align: left; padding-left: 5px !important; }
       .linha-total-final td { background: #dcfce7 !important; font-weight: 700; color: #14532d; }
       .bloco-tabela td.celula-input { padding: 0; height: 1px; vertical-align: middle; }
+      .bloco-tabela td.celula-input.celula-com-tipo { position: relative; }
       .bloco-tabela td.celula-input input, .bloco-tabela td.celula-input select { width: 100%; height: 100%; min-height: 24px; display: block; box-sizing: border-box; border: none; background: transparent; text-align: center; padding: 4px 1px; font-size: 0.72rem; outline: none; touch-action: manipulation; }
+      .bloco-tabela td.celula-input.celula-com-tipo.tem-badge input { min-height: 31px; padding: 2px 2px 13px; }
       .bloco-tabela td.celula-input input:focus, .bloco-tabela td.celula-input select:focus { background: #fef9c3; }
       .bloco-tabela td.celula-input input:disabled, .bloco-tabela td.celula-input select:disabled { background: #f1f5f9 !important; color: #94a3b8 !important; cursor: not-allowed; }
+      .badge-tipo-imovel { position: absolute; left: 50%; transform: translateX(-50%); bottom: 1px; z-index: 2; padding: 1px 4px; border-radius: 4px; font-size: 0.54rem; font-weight: 800; line-height: 1.05; border: 1px solid #16a34a; background: #dcfce7; color: #14532d; cursor: pointer; max-width: calc(100% - 4px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); user-select: none; touch-action: manipulation; }
+      .badge-tipo-imovel:hover { filter: brightness(0.95); }
+      .badge-tipo-imovel.pendente { border-color: #f59e0b; background: #fef3c7; color: #92400e; }
+      .badge-tipo-imovel.divergente { border-color: #ea580c; background: #ffedd5; color: #9a3412; }
+      .badge-tipo-imovel.oculto { display: none !important; }
+      .badge-tipo-imovel.desabilitado { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
+      .badge-tipo-resumo { display: block; font-size: 0.56rem; font-weight: 700; color: #166534; line-height: 1.05; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .popover-tipo-imovel { position: fixed; z-index: 9500; width: 282px; max-width: calc(100vw - 16px); background: #ffffff; border: 1.5px solid #16a34a; border-radius: 10px; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24); padding: 9px 10px; display: none; box-sizing: border-box; font-family: inherit; }
+      .popover-tipo-imovel.ativo { display: block; }
+      .popover-tipo-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-bottom: 6px; margin-bottom: 7px; border-bottom: 1px solid #e2e8f0; }
+      .popover-tipo-titulo { font-size: 0.74rem; font-weight: 800; color: #14532d; display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .popover-tipo-qtd { font-size: 0.68rem; font-weight: 800; background: #f0fdf4; color: #166534; border: 1px solid #86efac; border-radius: 5px; padding: 1px 6px; white-space: nowrap; }
+      .popover-tipo-fechar { background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; border-radius: 5px; width: 24px; height: 22px; font-size: 0.76rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+      .popover-tipo-secao-lbl { font-size: 0.66rem; font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.2px; }
+      .popover-tipo-rapido { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 8px; }
+      .btn-tipo-rapido { border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; border-radius: 6px; padding: 5px 2px; font-size: 0.74rem; font-weight: 800; cursor: pointer; text-align: center; touch-action: manipulation; transition: background 0.12s, border-color 0.12s; }
+      .btn-tipo-rapido.em-producao { background: #f0fdf4; border-color: #86efac; color: #166534; }
+      .btn-tipo-rapido.ativo { background: #16a34a; border-color: #15803d; color: #ffffff; }
+      .popover-tipo-grade { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 8px; }
+      .popover-tipo-campo { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+      .popover-tipo-campo label { font-size: 0.66rem; font-weight: 800; color: #334155; }
+      .popover-tipo-campo label.em-producao { color: #15803d; }
+      .popover-tipo-campo input { width: 100%; box-sizing: border-box; text-align: center; padding: 4px 2px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 0.8rem; font-weight: 700; color: #0f172a; background: #f8fafc; outline: none; min-height: 28px; }
+      .popover-tipo-campo input:focus { border-color: #16a34a; background: #fef9c3; }
+      .popover-tipo-rodape { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1; }
+      .popover-tipo-status { font-size: 0.68rem; font-weight: 700; color: #475569; flex: 1; }
+      .popover-tipo-status.ok { color: #15803d; }
+      .popover-tipo-status.alerta { color: #b45309; }
+      .popover-tipo-btn-acao { border: 1px solid #cbd5e1; background: #fff; color: #334155; border-radius: 5px; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+      .popover-tipo-btn-acao.confirmar { background: #166534; border-color: #14532d; color: #fff; }
       .separador-bloco { height: 4px; border-bottom: 1.5px dashed #cbd5e1; margin: 5px 0; }
       .titulo-depositos { background: #dcfce7 !important; color: #14532d !important; font-weight: 700; text-align: center; padding: 3px; }
       .titulo-producao { background: #dcfce7 !important; color: #14532d !important; font-weight: 700; text-align: center; padding: 3px; font-size: 0.74rem; }
@@ -644,7 +676,7 @@
       @media print {
         @page { size: A4 landscape; margin: 4mm; }
         body { background: #fff; }
-        header, nav.barra-navegacao-abas, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao, #telaAberturaAnimada, #telaLoginSistema, #telaEscolhaAtividade { display: none !important; }
+        header, nav.barra-navegacao-abas, nav.barra-navegacao-dropdown, .faixa-programacao, .barra-semanas, .abas-dias, .barra-lancamento-dia, .modal-overlay, .banner-confirmacao, #telaAberturaAnimada, #telaLoginSistema, #telaEscolhaAtividade, #popoverTipoImovel, .popover-tipo-imovel, .badge-tipo-imovel.pendente { display: none !important; }
         body.autenticacao-pendente *, body.atividade-pendente * { display: none !important; }
         main { padding: 0 !important; }
         .conteudo-aba { display: none !important; }
@@ -2877,6 +2909,18 @@
           height: 100%;
           min-height: 28px;
           font-size: 0.78rem;
+        }
+        .bloco-tabela td.celula-input.celula-com-tipo.tem-badge input {
+          min-height: 34px;
+          padding: 2px 2px 14px;
+        }
+        .popover-tipo-imovel .btn-tipo-rapido {
+          min-height: 34px;
+          font-size: 0.78rem;
+        }
+        .popover-tipo-imovel .popover-tipo-campo input {
+          min-height: 34px;
+          font-size: 0.86rem;
         }
         .ocorrencias-dia-toggle {
           min-height: 40px;
@@ -6403,6 +6447,8 @@
         { bId: "bFocados", rIdx: 0, rotulo: "Imóveis focados" },
         { bId: "bTratados", rIdx: 0, rotulo: "Imóveis Tratados" }
       ];
+      const TIPOS_IMOVEIS_DETALHE = ["R", "C", "TB", "PE", "O"];
+      const MAPA_PRODUCAO_TIPO_ROW = { R: 2, C: 3, TB: 4, PE: 5, O: 6 };
       const TIPOS_DEPOSITOS = ["A1","A2","B","C","D1","D2","E"];
       const COLUNAS_DEPOSITOS = ["Encontrado","Não inspecionados","Inspecionados","Focados","Tratados","Litros","Gramas","Amostras Coletadas"];
       const COL_ENCONTRADO = 0, COL_NAO_INSP = 1, COL_INSP = 2, COL_FOCADOS = 3, COL_TRATADOS = 4, COL_LITROS = 5, COL_GRAMAS = 6, COL_TOTAL_DEP = 7;
@@ -10576,6 +10622,11 @@
             i.title = "Preencha Quarteirão e Concluído?";
           }
         });
+        col.querySelectorAll('td.celula-com-tipo').forEach(td => {
+          const inp = td.querySelector('input');
+          const badge = td.querySelector('.badge-tipo-imovel');
+          if (badge) badge.classList.toggle('desabilitado', Boolean(inp?.disabled));
+        });
       }
       function renderizarBotoesDias() {
         const cont = document.getElementById("abasDias");
@@ -11660,7 +11711,32 @@
         const tb = document.createElement("tbody");
         [2, 3, 4, 5, 6].forEach(rIdx => {
           const l = LINHAS_BLOCO_1[rIdx]; const tr = document.createElement("tr");
-          for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinha = `${ag.id}-b1-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.className = "celula-input"; const ch = `b1-r${rIdx}-c${c}`; const inp = criarInputInteiro(ag, v, ch, atualizarTotais); inp.dataset.agenteIdProducao = ag.id; inp.dataset.producaoCol = c; td.appendChild(inp); } tr.appendChild(td); }
+          for (let c = 0; c < NUM_COLUNAS; c++) {
+            const td = document.createElement("td");
+            if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; }
+            else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinha = `${ag.id}-b1-r${rIdx}`; td.textContent = fmtIntCell(0); }
+            else {
+              td.className = "celula-input";
+              const ch = `b1-r${rIdx}-c${c}`;
+              const inp = criarInputInteiro(ag, v, ch, () => {
+                const agV = resolverAgenteVivo(ag);
+                let mudouAuto = false;
+                ["bFocados", "bTratados"].forEach(bId => {
+                  const vV = valoresDoDia(agV);
+                  const qtd = num(vV[`${bId}-r0-c${c}`]);
+                  if (qtd > 0 && aplicarAutoTipoSeUnico(agV, bId, c, qtd, { apenasSeVazio: true })) {
+                    mudouAuto = true;
+                  }
+                });
+                if (mudouAuto) salvar("semana");
+                atualizarTotais();
+              });
+              inp.dataset.agenteIdProducao = ag.id;
+              inp.dataset.producaoCol = c;
+              td.appendChild(inp);
+            }
+            tr.appendChild(td);
+          }
           tb.appendChild(tr);
         });
         const trT = document.createElement("tr"); trT.className = "linha-total-final";
@@ -11672,9 +11748,506 @@
         linhas.forEach((l, rIdx) => { const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinhaBloco = `${ag.id}-${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.className = "celula-input"; const ch = `${bId}-r${rIdx}-c${c}`; td.appendChild(criarInputInteiro(ag, v, ch, atualizarTotais)); } tr.appendChild(td); } tb.appendChild(tr); });
         t.appendChild(tb); w.appendChild(t); return w;
       }
+      function chaveTipoImovel(bId, tipo, c) {
+        return `${bId}-tipo-${tipo}-c${c}`;
+      }
+      function obterTiposProducaoColuna(v, c) {
+        const lista = [];
+        TIPOS_IMOVEIS_DETALHE.forEach(tipo => {
+          const row = MAPA_PRODUCAO_TIPO_ROW[tipo];
+          const qtd = num(v?.[`b1-r${row}-c${c}`]);
+          if (qtd > 0) lista.push({ tipo, qtd });
+        });
+        return lista;
+      }
+      function lerDetalheTipoColuna(v, bId, c) {
+        const det = { R: 0, C: 0, TB: 0, PE: 0, O: 0, soma: 0, tiposAtivos: [] };
+        TIPOS_IMOVEIS_DETALHE.forEach(tipo => {
+          const val = num(v?.[chaveTipoImovel(bId, tipo, c)]);
+          det[tipo] = val;
+          det.soma += val;
+          if (val > 0) det.tiposAtivos.push({ tipo, qtd: val });
+        });
+        return det;
+      }
+      function formatarResumoTipoDetalhe(det, qtdTotal = 0) {
+        if (qtdTotal <= 0 && det.soma <= 0) {
+          return { texto: "", estado: "oculto", tooltip: "" };
+        }
+        if (det.soma === 0) {
+          return {
+            texto: "?",
+            estado: "pendente",
+            tooltip: "Toque para informar o tipo do imóvel (R, C, TB, PE, O)"
+          };
+        }
+        if (det.tiposAtivos.length === 1 && det.soma === qtdTotal) {
+          const unico = det.tiposAtivos[0];
+          return {
+            texto: unico.tipo,
+            estado: "ok",
+            tooltip: `Tipo: ${unico.tipo} (${unico.qtd})`
+          };
+        }
+        const texto = det.tiposAtivos.map(x => `${x.tipo}${x.qtd}`).join("·");
+        const detalheTxt = det.tiposAtivos.map(x => `${x.tipo}: ${x.qtd}`).join(", ");
+        const divergente = qtdTotal > 0 && det.soma !== qtdTotal;
+        return {
+          texto,
+          estado: divergente ? "divergente" : "ok",
+          tooltip: divergente ? `${detalheTxt} (célula: ${qtdTotal})` : detalheTxt
+        };
+      }
+      function aplicarAutoTipoSeUnico(ag, bId, c, qtdRaw, opcoes = {}) {
+        if (!ag) return false;
+        const v = valoresDoDia(ag);
+        if (!ag._valoresTs) ag._valoresTs = {};
+        const qtd = num(qtdRaw);
+        const agora = agoraSyncMs();
+        if (qtd <= 0) {
+          let limpou = false;
+          TIPOS_IMOVEIS_DETALHE.forEach(tipo => {
+            const k = chaveTipoImovel(bId, tipo, c);
+            if (v[k] !== undefined && String(v[k]).trim() !== "") {
+              v[k] = "";
+              ag._valoresTs[k] = agora;
+              limpou = true;
+            }
+          });
+          if (limpou) ag._ts = agora;
+          return limpou;
+        }
+        const prods = obterTiposProducaoColuna(v, c);
+        if (prods.length !== 1) return false;
+        const unico = prods[0].tipo;
+        const det = lerDetalheTipoColuna(v, bId, c);
+        const deveAplicar = det.soma === 0 || (!opcoes.apenasSeVazio && det.tiposAtivos.length === 1 && det.tiposAtivos[0].tipo === unico);
+        if (!deveAplicar) return false;
+        let mudou = false;
+        TIPOS_IMOVEIS_DETALHE.forEach(tipo => {
+          const k = chaveTipoImovel(bId, tipo, c);
+          const alvo = (tipo === unico) ? String(qtd) : "";
+          if (String(v[k] || "") !== alvo) {
+            v[k] = alvo;
+            ag._valoresTs[k] = agora;
+            mudou = true;
+          }
+        });
+        if (mudou) ag._ts = agora;
+        return mudou;
+      }
+      let _popoverTipoCtx = null;
+      let _popoverSuprimidoChave = "";
+      function garantirPopoverTipoImovel() {
+        let pop = document.getElementById("popoverTipoImovel");
+        if (pop) return pop;
+        pop = document.createElement("div");
+        pop.id = "popoverTipoImovel";
+        pop.className = "popover-tipo-imovel";
+        pop.setAttribute("role", "dialog");
+        pop.setAttribute("aria-label", "Detalhar tipo de imóvel");
+        pop.innerHTML = `
+          <div class="popover-tipo-header">
+            <span class="popover-tipo-titulo" data-pop-titulo>🏷️ Tipo de imóvel</span>
+            <span class="popover-tipo-qtd" data-pop-qtd>Qtd: 0</span>
+            <button type="button" class="popover-tipo-fechar" data-pop-fechar title="Fechar (Esc)">✕</button>
+          </div>
+          <div class="popover-tipo-secao-lbl">Todos em (1 toque):</div>
+          <div class="popover-tipo-rapido">
+            ${TIPOS_IMOVEIS_DETALHE.map(t => `<button type="button" class="btn-tipo-rapido" data-pop-rapido="${t}">${t}</button>`).join("")}
+          </div>
+          <div class="popover-tipo-secao-lbl">Ou dividir por tipo:</div>
+          <div class="popover-tipo-grade">
+            ${TIPOS_IMOVEIS_DETALHE.map(t => `<div class="popover-tipo-campo"><label data-pop-lbl="${t}">${t}</label><input type="text" inputmode="numeric" placeholder="0" data-pop-input="${t}" /></div>`).join("")}
+          </div>
+          <div class="popover-tipo-rodape">
+            <span class="popover-tipo-status" data-pop-status>Selecione o tipo</span>
+            <button type="button" class="popover-tipo-btn-acao" data-pop-limpar>Limpar</button>
+            <button type="button" class="popover-tipo-btn-acao confirmar" data-pop-ok>✓ OK</button>
+          </div>
+        `;
+        document.body.appendChild(pop);
+
+        const manterTecladoAoTocarBotao = (btn) => {
+          btn.addEventListener("mousedown", (e) => e.preventDefault());
+          btn.addEventListener("pointerdown", (e) => {
+            if (e.pointerType === "touch") e.preventDefault();
+          });
+        };
+
+        pop.querySelectorAll("button").forEach(manterTecladoAoTocarBotao);
+
+        pop.querySelector("[data-pop-fechar]").addEventListener("click", (e) => {
+          e.preventDefault();
+          fecharPopoverTipoImovel(true);
+        });
+        pop.querySelector("[data-pop-ok]").addEventListener("click", (e) => {
+          e.preventDefault();
+          fecharPopoverTipoImovel(true);
+        });
+        pop.querySelector("[data-pop-limpar]").addEventListener("click", (e) => {
+          e.preventDefault();
+          if (!_popoverTipoCtx || estaModoLeitura()) return;
+          const agV = resolverAgenteVivo({ id: _popoverTipoCtx.agId });
+          if (!agV) return;
+          const vV = valoresDoDia(agV);
+          if (!agV._valoresTs) agV._valoresTs = {};
+          const agora = agoraSyncMs();
+          TIPOS_IMOVEIS_DETALHE.forEach(t => {
+            const k = chaveTipoImovel(_popoverTipoCtx.bId, t, _popoverTipoCtx.c);
+            vV[k] = "";
+            agV._valoresTs[k] = agora;
+          });
+          agV._ts = agora;
+          salvar("semana");
+          atualizarTotais();
+          atualizarConteudoPopoverTipoImovel();
+        });
+
+        pop.querySelectorAll("[data-pop-rapido]").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (!_popoverTipoCtx || estaModoLeitura()) return;
+            const tipo = btn.dataset.popRapido;
+            const agV = resolverAgenteVivo({ id: _popoverTipoCtx.agId });
+            if (!agV) return;
+            const vV = valoresDoDia(agV);
+            if (!agV._valoresTs) agV._valoresTs = {};
+            const chCel = `${_popoverTipoCtx.bId}-r0-c${_popoverTipoCtx.c}`;
+            let qtd = num(vV[chCel]);
+            const agora = agoraSyncMs();
+            if (qtd <= 0) {
+              qtd = 1;
+              vV[chCel] = "1";
+              agV._valoresTs[chCel] = agora;
+              if (_popoverTipoCtx.input) _popoverTipoCtx.input.value = "1";
+            }
+            TIPOS_IMOVEIS_DETALHE.forEach(t => {
+              const k = chaveTipoImovel(_popoverTipoCtx.bId, t, _popoverTipoCtx.c);
+              vV[k] = (t === tipo) ? String(qtd) : "";
+              agV._valoresTs[k] = agora;
+            });
+            agV._ts = agora;
+            salvar("semana");
+            atualizarTotais();
+            fecharPopoverTipoImovel(true);
+          });
+        });
+
+        pop.querySelectorAll("[data-pop-input]").forEach(inpTipo => {
+          inpTipo.addEventListener("focus", () => {
+            if (inpTipo.value === "0") inpTipo.value = "";
+          });
+          inpTipo.addEventListener("input", () => {
+            if (!_popoverTipoCtx || estaModoLeitura()) return;
+            const tipo = inpTipo.dataset.popInput;
+            const agV = resolverAgenteVivo({ id: _popoverTipoCtx.agId });
+            if (!agV) return;
+            const vV = valoresDoDia(agV);
+            if (!agV._valoresTs) agV._valoresTs = {};
+            const agora = agoraSyncMs();
+            const clean = String(inpTipo.value || "").replace(/\D/g, "");
+            if (inpTipo.value !== clean) inpTipo.value = clean;
+            const k = chaveTipoImovel(_popoverTipoCtx.bId, tipo, _popoverTipoCtx.c);
+            vV[k] = clean;
+            agV._valoresTs[k] = agora;
+            const det = lerDetalheTipoColuna(vV, _popoverTipoCtx.bId, _popoverTipoCtx.c);
+            const chCel = `${_popoverTipoCtx.bId}-r0-c${_popoverTipoCtx.c}`;
+            const qtdAtual = num(vV[chCel]);
+            if (det.soma > qtdAtual) {
+              vV[chCel] = String(det.soma);
+              agV._valoresTs[chCel] = agora;
+              if (_popoverTipoCtx.input) _popoverTipoCtx.input.value = String(det.soma);
+            }
+            agV._ts = agora;
+            salvar("semana");
+            atualizarTotais();
+            atualizarConteudoPopoverTipoImovel();
+          });
+        });
+
+        if (!document.body.dataset.boundPopoverTipo) {
+          document.body.dataset.boundPopoverTipo = "1";
+          document.addEventListener("pointerdown", (e) => {
+            if (!_popoverTipoCtx) return;
+            const p = document.getElementById("popoverTipoImovel");
+            if (!p || !p.classList.contains("ativo")) return;
+            if (p.contains(e.target)) return;
+            if (_popoverTipoCtx.td && _popoverTipoCtx.td.contains(e.target)) return;
+            fecharPopoverTipoImovel(false);
+          });
+          document.addEventListener("focusin", (e) => {
+            if (!_popoverTipoCtx) return;
+            const p = document.getElementById("popoverTipoImovel");
+            if (!p || !p.classList.contains("ativo")) return;
+            if (p.contains(e.target)) return;
+            if (_popoverTipoCtx.td && _popoverTipoCtx.td.contains(e.target)) return;
+            if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA")) {
+              if (!e.target.dataset?.tipoBloco) {
+                fecharPopoverTipoImovel(false);
+              }
+            }
+          });
+          document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && _popoverTipoCtx) {
+              fecharPopoverTipoImovel(true);
+            }
+          });
+          window.addEventListener("resize", () => {
+            if (_popoverTipoCtx && _popoverTipoCtx.td && document.body.contains(_popoverTipoCtx.td)) {
+              posicionarPopoverTipoImovel(_popoverTipoCtx.td);
+            }
+          });
+        }
+        return pop;
+      }
+      function posicionarPopoverTipoImovel(td) {
+        const pop = garantirPopoverTipoImovel();
+        if (!td || !pop) return;
+        const r = td.getBoundingClientRect();
+        const pw = Math.min(282, window.innerWidth - 16);
+        pop.style.width = pw + "px";
+        const ph = pop.offsetHeight || 195;
+        let left = r.left + r.width / 2 - pw / 2;
+        left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+        const espacoAbaixo = window.innerHeight - r.bottom;
+        let top;
+        if (r.bottom + ph + 10 <= window.innerHeight * 0.62 || r.top < ph + 12) {
+          top = Math.min(r.bottom + 6, Math.max(8, window.innerHeight - ph - 8));
+          if (espacoAbaixo < ph + 10 && r.top >= ph + 10) top = r.top - ph - 6;
+        } else {
+          top = Math.max(8, r.top - ph - 6);
+        }
+        pop.style.left = Math.round(left) + "px";
+        pop.style.top = Math.round(top) + "px";
+      }
+      function atualizarConteudoPopoverTipoImovel() {
+        if (!_popoverTipoCtx) return;
+        const pop = garantirPopoverTipoImovel();
+        const agV = resolverAgenteVivo({ id: _popoverTipoCtx.agId });
+        if (!agV) { fecharPopoverTipoImovel(false); return; }
+        const v = valoresDoDia(agV);
+        const { bId, c } = _popoverTipoCtx;
+        const chCel = `${bId}-r0-c${c}`;
+        const qtdTotal = num(v[chCel]);
+        const det = lerDetalheTipoColuna(v, bId, c);
+        const prodsSet = new Set(obterTiposProducaoColuna(v, c).map(p => p.tipo));
+
+        const titulo = bId === "bFocados" ? "🏷️ Imóveis focados" : "🏷️ Imóveis tratados";
+        const elTit = pop.querySelector("[data-pop-titulo]");
+        const elQtd = pop.querySelector("[data-pop-qtd]");
+        if (elTit) elTit.textContent = `${titulo} · Col. ${pad2(c)}`;
+        if (elQtd) elQtd.textContent = `Qtd: ${qtdTotal}`;
+
+        pop.querySelectorAll("[data-pop-rapido]").forEach(btn => {
+          const t = btn.dataset.popRapido;
+          btn.classList.toggle("em-producao", prodsSet.has(t));
+          const ativoUnico = det.tiposAtivos.length === 1 && det.tiposAtivos[0].tipo === t && det.soma === qtdTotal && qtdTotal > 0;
+          btn.classList.toggle("ativo", ativoUnico);
+        });
+
+        pop.querySelectorAll("[data-pop-lbl]").forEach(lbl => {
+          lbl.classList.toggle("em-producao", prodsSet.has(lbl.dataset.popLbl));
+        });
+
+        pop.querySelectorAll("[data-pop-input]").forEach(inp => {
+          if (document.activeElement === inp) return;
+          const t = inp.dataset.popInput;
+          const val = det[t];
+          inp.value = val > 0 ? String(val) : "";
+        });
+
+        const stEl = pop.querySelector("[data-pop-status]");
+        if (stEl) {
+          stEl.className = "popover-tipo-status";
+          if (qtdTotal === 0 && det.soma === 0) {
+            stEl.textContent = "Informe a quantidade";
+          } else if (det.soma === 0) {
+            stEl.classList.add("alerta");
+            stEl.textContent = `Falta classificar ${qtdTotal}`;
+          } else if (det.soma === qtdTotal) {
+            stEl.classList.add("ok");
+            stEl.textContent = `✓ ${det.soma} de ${qtdTotal} atribuídos`;
+          } else if (det.soma < qtdTotal) {
+            stEl.classList.add("alerta");
+            stEl.textContent = `Distribuído ${det.soma}/${qtdTotal} (falta ${qtdTotal - det.soma})`;
+          } else {
+            stEl.classList.add("alerta");
+            stEl.textContent = `Soma ${det.soma} (célula ${qtdTotal})`;
+          }
+        }
+      }
+      function abrirPopoverTipoImovel(ag, bId, c, td, input) {
+        if (!ag || !td || estaModoLeitura()) return;
+        const pop = garantirPopoverTipoImovel();
+        _popoverSuprimidoChave = "";
+        _popoverTipoCtx = { agId: ag.id, bId, c: Number(c), td, input };
+        atualizarConteudoPopoverTipoImovel();
+        pop.classList.add("ativo");
+        posicionarPopoverTipoImovel(td);
+      }
+      function fecharPopoverTipoImovel(suprimirAtual = false) {
+        const pop = document.getElementById("popoverTipoImovel");
+        if (suprimirAtual && _popoverTipoCtx) {
+          _popoverSuprimidoChave = `${_popoverTipoCtx.agId}|${_popoverTipoCtx.bId}|${_popoverTipoCtx.c}`;
+        }
+        _popoverTipoCtx = null;
+        if (pop) pop.classList.remove("ativo");
+      }
+      function atualizarBadgesTiposLinha(ag, colEl = null) {
+        if (!ag) return;
+        const raiz = colEl || document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"]`);
+        if (!raiz) return;
+        const v = valoresDoDia(ag);
+        raiz.querySelectorAll("td.celula-com-tipo").forEach(td => {
+          const bId = td.dataset.tipoBloco;
+          const c = Number(td.dataset.tipoCol);
+          if (!bId || !c) return;
+          const qtd = num(v[`${bId}-r0-c${c}`]);
+          const det = lerDetalheTipoColuna(v, bId, c);
+          const info = formatarResumoTipoDetalhe(det, qtd);
+          const badge = td.querySelector(".badge-tipo-imovel");
+          const inp = td.querySelector("input");
+          if (badge) {
+            badge.textContent = info.texto;
+            badge.title = info.tooltip;
+            badge.className = "badge-tipo-imovel " + info.estado + (inp?.disabled ? " desabilitado" : "");
+          }
+          td.classList.toggle("tem-badge", info.estado !== "oculto");
+          if (inp && info.tooltip) {
+            inp.title = info.tooltip;
+          } else if (inp && !inp.disabled) {
+            inp.title = "";
+          }
+        });
+      }
+      function atualizarBadgesTiposEquipe(ativos) {
+        ["bFocados", "bTratados"].forEach(bId => {
+          const totaisLinha = { R: 0, C: 0, TB: 0, PE: 0, O: 0, soma: 0, tiposAtivos: [] };
+          let qtdTotalLinha = 0;
+          for (let c = 1; c <= 7; c++) {
+            const detCol = { R: 0, C: 0, TB: 0, PE: 0, O: 0, soma: 0, tiposAtivos: [] };
+            let qtdCol = 0;
+            ativos.forEach(a => {
+              const vA = valoresDoDia(a);
+              qtdCol += num(vA[`${bId}-r0-c${c}`]);
+              const detA = lerDetalheTipoColuna(vA, bId, c);
+              TIPOS_IMOVEIS_DETALHE.forEach(t => {
+                const valT = detA[t] || 0;
+                detCol[t] += valT;
+                detCol.soma += valT;
+                totaisLinha[t] += valT;
+                totaisLinha.soma += valT;
+              });
+            });
+            qtdTotalLinha += qtdCol;
+            TIPOS_IMOVEIS_DETALHE.forEach(t => {
+              if (detCol[t] > 0) detCol.tiposAtivos.push({ tipo: t, qtd: detCol[t] });
+            });
+            const celCol = document.querySelector(`[data-total-equipe-dia-bloco="${bId}-r0-c${c}"]`);
+            if (celCol) {
+              const infoC = formatarResumoTipoDetalhe(detCol, qtdCol);
+              celCol.title = infoC.tooltip || "";
+            }
+          }
+          TIPOS_IMOVEIS_DETALHE.forEach(t => {
+            if (totaisLinha[t] > 0) totaisLinha.tiposAtivos.push({ tipo: t, qtd: totaisLinha[t] });
+          });
+          const celTot = document.querySelector(`[data-total-equipe-linha-bloco="${bId}-r0"]`);
+          if (celTot) {
+            const infoL = formatarResumoTipoDetalhe(totaisLinha, qtdTotalLinha);
+            celTot.title = infoL.tooltip || "";
+            let sub = celTot.querySelector(".badge-tipo-resumo");
+            if (totaisLinha.soma > 0) {
+              if (!sub) {
+                sub = document.createElement("span");
+                sub.className = "badge-tipo-resumo";
+                celTot.appendChild(sub);
+              }
+              sub.textContent = infoL.texto;
+            } else if (sub) {
+              sub.remove();
+            }
+          }
+        });
+      }
       function criarBlocoMulti(ag, itens) {
         const w = document.createElement("div"); w.className = "bloco-tabela"; const v = valoresDoDia(ag); const t = document.createElement("table"); aplicarColgroupBloco(t); const tb = document.createElement("tbody");
-        itens.forEach(({ bId, rIdx, rotulo }) => { const tr = document.createElement("tr"); for (let c = 0; c < NUM_COLUNAS; c++) { const td = document.createElement("td"); if (c === 0) { td.className = "celula-rotulo"; td.textContent = rotulo; } else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinhaBloco = `${ag.id}-${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); } else { td.className = "celula-input"; const ch = `${bId}-r${rIdx}-c${c}`; td.appendChild(criarInputInteiro(ag, v, ch, atualizarTotais)); } tr.appendChild(td); } tb.appendChild(tr); });
+        itens.forEach(({ bId, rIdx, rotulo }) => {
+          const tr = document.createElement("tr");
+          for (let c = 0; c < NUM_COLUNAS; c++) {
+            const td = document.createElement("td");
+            if (c === 0) { td.className = "celula-rotulo"; td.textContent = rotulo; }
+            else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinhaBloco = `${ag.id}-${bId}-r${rIdx}`; td.textContent = fmtIntCell(0); }
+            else {
+              td.className = "celula-input celula-com-tipo";
+              td.dataset.tipoBloco = bId;
+              td.dataset.tipoCol = String(c);
+              td.dataset.agenteId = ag.id;
+              const ch = `${bId}-r${rIdx}-c${c}`;
+              const inp = criarInputInteiro(ag, v, ch, () => {
+                const agV = resolverAgenteVivo(ag);
+                if (aplicarAutoTipoSeUnico(agV, bId, c, inp.value)) {
+                  salvar("semana");
+                }
+                atualizarTotais();
+                const vV = valoresDoDia(agV);
+                const qtd = num(vV[ch]);
+                const det = lerDetalheTipoColuna(vV, bId, c);
+                if (qtd <= 0) {
+                  if (_popoverTipoCtx && _popoverTipoCtx.agId === agV.id && _popoverTipoCtx.bId === bId && _popoverTipoCtx.c === c) {
+                    fecharPopoverTipoImovel(false);
+                  }
+                } else if (_popoverTipoCtx && _popoverTipoCtx.agId === agV.id && _popoverTipoCtx.bId === bId && _popoverTipoCtx.c === c) {
+                  atualizarConteudoPopoverTipoImovel();
+                } else if (det.soma !== qtd) {
+                  abrirPopoverTipoImovel(agV, bId, c, td, inp);
+                }
+              });
+              inp.dataset.tipoBloco = bId;
+              inp.dataset.tipoCol = String(c);
+              inp.addEventListener("focus", () => {
+                const agV = resolverAgenteVivo(ag);
+                const vV = valoresDoDia(agV);
+                const qtd = num(vV[ch]);
+                const det = lerDetalheTipoColuna(vV, bId, c);
+                const chaveSupr = `${agV.id}|${bId}|${c}`;
+                if (qtd > 0 && det.soma !== qtd && _popoverSuprimidoChave !== chaveSupr) {
+                  abrirPopoverTipoImovel(agV, bId, c, td, inp);
+                } else if (_popoverTipoCtx && (_popoverTipoCtx.agId !== agV.id || _popoverTipoCtx.bId !== bId || _popoverTipoCtx.c !== c)) {
+                  fecharPopoverTipoImovel(false);
+                }
+              });
+              const badge = document.createElement("button");
+              badge.type = "button";
+              badge.className = "badge-tipo-imovel oculto";
+              badge.tabIndex = -1;
+              badge.addEventListener("mousedown", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              });
+              badge.addEventListener("pointerdown", (e) => {
+                if (e.pointerType === "touch") e.preventDefault();
+                e.stopPropagation();
+              });
+              badge.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (inp.disabled || estaModoLeitura()) return;
+                const agV = resolverAgenteVivo(ag);
+                if (_popoverTipoCtx && _popoverTipoCtx.agId === agV.id && _popoverTipoCtx.bId === bId && _popoverTipoCtx.c === c) {
+                  fecharPopoverTipoImovel(true);
+                } else {
+                  abrirPopoverTipoImovel(agV, bId, c, td, inp);
+                }
+              });
+              td.appendChild(inp);
+              td.appendChild(badge);
+            }
+            tr.appendChild(td);
+          }
+          tb.appendChild(tr);
+        });
         t.appendChild(tb); w.appendChild(t); return w;
       }
       function calcularInformadoColuna(v, c, atParam = null) {
@@ -11826,6 +12399,7 @@
           for (let c = 0; c < COLUNAS_DEPOSITOS.length; c++) { if (c === COL_INSP) continue; let s = 0; TIPOS_DEPOSITOS.forEach((_, rIdx) => { s += num(v[`b5-r${rIdx}-c${c}`]); }); const cel = document.querySelector(`[data-total-deposito-coluna="${ag.id}-b5-c${c}"]`); if (cel) { if (c === COL_GRAMAS) cel.textContent = fmtDecCell(s); else cel.textContent = fmtIntCell(s); } }
           const tE = num(document.querySelector(`[data-total-deposito-coluna="${ag.id}-b5-c${COL_ENCONTRADO}"]`)?.textContent), tN = num(document.querySelector(`[data-total-deposito-coluna="${ag.id}-b5-c${COL_NAO_INSP}"]`)?.textContent); const ciT = document.querySelector(`[data-inspecionado-total="${ag.id}"]`); if (ciT) ciT.textContent = fmtIntCell(tE - tN);
           aplicarBloqueiosAgente(ag, dia);
+          atualizarBadgesTiposLinha(ag);
         });
         LINHAS_BLOCO_1.forEach((l, rIdx) => {
           if (l.tipo === "quarteirao") {
@@ -11884,7 +12458,8 @@
         });
         for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { LINHAS_BLOCO_1.forEach((l, rIdx) => { if (l.somaNoTotal) s += num(valoresDoDia(a)[`b1-r${rIdx}-c${c}`]); }); }); const cel = document.querySelector(`[data-total-equipe-dia-final="c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); }
         let g = 0; for (let c = 1; c <= 7; c++) g += num(document.querySelector(`[data-total-equipe-dia-final="c${c}"]`)?.textContent); const cG = document.querySelector(`[data-total-equipe-geral="1"]`); if (cG) cG.textContent = fmtIntCell(g);
-        [{ id: "b2", l: LINHAS_BLOCO_2 }, { id: "bFocados", l: LINHAS_BLOCO_FOCADOS }, { id: "bTratados", l: LINHAS_BLOCO_TRATADOS }, { id: "b4", l: LINHAS_BLOCO_4 }].forEach(b => { b.l.forEach((_, rIdx) => { for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { s += num(valoresDoDia(a)[`${b.id}-r${rIdx}-c${c}`]); }); const cel = document.querySelector(`[data-total-equipe-dia-bloco="${b.id}-r${rIdx}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); } let tl = 0; for (let c = 1; c <= 7; c++) tl += num(document.querySelector(`[data-total-equipe-dia-bloco="${b.id}-r${rIdx}-c${c}"]`)?.textContent); const celL = document.querySelector(`[data-total-equipe-linha-bloco="${b.id}-r${rIdx}"]`); if (celL) celL.textContent = fmtIntCell(tl); }); });
+        [{ id: "b2", l: LINHAS_BLOCO_2 }, { id: "bFocados", l: LINHAS_BLOCO_FOCADOS }, { id: "bTratados", l: LINHAS_BLOCO_TRATADOS }, { id: "b4", l: LINHAS_BLOCO_4 }].forEach(b => { b.l.forEach((_, rIdx) => { for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { s += num(valoresDoDia(a)[`${b.id}-r${rIdx}-c${c}`]); }); const cel = document.querySelector(`[data-total-equipe-dia-bloco="${b.id}-r${rIdx}-c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); } let tl = 0; for (let c = 1; c <= 7; c++) tl += num(document.querySelector(`[data-total-equipe-dia-bloco="${b.id}-r${rIdx}-c${c}"]`)?.textContent); const celL = document.querySelector(`[data-total-equipe-linha-bloco="${b.id}-r${rIdx}"]`); if (celL) { const sub = celL.querySelector(".badge-tipo-resumo"); if (celL.firstChild && celL.firstChild.nodeType === 3) celL.firstChild.nodeValue = fmtIntCell(tl); else celL.textContent = fmtIntCell(tl); if (sub && !celL.contains(sub)) celL.appendChild(sub); } }); });
+        atualizarBadgesTiposEquipe(ativos);
         let tie = 0; for (let c = 1; c <= 7; c++) { let s = 0; ativos.forEach(a => { s += calcularInformadoColuna(valoresDoDia(a), c); }); tie += s; const cel = document.querySelector(`[data-informado-equipe-dia="c${c}"]`); if (cel) cel.textContent = fmtIntCell(s); } const ciT = document.querySelector(`[data-informado-equipe-total="1"]`); if (ciT) ciT.textContent = fmtIntCell(tie);
         TIPOS_DEPOSITOS.forEach((_, rIdx) => {
           let sE = 0, sN = 0, sT = 0;
@@ -11913,6 +12488,14 @@
         document.querySelectorAll("[data-total-equipe-sup-total-cab]").forEach(el => el.textContent = fmtIntCell(totSupGeral));
         atualizarObservacaoSupervisaoSemana();
         renderizarCabecalhoResumo();
+        if (_popoverTipoCtx) {
+          if (!_popoverTipoCtx.td || !document.body.contains(_popoverTipoCtx.td)) {
+            fecharPopoverTipoImovel(false);
+          } else {
+            atualizarConteudoPopoverTipoImovel();
+          }
+        }
+        try { if (estado.atividadeAtiva === "liraa") renderizarIndicesLiraa(); } catch(e) {}
         try { if (document.getElementById("aba-quarteiroes-designados")?.classList.contains("ativo")) renderizarQuarteiroesDesignados(); } catch(e) {}
       }
       function calcularSomasDia(diaKey, sk = null, repoA = null) {
@@ -12433,6 +13016,8 @@
           R: 0, C: 0, TB: 0, PE: 0, O: 0,
           imoveisFocados: 0,
           imoveisTratados: 0,
+          focadosPorTipo: { R: 0, C: 0, TB: 0, PE: 0, O: 0 },
+          tratadosPorTipo: { R: 0, C: 0, TB: 0, PE: 0, O: 0 },
           eliminados: 0,
           litrosTratados: 0,
           gramasLarvicida: 0,
@@ -12492,10 +13077,32 @@
               const rawQ = v[`b1-r0-c${c}`];
               const rawConc = v[`b1-r1-c${c}`];
               const isColPE = (pe > 0 && r === 0 && cc === 0 && tb === 0 && o === 0) || /\bPE\b|^PE[-_\s0-9]/i.test(String(rawQ || "").trim());
+
+              const qtdFocCol = num(v[`bFocados-r0-c${c}`]);
+              const qtdTratCol = num(v[`bTratados-r0-c${c}`]);
+              const detFoc = lerDetalheTipoColuna(v, "bFocados", c);
+              const detTrat = lerDetalheTipoColuna(v, "bTratados", c);
+              const prodsCol = obterTiposProducaoColuna(v, c);
+
+              if (!isColPE || qtdFocCol > 0 || detFoc.soma > 0) {
+                res.imoveisFocados += qtdFocCol > 0 ? qtdFocCol : detFoc.soma;
+                if (detFoc.soma > 0) {
+                  TIPOS_IMOVEIS_DETALHE.forEach(t => { res.focadosPorTipo[t] += detFoc[t]; });
+                } else if (qtdFocCol > 0 && prodsCol.length === 1) {
+                  res.focadosPorTipo[prodsCol[0].tipo] += qtdFocCol;
+                }
+              }
+              if (!isColPE || qtdTratCol > 0 || detTrat.soma > 0) {
+                res.imoveisTratados += qtdTratCol > 0 ? qtdTratCol : detTrat.soma;
+                if (detTrat.soma > 0) {
+                  TIPOS_IMOVEIS_DETALHE.forEach(t => { res.tratadosPorTipo[t] += detTrat[t]; });
+                } else if (qtdTratCol > 0 && prodsCol.length === 1) {
+                  res.tratadosPorTipo[prodsCol[0].tipo] += qtdTratCol;
+                }
+              }
+
               if (!isColPE) {
                 res.eliminados += num(v[`b4-r0-c${c}`]);
-                res.imoveisFocados += num(v[`bFocados-r0-c${c}`]);
-                res.imoveisTratados += num(v[`bTratados-r0-c${c}`]);
                 const todosQ = extrairQuarteiroesDeTexto(rawQ).map(normalizarQuarteirao).filter(Boolean);
                 const concQ = new Set(extrairQuarteiroesConcluidosColuna(rawQ, rawConc));
                 todosQ.forEach(q => {
@@ -12597,22 +13204,29 @@
           setVal("campoO", formatarInteiroFormularioLiraa(dados.O));
 
           const salvoSem = (sk && estado?.indicesLiraaForm?.porSemana?.[sk]) || null;
+          const tratPorTipo = dados.tratadosPorTipo || { R: 0, C: 0, TB: 0, PE: 0, O: 0 };
+          const somaTratDiario = num(tratPorTipo.R) + num(tratPorTipo.C) + num(tratPorTipo.TB) + num(tratPorTipo.PE) + num(tratPorTipo.O);
           const tratMan = salvoSem?.tratadosManuais;
           const somaTratMan = tratMan ? (num(tratMan.R) + num(tratMan.C) + num(tratMan.TB) + num(tratMan.PE) + num(tratMan.O)) : 0;
-          if (tratMan && somaTratMan > 0 && (dados.imoveisTratados === 0 || somaTratMan === dados.imoveisTratados)) {
-            setVal("campoR_Trat", formatarInteiroFormularioLiraa(tratMan.R));
-            setVal("campoC_Trat", formatarInteiroFormularioLiraa(tratMan.C));
-            setVal("campoTB_Trat", formatarInteiroFormularioLiraa(tratMan.TB));
-            setVal("campoPE_Trat", formatarInteiroFormularioLiraa(tratMan.PE));
-            setVal("campoO_Trat", formatarInteiroFormularioLiraa(tratMan.O));
+          if (somaTratDiario > 0) {
+            TIPOS_IMOVEIS_DETALHE.forEach(k => setVal(`campo${k}_Trat`, formatarInteiroFormularioLiraa(tratPorTipo[k])));
+          } else if (tratMan && somaTratMan > 0 && (dados.imoveisTratados === 0 || somaTratMan === dados.imoveisTratados)) {
+            TIPOS_IMOVEIS_DETALHE.forEach(k => setVal(`campo${k}_Trat`, formatarInteiroFormularioLiraa(tratMan[k])));
           } else {
-            ["R", "C", "TB", "PE", "O"].forEach(k => setVal(`campo${k}_Trat`, "00"));
+            TIPOS_IMOVEIS_DETALHE.forEach(k => setVal(`campo${k}_Trat`, "00"));
           }
 
+          const focPorTipo = dados.focadosPorTipo || { R: 0, C: 0, TB: 0, PE: 0, O: 0 };
+          const somaFocDiario = num(focPorTipo.R) + num(focPorTipo.C) + num(focPorTipo.TB) + num(focPorTipo.PE) + num(focPorTipo.O);
           const focMan = salvoSem?.focadosManuais;
-          ["R", "C", "TB", "PE", "O"].forEach(k => {
-            setVal(`campo${k}_Foc`, focMan ? formatarInteiroFormularioLiraa(focMan[k]) : "00");
-          });
+          const somaFocMan = focMan ? (num(focMan.R) + num(focMan.C) + num(focMan.TB) + num(focMan.PE) + num(focMan.O)) : 0;
+          if (somaFocDiario > 0) {
+            TIPOS_IMOVEIS_DETALHE.forEach(k => setVal(`campo${k}_Foc`, formatarInteiroFormularioLiraa(focPorTipo[k])));
+          } else if (focMan && somaFocMan > 0 && (dados.imoveisFocados === 0 || somaFocMan === dados.imoveisFocados)) {
+            TIPOS_IMOVEIS_DETALHE.forEach(k => setVal(`campo${k}_Foc`, formatarInteiroFormularioLiraa(focMan[k])));
+          } else {
+            TIPOS_IMOVEIS_DETALHE.forEach(k => setVal(`campo${k}_Foc`, "00"));
+          }
 
           TIPOS_DEPOSITOS.forEach(tipo => {
             const dep = dados.depositos[tipo] || { encontrados: 0, naoInspecionados: 0, inspecionados: 0, focados: 0, tratados: 0 };
@@ -13367,10 +13981,16 @@
           let imoveisFocadosQd = 0;
           if (ehLiraaQd) {
             const semsLiraaQd = dashSemanasDoCiclo(ctx.ano, ctx.ciclo);
+            const repoLiraaQd = repoAtividade("liraa");
             semsLiraaQd.forEach(sk => {
-              const fm = estado?.indicesLiraaForm?.porSemana?.[sk]?.focadosManuais;
-              if (fm) {
-                imoveisFocadosQd += num(fm.R) + num(fm.C) + num(fm.TB) + num(fm.PE) + num(fm.O);
+              const dadosSem = consolidarDadosSemanaLiraa(sk, repoLiraaQd?.[sk] || null);
+              if (dadosSem.imoveisFocados > 0) {
+                imoveisFocadosQd += dadosSem.imoveisFocados;
+              } else {
+                const fm = estado?.indicesLiraaForm?.porSemana?.[sk]?.focadosManuais;
+                if (fm) {
+                  imoveisFocadosQd += num(fm.R) + num(fm.C) + num(fm.TB) + num(fm.PE) + num(fm.O);
+                }
               }
             });
             if (imoveisFocadosQd === 0 && (agg.FOCADOS_GERAL || 0) > 0) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pmcd-sugarbo-v77';
+const CACHE_NAME = 'pmcd-sugarbo-v78';
 const ARQUIVOS = [
   './',
   './index.html',
