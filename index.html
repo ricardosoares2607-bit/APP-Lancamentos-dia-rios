@@ -310,7 +310,7 @@
       .col-calculada.celula-informados-excedida { background: #dc2626 !important; color: #ffffff; font-weight: 900; animation: piscarErroInformados 0.7s ease-in-out infinite; }
       .input-gramas-autocalc { background: #ecfdf5 !important; }
       .cabecalho-agente { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 4px; }
-      .cabecalho-agente h3 { font-size: 0.95rem; color: #166534; }
+      .cabecalho-agente h3 { font-size: 0.95rem; color: #166534; padding: 2px 8px; border-radius: 6px; display: inline-block; }
       .cabecalho-agente .acoes button { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; border: none; cursor: pointer; font-weight: 700; }
       .tag-inativo { font-size: 0.68rem; background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: 700; border: 1px solid #fca5a5; display: inline-flex; align-items: center; gap: 4px; }
       .bloco-tabela { width: 100%; overflow-x: auto; scrollbar-width: thin; }
@@ -318,7 +318,7 @@
       .bloco-tabela th, .bloco-tabela td { border: 1px solid #cbd5e1; padding: 3px 2px; text-align: center; }
       .bloco-tabela th { background: #f1f5f9; color: #1e293b; }
       .linha-identificacao th { background: #dcfce7 !important; color: #14532d !important; font-weight: 700; font-size: 0.74rem; padding: 4px; }
-      .linha-identificacao input.nome-agente { width: 100%; border: none; background: transparent; text-align: center; font-size: 0.74rem; font-weight: 700; color: #14532d; outline: none; }
+      .linha-identificacao input.nome-agente { width: 100%; border: none; background: transparent; text-align: center; font-size: 0.74rem; font-weight: 700; color: #14532d; outline: none; touch-action: manipulation; }
 
       /* Destaque piscante do nome do agente durante lançamentos */
       .wrap-nome-agente { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 2px 4px; border-radius: 4px; transition: all 0.2s ease; box-sizing: border-box; }
@@ -385,7 +385,12 @@
       }
 
       .badge-em-lancamento {
-        display: none;
+        display: inline-flex;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        align-items: center;
+        gap: 4px;
         font-size: 0.68rem;
         font-weight: 800;
         padding: 2px 8px;
@@ -405,17 +410,13 @@
 
       .coluna-agente:focus-within .badge-em-lancamento,
       .coluna-agente.em-lancamento .badge-em-lancamento {
-        display: inline-flex !important;
-        align-items: center;
-        gap: 4px;
+        visibility: visible !important;
+        opacity: 1 !important;
       }
 
       .coluna-agente:focus-within .cabecalho-agente h3,
       .coluna-agente.em-lancamento .cabecalho-agente h3 {
         animation: piscarDestaqueCabecalhoAgente 0.85s infinite ease-in-out !important;
-        padding: 3px 10px !important;
-        border-radius: 6px !important;
-        display: inline-block !important;
         font-weight: 900 !important;
       }
 
@@ -442,7 +443,6 @@
       .coluna-agente.em-lancamento input.nome-agente {
         animation: piscarTextoNomeTabela 0.85s infinite ease-in-out !important;
         font-weight: 900 !important;
-        font-size: 0.84rem !important;
         letter-spacing: 0.4px;
       }
 
@@ -463,8 +463,8 @@
       .col-calculada { background: #dbeafe !important; font-weight: 700; color: #1e40af; }
       .celula-rotulo { background: #f8fafc; font-weight: 700; color: #14532d; text-align: left; padding-left: 5px !important; }
       .linha-total-final td { background: #dcfce7 !important; font-weight: 700; color: #14532d; }
-      .bloco-tabela td.celula-input { padding: 0; }
-      .bloco-tabela td.celula-input input, .bloco-tabela td.celula-input select { width: 100%; border: none; background: transparent; text-align: center; padding: 4px 1px; font-size: 0.72rem; outline: none; }
+      .bloco-tabela td.celula-input { padding: 0; height: 1px; vertical-align: middle; }
+      .bloco-tabela td.celula-input input, .bloco-tabela td.celula-input select { width: 100%; height: 100%; min-height: 24px; display: block; box-sizing: border-box; border: none; background: transparent; text-align: center; padding: 4px 1px; font-size: 0.72rem; outline: none; touch-action: manipulation; }
       .bloco-tabela td.celula-input input:focus, .bloco-tabela td.celula-input select:focus { background: #fef9c3; }
       .bloco-tabela td.celula-input input:disabled, .bloco-tabela td.celula-input select:disabled { background: #f1f5f9 !important; color: #94a3b8 !important; cursor: not-allowed; }
       .separador-bloco { height: 4px; border-bottom: 1.5px dashed #cbd5e1; margin: 5px 0; }
@@ -756,7 +756,7 @@
       .reconhecimento-cabecalho-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px 12px; }
       .reconhecimento-cabecalho-grid .rc-item { display: flex; flex-direction: column; gap: 3px; }
       .reconhecimento-cabecalho-grid .rc-item label { font-size: 0.72rem; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.3px; }
-      .reconhecimento-cabecalho-grid .rc-item input { padding: 5px 8px; border: 1.5px solid #cbd5e1; border-radius: 5px; font-size: 0.8rem; font-weight: 600; color: #1e293b; outline: none; background: #ffffff; transition: border-color 0.15s ease, background 0.15s ease; }
+      .reconhecimento-cabecalho-grid .rc-item input { padding: 5px 8px; border: 1.5px solid #cbd5e1; border-radius: 5px; font-size: 0.8rem; font-weight: 600; color: #1e293b; outline: none; background: #ffffff; transition: border-color 0.15s ease, background 0.15s ease; touch-action: manipulation; }
       .reconhecimento-cabecalho-grid .rc-item input:focus { border-color: #16a34a; background: #f0fdf4; }
       .reconhecimento-consolidado-card { background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1.5px solid #86efac; border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
       .reconhecimento-consolidado-titulo { font-size: 0.85rem; font-weight: 800; color: #14532d; display: flex; align-items: center; gap: 6px; }
@@ -772,11 +772,12 @@
       .reconhecimento-tabela-titulo { background: #f1f5f9; color: #14532d; font-size: 0.76rem; font-weight: 800; padding: 5px 10px; border-bottom: 1.5px solid #cbd5e1; text-align: center; letter-spacing: 0.5px; text-transform: uppercase; }
       .reconhecimento-tabela { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
       .reconhecimento-tabela th, .reconhecimento-tabela td { border: 1px solid #cbd5e1; padding: 2px 3px; text-align: center; }
+      .reconhecimento-tabela tbody td:not(.td-total) { padding: 0; height: 1px; }
       .reconhecimento-tabela th { background: #f0fdf4; color: #14532d; font-weight: 800; font-size: 0.72rem; padding: 4px 2px; }
       .reconhecimento-tabela th.th-total { background: #dcfce7; color: #14532d; }
       .reconhecimento-tabela tr:nth-child(even) td { background: #fbfcfe; }
       .reconhecimento-tabela tr:hover td { background: #f0fdf4; }
-      .reconhecimento-tabela input { width: 100%; border: none; background: transparent; text-align: center; font-size: 0.75rem; font-weight: 700; color: #1e293b; padding: 3px 0; outline: none; box-sizing: border-box; }
+      .reconhecimento-tabela input { width: 100%; height: 100%; min-height: 26px; display: block; border: none; background: transparent; text-align: center; font-size: 0.75rem; font-weight: 700; color: #1e293b; padding: 3px 2px; outline: none; box-sizing: border-box; touch-action: manipulation; }
       .reconhecimento-tabela input:focus { background: #ffffff; box-shadow: inset 0 0 0 1.5px #16a34a; border-radius: 3px; }
       .reconhecimento-tabela input.input-quarteirao { color: #14532d; font-weight: 800; }
       .reconhecimento-tabela td.td-total { background: #f0fdf4; font-weight: 800; color: #14532d; font-size: 0.74rem; }
@@ -2573,7 +2574,7 @@
       }
       #aba-quarteiroes-liraa td.total-linha { background: var(--total-col-bg); font-weight: bold; color: #000; }
       #aba-quarteiroes-liraa td.liraa-calc { background: var(--liraa-col-bg); color: var(--liraa-col-texto); font-weight: 800; font-size: 10px; }
-      #aba-quarteiroes-liraa td.editavel { background: #fff; cursor: text; }
+      #aba-quarteiroes-liraa td.editavel { background: #fff; cursor: text; touch-action: manipulation; }
       #aba-quarteiroes-liraa table.tabela-dados tbody tr:nth-child(even):not(.total) td.editavel { background: var(--fundo-zebrado); }
       #aba-quarteiroes-liraa td.editavel:hover { background: #e2e8f0; }
       #aba-quarteiroes-liraa td.editavel:focus {
@@ -2873,6 +2874,7 @@
         }
         .bloco-tabela td.celula-input input,
         .bloco-tabela td.celula-input select {
+          height: 100%;
           min-height: 28px;
           font-size: 0.78rem;
         }
@@ -10815,23 +10817,152 @@
           ? (obterMesDaSemana(s, pS) || obterNomeMesDeData(obterDataSegundaSemana(s)) || s.cabecalho?.mes || "")
           : (s.cabecalho?.mes || obterNomeMesDeData(obterDataSegundaSemana(s)));
         const inA = document.getElementById("anoLancamento"), seC = document.getElementById("cicloLancamentoCiclo"), inM = document.getElementById("mesLancamento"), inS = document.getElementById("semanaLancamento"), inI = document.getElementById("semanaDataInicio"), inF = document.getElementById("semanaDataTermino");
-        if (inA) inA.value = ano; if (seC) seC.value = cA; if (inM) inM.value = mes; if (inS) inS.value = estado.semanaAtiva; if (inI) inI.value = pS.inicioISO; if (inF) inF.value = pS.terminoISO;
+        if (inA && document.activeElement !== inA) inA.value = ano;
+        if (seC && document.activeElement !== seC) seC.value = cA;
+        if (inM && document.activeElement !== inM) inM.value = mes;
+        if (inS && document.activeElement !== inS) inS.value = estado.semanaAtiva;
+        if (inI && document.activeElement !== inI) inI.value = pS.inicioISO;
+        if (inF && document.activeElement !== inF) inF.value = pS.terminoISO;
         if (s.cabecalho) { s.cabecalho.semanaInicio = pS.inicioBR; s.cabecalho.semanaTermino = pS.terminoBR; }
         renderizarBotoesDias();
         const ehExtraAtivo = at !== "liraa" && ehChaveDiaExtra(estado.diaAtivo);
         const bAuto = document.getElementById("btnAutoPreencherSemana"); if (bAuto) bAuto.style.display = ehExtraAtivo ? "none" : "";
         const bRmEx = document.getElementById("btnRemoverDiaExtra"); if (bRmEx) bRmEx.style.display = ehExtraAtivo ? "" : "none";
-        const dA = diaAtual(); const inp = document.getElementById("dataDia"); if (inp && dA) inp.value = dA.data || hojeISO();
+        const dA = diaAtual(); const inp = document.getElementById("dataDia"); if (inp && dA && document.activeElement !== inp) inp.value = dA.data || hojeISO();
         const pv = document.getElementById("diaSemanaPreview"); if (pv && dA) pv.textContent = nomeDiaExibido(dA.data, estado.diaAtivo) || "—";
-        const pr = document.getElementById("programadosDia"); if (pr && dA) pr.value = dA.programados || "";
+        const pr = document.getElementById("programadosDia"); if (pr && dA && document.activeElement !== pr) pr.value = dA.programados || "";
         atualizarEstadoCampoProg();
-        const ar = document.getElementById("areaTabelas"); if (ar) { ar.innerHTML = ""; if (dA?.agentes) { dA.agentes.filter(ag => ag && !ag._deleted).forEach((ag, i) => ar.appendChild(criarColunaAgente(ag, i))); ar.appendChild(criarColunaTotal()); } }
+        const ar = document.getElementById("areaTabelas");
+        if (ar) {
+          if (!ar.dataset.boundCellClick) {
+            ar.dataset.boundCellClick = "1";
+            ar.addEventListener("click", (e) => {
+              const td = e.target?.closest?.("td.celula-input");
+              if (!td || e.target !== td) return;
+              const ctrl = td.querySelector("input, select");
+              if (!ctrl || ctrl.disabled || ctrl.readOnly) return;
+              if (document.activeElement !== ctrl) {
+                try { ctrl.focus({ preventScroll: true }); } catch (_) { try { ctrl.focus(); } catch (__) {} }
+              }
+            });
+          }
+          const agsAtivos = (dA && Array.isArray(dA.agentes)) ? dA.agentes.filter(ag => ag && !ag._deleted) : [];
+          const dS = dA ? (dA.data || hojeISO()) : hojeISO();
+          const renderKey = `${at}|${estado.semanaAtiva}|${estado.diaAtivo}|${agsAtivos.map(a => a.id).join(",")}`;
+          const colsAtuais = Array.from(ar.querySelectorAll(":scope > .coluna-agente:not(.total)"));
+          const podeAtualizarEmLugar = ar.dataset.renderKey === renderKey &&
+            colsAtuais.length === agsAtivos.length &&
+            colsAtuais.every((col, idx) => col.dataset.agenteId === String(agsAtivos[idx].id || "")) &&
+            Boolean(ar.querySelector(":scope > .coluna-agente.total"));
+          if (podeAtualizarEmLugar) {
+            atualizarAreaTabelasEmLugar(ar, agsAtivos, dS, at);
+          } else {
+            ar.innerHTML = "";
+            ar.dataset.renderKey = renderKey;
+            if (dA?.agentes) {
+              agsAtivos.forEach((ag, i) => ar.appendChild(criarColunaAgente(ag, i)));
+              ar.appendChild(criarColunaTotal());
+            }
+          }
+        }
         verificarEAtualizarBadgeAtividade(); atualizarEstadoBotoesSemana(); atualizarBannerConfirmacao();
         renderizarCabecalhoResumo(); renderizarRodape(); renderizarResumo(); renderizarCiclo(); renderizarConfigEquipe();
         atualizarTotais(); sincronizarFontesAssinatura();
         try { if (document.getElementById("aba-quarteiroes-designados")?.classList.contains("ativo")) renderizarQuarteiroesDesignados(); } catch(e) {}
         try { if (document.getElementById("aba-dashboard")?.classList.contains("ativo")) renderizarDashboard(); } catch(e) {}
         try { if (estado.atividadeAtiva === "liraa" || document.getElementById("aba-indices-liraa")?.classList.contains("ativo")) renderizarIndicesLiraa(); } catch(e) {}
+      }
+      function atualizarAreaTabelasEmLugar(ar, agsAtivos, dS, at) {
+        const colsAtuais = Array.from(ar.querySelectorAll(":scope > .coluna-agente:not(.total)"));
+        const dataBR = formatarDataBR(dS);
+        const diaNome = nomeDiaExibido(dS, estado.diaAtivo);
+        colsAtuais.forEach((col, idx) => {
+          const ag = agsAtivos[idx];
+          if (!ag) return;
+          const v = valoresDoDia(ag);
+          const emLanc = col.classList.contains("em-lancamento") || col.contains(document.activeElement);
+          col.className = `coluna-agente tema-${idx % 5}` + (ag.ativo ? "" : " inativo") + (emLanc ? " em-lancamento" : "");
+          const cabInfo = col.querySelector(".cabecalho-agente > div:first-child");
+          if (cabInfo) {
+            const h3 = cabInfo.querySelector("h3");
+            if (h3) h3.textContent = ag.nome || "Agente";
+            const badgeTema = cabInfo.querySelector(".badge-tema-agente");
+            if (badgeTema) {
+              const tm = TEMAS_CORES_AGENTES[idx % 5];
+              badgeTema.textContent = `${tm.icone} ${tm.nome}`;
+            }
+            let tagInat = cabInfo.querySelector(".tag-inativo");
+            if (!ag.ativo && !tagInat) {
+              tagInat = document.createElement("span");
+              tagInat.className = "tag-inativo";
+              tagInat.textContent = "🔒 INATIVO";
+              cabInfo.appendChild(tagInat);
+            } else if (ag.ativo && tagInat) {
+              tagInat.remove();
+            }
+          }
+          const bt = col.querySelector(".cabecalho-agente .acoes button");
+          if (bt) {
+            bt.className = ag.ativo ? "btn-cinza" : "btn-verde";
+            bt.textContent = ag.ativo ? "Inativar" : "Reativar";
+          }
+          const trId = col.querySelector(".linha-identificacao");
+          if (trId) {
+            const ths = trId.querySelectorAll("th");
+            if (ths[0]) ths[0].textContent = `📅 ${dataBR}`;
+            if (ths[1]) ths[1].textContent = `🗓 ${diaNome}`;
+            const inpNome = trId.querySelector("input.nome-agente");
+            if (inpNome && document.activeElement !== inpNome) inpNome.value = ag.nome || "";
+            const selSup = trId.querySelector(".sup-sim-nao");
+            const detSup = trId.querySelector(".sup-detalhes");
+            const inpD = trId.querySelector(".sup-direta");
+            const inpI = trId.querySelector(".sup-indireta");
+            const totSup = trId.querySelector(".sup-total");
+            if (selSup && document.activeElement !== selSup) selSup.value = v["supSimNao"] || "";
+            if (selSup) {
+              if (!selSup.value) {
+                selSup.classList.add("sup-obrigatorio-pendente");
+                selSup.title = "Campo obrigatório: selecione Sim ou Não";
+              } else {
+                selSup.classList.remove("sup-obrigatorio-pendente");
+                selSup.title = "";
+              }
+              if (detSup) detSup.style.display = (selSup.value === "Sim") ? "flex" : "none";
+            }
+            if (inpD && document.activeElement !== inpD) inpD.value = (selSup?.value === "Sim") ? (v["supDireta"] || "") : "";
+            if (inpI && document.activeElement !== inpI) inpI.value = (selSup?.value === "Sim") ? (v["supIndireta"] || "") : "";
+            if (totSup) {
+              const tt = (selSup?.value === "Sim") ? (num(inpD?.value) + num(inpI?.value)) : 0;
+              totSup.textContent = fmtIntCell(tt);
+            }
+          }
+          col.querySelectorAll("[data-ch]").forEach(el => {
+            if (document.activeElement === el) return;
+            const ch = el.dataset.ch;
+            const tipo = el.dataset.tipoCampo;
+            if (tipo === "quarteirao" || tipo === "concluido") {
+              el.value = v[ch] || "";
+            } else {
+              el.value = fmtIntCell(v[ch]);
+            }
+          });
+          col.querySelectorAll("input[data-dep-ch]").forEach(el => {
+            if (document.activeElement === el) return;
+            const ch = el.dataset.depCh;
+            const d = el.dataset.decimal === "true";
+            el.value = d ? (v[ch] || "") : fmtIntCell(v[ch]);
+          });
+          const ocorrBox = col.querySelector(".ocorrencias-dia-box");
+          if (ocorrBox && !ocorrBox.contains(document.activeElement)) {
+            ocorrBox.replaceWith(criarBlocoOcorrenciasDia(ag));
+          }
+        });
+        const colTot = ar.querySelector(":scope > .coluna-agente.total");
+        if (colTot) {
+          const thsTot = colTot.querySelectorAll(".linha-identificacao th");
+          if (thsTot[0]) thsTot[0].textContent = `📅 ${dataBR}`;
+          if (thsTot[1]) thsTot[1].textContent = `🗓 ${diaNome}`;
+        }
       }
       function renderizarCabecalhoResumo() {
         const s = semana(); const cab = s ? s.cabecalho : {}; const ano = obterAnoSemana(s); const cN = normalizarNumeroCiclo(cab ? cab.ciclo : "1"); const atAtual = (s?.atividade || estado?.atividadeAtiva || "ciclo"); const ehCiclo = atAtual === "ciclo"; const dc = obterDatasCicloEfetivas(ano, cN, estado.atividadeAtiva); const pA = obterPeriodoDaSemana(estado.semanaAtiva, ano, cN, estado.atividadeAtiva);
@@ -10843,21 +10974,21 @@
         }
         document.querySelectorAll("[data-cab]").forEach(i => {
           const k = i.dataset.cab;
-          if (k === "ciclo") i.value = formatarCicloTexto(cN);
-          else if (k === "cicloInicio") i.value = formatarDataBR(dc.inicio) || cab?.cicloInicio || "";
-          else if (k === "cicloTermino") i.value = formatarDataBR(dc.termino) || cab?.cicloTermino || "";
+          if (k === "ciclo") { if (document.activeElement !== i) i.value = formatarCicloTexto(cN); }
+          else if (k === "cicloInicio") { if (document.activeElement !== i) i.value = formatarDataBR(dc.inicio) || cab?.cicloInicio || ""; }
+          else if (k === "cicloTermino") { if (document.activeElement !== i) i.value = formatarDataBR(dc.termino) || cab?.cicloTermino || ""; }
           else if (k === "mes") {
             const valMes = ehCiclo ? ((s?._cabMesManual && cab?.mes) ? cab.mes : mesAutoCiclo) : (cab?.mes || obterNomeMesDeData(pA.inicioISO));
             if (document.activeElement !== i) i.value = valMes;
           }
-          else if (k === "semana") i.value = pad2(cab?.semana || "");
-          else if (k === "semanaInicio") i.value = pA.inicioBR;
-          else if (k === "semanaTermino") i.value = pA.terminoBR;
+          else if (k === "semana") { if (document.activeElement !== i) i.value = pad2(cab?.semana || ""); }
+          else if (k === "semanaInicio") { if (document.activeElement !== i) i.value = pA.inicioBR; }
+          else if (k === "semanaTermino") { if (document.activeElement !== i) i.value = pA.terminoBR; }
           else if (k === "agentesEquipe") {
             const valAgentes = (s?._cabAgentesManual && cab?.agentesEquipe !== undefined && cab.agentesEquipe !== "") ? cab.agentesEquipe : agentesTrabalharamSem;
             if (document.activeElement !== i) i.value = valAgentes;
           }
-          else { const vd = (estado.configEquipe && estado.configEquipe[k]) ? estado.configEquipe[k] : ""; i.value = cab && cab[k] ? cab[k] : vd; if (cab && !cab[k] && vd) cab[k] = vd; }
+          else { const vd = (estado.configEquipe && estado.configEquipe[k]) ? estado.configEquipe[k] : ""; if (document.activeElement !== i) i.value = cab && cab[k] ? cab[k] : vd; if (cab && !cab[k] && vd) cab[k] = vd; }
         });
       }
       function renderizarRodape() {
@@ -10865,15 +10996,16 @@
         const s = semana(); const r = s ? s.rodape : {};
         document.querySelectorAll("[data-rodape]").forEach(el => {
           const k = el.dataset.rodape; const vd = (k === "responsavel" && estado.configEquipe?.responsavel) ? estado.configEquipe.responsavel : "";
-          el.value = r && r[k] ? r[k] : vd; if (r && !r[k] && vd) r[k] = vd;
+          if (document.activeElement !== el) el.value = r && r[k] ? r[k] : vd;
+          if (r && !r[k] && vd) r[k] = vd;
           if (k === "responsavel") { const f = (r && r.fontResponsavel) || ""; if (f) { el.style.setProperty("font-family", f, "important"); el.style.setProperty("font-size", "1.35rem", "important"); } else { el.style.removeProperty("font-family"); el.style.removeProperty("font-size"); } }
         });
         const cr = objConsolidadoAtivo().rodape || {};
         document.querySelectorAll("[data-ciclorodape]").forEach(el => {
           const k = el.dataset.ciclorodape;
-          if (k === "observacao") { el.value = cr.observacao || ""; return; }
+          if (k === "observacao") { if (document.activeElement !== el) el.value = cr.observacao || ""; return; }
           const vd = (k === "responsavel" && estado.configEquipe?.responsavel) ? estado.configEquipe.responsavel : "";
-          el.value = cr[k] || vd || "";
+          if (document.activeElement !== el) el.value = cr[k] || vd || "";
           if (k === "responsavel") { const f = cr.fontResponsavel || ""; if (f) { el.style.setProperty("font-family", f, "important"); el.style.setProperty("font-size", "1.35rem", "important"); } else { el.style.removeProperty("font-family"); el.style.removeProperty("font-size"); } }
         });
       }
@@ -11197,12 +11329,13 @@
         footer.appendChild(btnLimpar);
 
         const atualizarResumoVisual = (lista) => {
+          const agV = resolverAgenteVivo(ag);
           const qtd = lista.length;
           const temPE = lista.some(o => o.toLowerCase() === OCORRENCIA_PE_LABEL.toLowerCase());
           const ehCicloAt = (estado?.atividadeAtiva || "ciclo") === "ciclo";
           peBox.classList.toggle("visivel", temPE && ehCicloAt);
-          if (!temPE) inpPEQtd.value = "";
-          const qtdPE = temPE ? lerQtdOcorrenciaPEAgenteDia(ag) : 0;
+          if (!temPE && document.activeElement !== inpPEQtd) inpPEQtd.value = "";
+          const qtdPE = temPE ? lerQtdOcorrenciaPEAgenteDia(agV) : 0;
           box.classList.toggle("tem-selecao", qtd > 0);
           if (qtd > 0) {
             badge.className = "ocorrencias-dia-badge";
@@ -11239,8 +11372,9 @@
               cb.checked = !cb.checked;
               return;
             }
+            const agV = resolverAgenteVivo(ag);
             const novas = checkboxes.filter(x => x.cb.checked).map(x => x.opcao);
-            selecionadas = salvarOcorrenciasAgenteDia(ag, novas);
+            selecionadas = salvarOcorrenciasAgenteDia(agV, novas);
             checkboxes.forEach(x => x.lbl.classList.toggle("selecionado", selecionadas.includes(x.opcao)));
             atualizarResumoVisual(selecionadas);
             if (opcao === OCORRENCIA_PE_LABEL && cb.checked) {
@@ -11256,28 +11390,31 @@
         });
 
         inpPEQtd.addEventListener("input", () => {
+          const agV = resolverAgenteVivo(ag);
           if (estaModoLeitura()) {
-            const qtdAtual = lerQtdOcorrenciaPEAgenteDia(ag);
+            const qtdAtual = lerQtdOcorrenciaPEAgenteDia(agV);
             inpPEQtd.value = qtdAtual > 0 ? String(qtdAtual) : "";
             return;
           }
           const limpo = String(inpPEQtd.value || "").replace(/\D+/g, "");
           if (inpPEQtd.value !== limpo) inpPEQtd.value = limpo;
-          salvarQtdPEOcorrenciaAgenteDia(ag, limpo);
+          salvarQtdPEOcorrenciaAgenteDia(agV, limpo);
           atualizarResumoVisual(selecionadas);
         });
         inpPEQtd.addEventListener("blur", () => {
           if (estaModoLeitura()) return;
-          const salvo = salvarQtdPEOcorrenciaAgenteDia(ag, inpPEQtd.value);
+          const agV = resolverAgenteVivo(ag);
+          const salvo = salvarQtdPEOcorrenciaAgenteDia(agV, inpPEQtd.value);
           inpPEQtd.value = salvo;
           atualizarResumoVisual(selecionadas);
         });
 
         btnLimpar.addEventListener("click", () => {
           if (estaModoLeitura()) return;
+          const agV = resolverAgenteVivo(ag);
           checkboxes.forEach(x => { x.cb.checked = false; x.lbl.classList.remove("selecionado"); });
           inpPEQtd.value = "";
-          selecionadas = salvarOcorrenciasAgenteDia(ag, []);
+          selecionadas = salvarOcorrenciasAgenteDia(agV, []);
           atualizarResumoVisual(selecionadas);
         });
 
@@ -11376,14 +11513,22 @@
         return concluidos;
       }
       function contarQuarteiroesLinha(vals) { const u = new Set(); vals.forEach(v => { if (v === undefined || v === null) return; extrairQuarteiroesDeTexto(v).forEach(q => { const n = normalizarQuarteirao(q); if (n) u.add(n); }); }); return u.size; }
-      function criarInputQuarteirao(ag, vals, ch, onChange) { const stamp = () => { const agora = agoraSyncMs(); if (!ag._valoresTs) ag._valoresTs = {}; ag._valoresTs[ch] = agora; ag._ts = agora; }; const i = document.createElement("input"); i.type = "text"; i.placeholder = "0"; i.value = vals[ch] || ""; i.addEventListener("focus", () => { i.value = vals[ch] || ""; }); i.addEventListener("input", () => { vals[ch] = i.value; stamp(); salvar("semana"); onChange(); }); i.addEventListener("blur", () => { vals[ch] = (vals[ch] || "").trim(); i.value = vals[ch]; stamp(); salvar("semana"); onChange(); }); return i; }
-      function criarInputInteiro(ag, vals, ch, onChange) { const stamp = () => { const agora = agoraSyncMs(); if (!ag._valoresTs) ag._valoresTs = {}; ag._valoresTs[ch] = agora; ag._ts = agora; }; const i = document.createElement("input"); i.type = "text"; i.inputMode = "numeric"; i.value = fmtIntCell(vals[ch]); i.addEventListener("focus", () => { i.value = vals[ch] || ""; }); i.addEventListener("input", () => { vals[ch] = i.value; stamp(); salvar("semana"); onChange(); }); i.addEventListener("blur", () => { i.value = fmtIntCell(vals[ch]); }); return i; }
+      function resolverAgenteVivo(agFallback) {
+        const d = diaAtual();
+        if (d && Array.isArray(d.agentes) && agFallback?.id) {
+          const achado = d.agentes.find(a => a && !a._deleted && a.id === agFallback.id);
+          if (achado) return achado;
+        }
+        return agFallback;
+      }
+      function criarInputQuarteirao(ag, vals, ch, onChange) { const stamp = (agV) => { const agora = agoraSyncMs(); if (!agV._valoresTs) agV._valoresTs = {}; agV._valoresTs[ch] = agora; agV._ts = agora; }; const i = document.createElement("input"); i.type = "text"; i.placeholder = "0"; i.dataset.ch = ch; i.dataset.tipoCampo = "quarteirao"; i.value = vals[ch] || ""; i.addEventListener("focus", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); i.value = vV[ch] || ""; }); i.addEventListener("input", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); vV[ch] = i.value; stamp(agV); salvar("semana"); onChange(); }); i.addEventListener("blur", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); vV[ch] = (vV[ch] || "").trim(); i.value = vV[ch]; stamp(agV); salvar("semana"); onChange(); }); return i; }
+      function criarInputInteiro(ag, vals, ch, onChange) { const stamp = (agV) => { const agora = agoraSyncMs(); if (!agV._valoresTs) agV._valoresTs = {}; agV._valoresTs[ch] = agora; agV._ts = agora; }; const i = document.createElement("input"); i.type = "text"; i.inputMode = "numeric"; i.dataset.ch = ch; i.dataset.tipoCampo = "int"; i.value = fmtIntCell(vals[ch]); i.addEventListener("focus", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); i.value = vV[ch] || ""; }); i.addEventListener("input", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); vV[ch] = i.value; stamp(agV); salvar("semana"); onChange(); }); i.addEventListener("blur", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); i.value = fmtIntCell(vV[ch]); }); return i; }
       function criarBlocoQuarteirao(ag) {
         const w = document.createElement("div"); w.className = "bloco-tabela"; const v = valoresDoDia(ag); if (!ag._valoresTs) ag._valoresTs = {}; const t = document.createElement("table"); aplicarColgroupBloco(t);
         const dA = diaAtual(); const dS = dA ? dA.data : hojeISO(); const th = document.createElement("thead"); const trId = document.createElement("tr"); trId.className = "linha-identificacao";
         trId.innerHTML = `<th colspan="2">📅 ${formatarDataBR(dS)}</th><th colspan="2">🗓 ${nomeDiaExibido(dS, estado.diaAtivo)}</th><th colspan="2" class="th-nome-agente" title="Agente do lançamento"><div class="wrap-nome-agente"><span class="icone-lancando-agente">✍️</span><input type="text" class="nome-agente" value="${ag.nome}" /></div></th><th colspan="3" style="padding:2px 3px;"><div class="sup-cab"><span class="sup-rotulo">👁️ Supervisão? <strong style="color:#dc2626;" title="Obrigatório">*</strong></span><select class="sup-sim-nao" required aria-required="true"><option value="">Selecione...</option><option value="Sim">Sim</option><option value="Não">Não</option></select><div class="sup-detalhes" style="display:none;"><label>D:</label><input type="text" inputmode="numeric" class="sup-input sup-direta" placeholder="0" /><label>I:</label><input type="text" inputmode="numeric" class="sup-input sup-indireta" placeholder="0" /><span class="sup-total-wrap"><strong>T:</strong> <span class="sup-total">0</span></span></div></div></th>`;
         th.appendChild(trId);
-        trId.querySelector("input.nome-agente").addEventListener("input", e => { const agora = agoraSyncMs(); ag.nome = e.target.value; ag._ts = agora; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(a => a.id === ag.id); if (c) { c.nome = ag.nome; c.atualizadoEm = agora; } } const s = semana(); if (s?.cabecalho && !s._cabAgentesManual) { s.cabecalho.agentesEquipe = obterAgentesQueTrabalharamNaSemana(s).join(", "); if (!s._cabTs) s._cabTs = {}; s._cabTs.agentesEquipe = agora; const eq = document.querySelector('[data-cab="agentesEquipe"]'); if (eq) eq.value = s.cabecalho.agentesEquipe; } salvar("tudo"); const h = document.querySelector(`.coluna-agente[data-agente-id="${ag.id}"] .cabecalho-agente h3`); if (h) h.textContent = ag.nome || "Agente"; });
+        trId.querySelector("input.nome-agente").addEventListener("input", e => { const agV = resolverAgenteVivo(ag); const agora = agoraSyncMs(); agV.nome = e.target.value; agV._ts = agora; if (estado.configEquipe?.agentes) { const c = estado.configEquipe.agentes.find(a => a.id === agV.id); if (c) { c.nome = agV.nome; c.atualizadoEm = agora; } } const s = semana(); if (s?.cabecalho && !s._cabAgentesManual) { s.cabecalho.agentesEquipe = obterAgentesQueTrabalharamNaSemana(s).join(", "); if (!s._cabTs) s._cabTs = {}; s._cabTs.agentesEquipe = agora; const eq = document.querySelector('[data-cab="agentesEquipe"]'); if (eq) eq.value = s.cabecalho.agentesEquipe; } salvar("tudo"); const h = document.querySelector(`.coluna-agente[data-agente-id="${agV.id}"] .cabecalho-agente h3`); if (h) h.textContent = agV.nome || "Agente"; });
 
         (function () {
           const sel = trId.querySelector(".sup-sim-nao");
@@ -11404,27 +11549,30 @@
             }
           };
           const calc = (carimbo = false) => {
+            const agV = resolverAgenteVivo(ag);
+            const vV = valoresDoDia(agV);
+            if (!agV._valoresTs) agV._valoresTs = {};
             if (sel.value === "Sim") {
               const d = num(inpD.value);
               const i = num(inpI.value);
               const tt = d + i;
               totEl.textContent = fmtIntCell(tt);
-              v["supDireta"] = inpD.value;
-              v["supIndireta"] = inpI.value;
-              v["supTotal"] = String(tt);
+              vV["supDireta"] = inpD.value;
+              vV["supIndireta"] = inpI.value;
+              vV["supTotal"] = String(tt);
             } else {
               totEl.textContent = "0";
-              v["supDireta"] = "0";
-              v["supIndireta"] = "0";
-              v["supTotal"] = "0";
+              vV["supDireta"] = "0";
+              vV["supIndireta"] = "0";
+              vV["supTotal"] = "0";
             }
             if (carimbo) {
               const agora = agoraSyncMs();
-              ag._valoresTs["supSimNao"] = agora;
-              ag._valoresTs["supDireta"] = agora;
-              ag._valoresTs["supIndireta"] = agora;
-              ag._valoresTs["supTotal"] = agora;
-              ag._ts = agora;
+              agV._valoresTs["supSimNao"] = agora;
+              agV._valoresTs["supDireta"] = agora;
+              agV._valoresTs["supIndireta"] = agora;
+              agV._valoresTs["supTotal"] = agora;
+              agV._ts = agora;
             }
           };
           const sinc = (carimbo = false) => {
@@ -11433,13 +11581,15 @@
             calc(carimbo);
           };
           sel.addEventListener("change", () => {
-            v["supSimNao"] = sel.value;
+            const agV = resolverAgenteVivo(ag);
+            const vV = valoresDoDia(agV);
+            vV["supSimNao"] = sel.value;
             if (sel.value === "Não") {
               inpD.value = "";
               inpI.value = "";
-              v["supDireta"] = "0";
-              v["supIndireta"] = "0";
-              v["supTotal"] = "0";
+              vV["supDireta"] = "0";
+              vV["supIndireta"] = "0";
+              vV["supTotal"] = "0";
             }
             sinc(true);
             salvar("semana");
@@ -11478,7 +11628,7 @@
             const td = document.createElement("td");
             if (c === 0) { td.className = "celula-rotulo"; td.textContent = l.rotulo; }
             else if (c === NUM_COLUNAS - 1) { td.className = "col-total"; td.dataset.totalLinha = `${ag.id}-b1-r${rIdx}`; td.textContent = fmtIntCell(0); }
-            else { td.className = "celula-input"; const ch = `b1-r${rIdx}-c${c}`; if (l.tipo === "concluido") { const s = document.createElement("select"); s.innerHTML = `<option value=""></option><option value="Sim">Sim</option><option value="Não">Não</option>`; s.value = v[ch] || ""; s.addEventListener("change", () => { const agora = agoraSyncMs(); v[ch] = s.value; ag._valoresTs[ch] = agora; ag._ts = agora; salvar("semana"); atualizarTotais(); }); td.appendChild(s); } else if (l.tipo === "quarteirao") td.appendChild(criarInputQuarteirao(ag, v, ch, atualizarTotais)); else td.appendChild(criarInputInteiro(ag, v, ch, atualizarTotais)); }
+            else { td.className = "celula-input"; const ch = `b1-r${rIdx}-c${c}`; if (l.tipo === "concluido") { const s = document.createElement("select"); s.dataset.ch = ch; s.dataset.tipoCampo = "concluido"; s.innerHTML = `<option value=""></option><option value="Sim">Sim</option><option value="Não">Não</option>`; s.value = v[ch] || ""; s.addEventListener("change", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); if (!agV._valoresTs) agV._valoresTs = {}; const agora = agoraSyncMs(); vV[ch] = s.value; agV._valoresTs[ch] = agora; agV._ts = agora; salvar("semana"); atualizarTotais(); }); td.appendChild(s); } else if (l.tipo === "quarteirao") td.appendChild(criarInputQuarteirao(ag, v, ch, atualizarTotais)); else td.appendChild(criarInputInteiro(ag, v, ch, atualizarTotais)); }
             tr.appendChild(td);
           }
           tb.appendChild(tr);
@@ -11537,14 +11687,17 @@
         tb.appendChild(trT); t.appendChild(tb);
         tb.querySelectorAll("input[data-dep-ch]").forEach(inp => {
           const ch = inp.dataset.depCh; const d = inp.dataset.decimal === "true"; const cI = Number(ch.split("-c").pop()); const rIdx = Number(inp.dataset.rIdx);
-          if (!d) { inp.addEventListener("focus", () => { inp.value = v[ch] || ""; }); inp.addEventListener("blur", () => { inp.value = fmtIntCell(v[ch]); }); }
-          else { inp.addEventListener("blur", () => { if (v[ch] !== undefined && v[ch] !== null && String(v[ch]).trim() !== "") { const agora = agoraSyncMs(); inp.value = fmtDecCell(num(v[ch])); v[ch] = inp.value; ag._valoresTs[ch] = agora; ag._ts = agora; salvar("semana"); atualizarTotais(); renderizarResumo(); renderizarCiclo(); } }); }
+          if (!d) { inp.addEventListener("focus", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); inp.value = vV[ch] || ""; }); inp.addEventListener("blur", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); inp.value = fmtIntCell(vV[ch]); }); }
+          else { inp.addEventListener("blur", () => { const agV = resolverAgenteVivo(ag); const vV = valoresDoDia(agV); if (!agV._valoresTs) agV._valoresTs = {}; if (vV[ch] !== undefined && vV[ch] !== null && String(vV[ch]).trim() !== "") { const agora = agoraSyncMs(); inp.value = fmtDecCell(num(vV[ch])); vV[ch] = inp.value; agV._valoresTs[ch] = agora; agV._ts = agora; salvar("semana"); atualizarTotais(); renderizarResumo(); renderizarCiclo(); } }); }
           const disp = () => {
+            const agV = resolverAgenteVivo(ag);
+            const vV = valoresDoDia(agV);
+            if (!agV._valoresTs) agV._valoresTs = {};
             const agora = agoraSyncMs();
-            v[ch] = inp.value;
-            ag._valoresTs[ch] = agora;
-            ag._ts = agora;
-            if (cI === COL_LITROS) { const litros = num(inp.value); const gCh = `b5-r${rIdx}-c${COL_GRAMAS}`; const gIn = tb.querySelector(`input[data-dep-ch="${gCh}"]`); if (gIn) { if (litros > 0) { const g = calcularGramasBti(litros); if (g > 0) { gIn.value = fmtDecCell(g); gIn.classList.add("input-gramas-autocalc"); gIn.title = `Auto (${Math.ceil(litros)} L × tabela Bti = ${fmtDecCell(g)} g)`; } else { gIn.value = ""; gIn.classList.remove("input-gramas-autocalc"); gIn.title = ""; } } else { gIn.value = ""; gIn.classList.remove("input-gramas-autocalc"); gIn.title = ""; } v[gCh] = gIn.value; ag._valoresTs[gCh] = agora; } }
+            vV[ch] = inp.value;
+            agV._valoresTs[ch] = agora;
+            agV._ts = agora;
+            if (cI === COL_LITROS) { const litros = num(inp.value); const gCh = `b5-r${rIdx}-c${COL_GRAMAS}`; const gIn = tb.querySelector(`input[data-dep-ch="${gCh}"]`); if (gIn) { if (litros > 0) { const g = calcularGramasBti(litros); if (g > 0) { gIn.value = fmtDecCell(g); gIn.classList.add("input-gramas-autocalc"); gIn.title = `Auto (${Math.ceil(litros)} L × tabela Bti = ${fmtDecCell(g)} g)`; } else { gIn.value = ""; gIn.classList.remove("input-gramas-autocalc"); gIn.title = ""; } } else { gIn.value = ""; gIn.classList.remove("input-gramas-autocalc"); gIn.title = ""; } vV[gCh] = gIn.value; agV._valoresTs[gCh] = agora; } }
             salvar("semana"); atualizarTotais(); renderizarResumo(); renderizarCiclo();
           };
           inp.addEventListener("input", disp); inp.addEventListener("change", disp);
@@ -12387,7 +12540,7 @@
           window._liraaConsolidadoLitros = dados.litrosTratados;
           window._liraaConsolidadoGramas = dados.gramasLarvicida;
 
-          const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+          const setVal = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v; };
 
           if (dados.temSemana) {
             setVal("cabMunicipio", dados.cabecalho.municipio);
@@ -12405,13 +12558,13 @@
             setVal("rodapeResponsavel", dados.rodape.responsavel);
             const rodData = document.getElementById("rodapeData");
             const salvoSem = (sk && estado?.indicesLiraaForm?.porSemana?.[sk]) || null;
-            if (rodData) rodData.value = salvoSem?.rodapeData || dados.rodape.data || "";
+            if (rodData && document.activeElement !== rodData) rodData.value = salvoSem?.rodapeData || dados.rodape.data || "";
           }
 
           const supSel = document.getElementById("campoSupervisaoSimNao");
           const supCampos = document.getElementById("camposSupervisaoDiario");
           const temSup = dados.supSim || (dados.supDireta + dados.supIndireta > 0);
-          if (supSel) supSel.value = temSup ? "SIM" : "NAO";
+          if (supSel && document.activeElement !== supSel) supSel.value = temSup ? "SIM" : "NAO";
           if (supCampos) supCampos.style.display = temSup ? "flex" : "none";
           setVal("campoSupervisaoDireta", dados.supDireta);
           setVal("campoSupervisaoIndireta", dados.supIndireta);
@@ -12453,13 +12606,13 @@
 
           setVal("campoDepositosEliminados", formatarInteiroFormularioLiraa(dados.eliminados));
           const campoLitros = document.getElementById("campoLitrosTratados");
-          if (campoLitros) {
+          if (campoLitros && document.activeElement !== campoLitros) {
             campoLitros.value = dados.litrosTratados > 0 ? String(Math.round(dados.litrosTratados * 10) / 10) : "00";
           }
           setVal("campoAmostrasColetadas", formatarInteiroFormularioLiraa(dados.amostrasColetadas));
 
           const selCabConc = document.getElementById("cabConcluido");
-          if (selCabConc) {
+          if (selCabConc && document.activeElement !== selCabConc) {
             if (dados.quarteiroes.size > 0) {
               const todosConc = Array.from(dados.quarteiroes.values()).every(Boolean);
               selCabConc.value = todosConc ? "SIM" : "NAO";
@@ -12471,7 +12624,7 @@
           }
 
           const oCont = document.getElementById("campoOcorrencias");
-          if (oCont) {
+          if (oCont && !oCont.contains(document.activeElement)) {
             const listaOcorrencias = Array.isArray(salvoSem?.ocorrencias)
               ? salvoSem.ocorrencias
               : (Array.isArray(estado?.indicesLiraaForm?.ocorrencias) ? estado.indicesLiraaForm.ocorrencias : []);
@@ -12481,7 +12634,7 @@
           }
 
           const detEl = document.getElementById("campoDetalhamento");
-          if (detEl) {
+          if (detEl && document.activeElement !== detEl) {
             if (typeof salvoSem?.detalhamento === "string") {
               detEl.innerHTML = salvoSem.detalhamento;
             } else if (!salvoSem && typeof estado?.indicesLiraaForm?.detalhamento === "string") {
@@ -12496,7 +12649,7 @@
           calcularTotaisDiario({ silencioso: true });
 
           const campoGramas = document.getElementById("campoGramasLarvicida");
-          if (campoGramas) {
+          if (campoGramas && document.activeElement !== campoGramas) {
             if (dados.gramasLarvicida > 0) {
               campoGramas.value = dados.gramasLarvicida.toFixed(1);
             } else if (dados.litrosTratados > 0) {
@@ -12951,6 +13104,17 @@
             el.addEventListener("input", () => salvarFormularioIndicesLiraa());
             el.addEventListener("change", () => salvarFormularioIndicesLiraa());
           });
+          if (!form.dataset.boundTdFocus) {
+            form.dataset.boundTdFocus = "1";
+            form.addEventListener("click", (e) => {
+              const td = e.target && e.target.closest ? e.target.closest("td") : null;
+              if (!td || e.target.closest("input, select, textarea, button, a, label")) return;
+              const ctrl = td.querySelector("input:not([disabled]):not([readonly]), select:not([disabled])");
+              if (ctrl && typeof ctrl.focus === "function") {
+                ctrl.focus({ preventScroll: true });
+              }
+            });
+          }
         }
         const detEl = document.getElementById("campoDetalhamento");
         if (detEl) {
@@ -13503,17 +13667,39 @@
         const ins = [["cfgBairro","bairro"],["cfgEstrato","estrato"],["cfgEquipe","equipe"],["cfgSupervisor","supervisor"],["cfgResponsavel","responsavel"]];
         ins.forEach(([id, k]) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = cfg[k] || ""; });
         const tb = document.getElementById("listaAgentesConfigTbody"); if (!tb) return;
-        tb.innerHTML = "";
         const a = Array.isArray(cfg.agentes) ? cfg.agentes.filter(x => x && !x._deleted) : [];
         const tot = a.length; const at = a.filter(x => x.ativo !== false).length; const inat = tot - at;
         const bdg = document.getElementById("badgeTotalAgentesConfig"); if (bdg) bdg.innerHTML = `<strong>${tot}</strong> &bull; <span style="color:#166534">🟢 ${at}</span> &bull; <span style="color:#991b1b">🔒 ${inat}</span>`;
         if (a.length === 0) { tb.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: #64748b;">Nenhum agente.</td></tr>`; return; }
+        const inputsAtuais = Array.from(tb.querySelectorAll(".input-nome-ag-cfg"));
+        const podeAtualizarCfgEmLugar = inputsAtuais.length === a.length && inputsAtuais.every((inp, idx) => inp.dataset.id === String(a[idx].id || ""));
+        if (podeAtualizarCfgEmLugar) {
+          a.forEach((ag, i) => {
+            const inp = inputsAtuais[i];
+            const tr = inp.closest("tr");
+            if (!tr) return;
+            tr.className = ag.ativo ? "" : "linha-inativo";
+            if (tr.children[0]) tr.children[0].textContent = pad2(i + 1);
+            if (document.activeElement !== inp) inp.value = ag.nome || "";
+            if (tr.children[2]) {
+              tr.children[2].innerHTML = ag.ativo ? '<span class="tag-status-cfg ativo">🟢 Ativo</span>' : '<span class="tag-status-cfg inativo">🔒 Inativo</span>';
+            }
+            const btnT = tr.querySelector('[data-acao="toggle"]');
+            if (btnT) {
+              btnT.className = `btn-acao-cfg ${ag.ativo ? "inativar" : "reativar"}`;
+              btnT.textContent = ag.ativo ? "⏸️ Inativar" : "▶️ Reativar";
+            }
+          });
+          return;
+        }
+        tb.innerHTML = "";
         a.forEach((ag, i) => {
+          const resolverAgCfg = () => (estado.configEquipe?.agentes || []).find(x => x && !x._deleted && x.id === ag.id) || ag;
           const tr = document.createElement("tr"); if (!ag.ativo) tr.className = "linha-inativo";
           tr.innerHTML = `<td style="font-weight: 700; color: #64748b; text-align: center;">${pad2(i+1)}</td><td><input type="text" class="input-nome-ag-cfg" value="${ag.nome || ""}" data-id="${ag.id}" style="border: 1px solid #cbd5e1; border-radius: 4px; padding: 5px 8px; font-weight: 600; width: 100%; max-width: 280px; font-size: 0.84rem;" /></td><td>${ag.ativo ? '<span class="tag-status-cfg ativo">🟢 Ativo</span>' : '<span class="tag-status-cfg inativo">🔒 Inativo</span>'}</td><td><div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">${ag.ativo ? `<button type="button" class="btn-acao-cfg inativar" data-acao="toggle" data-id="${ag.id}">⏸️ Inativar</button>` : `<button type="button" class="btn-acao-cfg reativar" data-acao="toggle" data-id="${ag.id}">▶️ Reativar</button>`}<button type="button" class="btn-acao-cfg excluir" data-acao="excluir" data-id="${ag.id}">🗑️ Excluir</button></div></td>`;
-          tr.querySelector(".input-nome-ag-cfg").addEventListener("change", e => { const nv = e.target.value.trim(); if (nv) { const agora = agoraSyncMs(ag.atualizadoEm); ag.nome = nv; ag.atualizadoEm = agora; estado.configEquipe._ts = agora; sincronizarAgentesComSemanaAtiva(agora, false); salvar("tudo"); renderizar(); atualizarTotais(); renderizarConfigEquipe(); } });
-          tr.querySelector('[data-acao="toggle"]').addEventListener("click", () => { const agora = agoraSyncMs(ag.atualizadoEm); ag.ativo = !ag.ativo; ag.atualizadoEm = agora; estado.configEquipe._ts = agora; sincronizarAgentesComSemanaAtiva(agora, false); salvar("tudo"); renderizar(); atualizarTotais(); renderizarConfigEquipe(); });
-          tr.querySelector('[data-acao="excluir"]').addEventListener("click", () => { if (confirm(`Excluir "${ag.nome}"?`)) { const agora = agoraSyncMs(Math.max(Number(ag.atualizadoEm) || 0, Number(estado.configEquipe?._ts) || 0)); ag._deleted = true; ag._deletedAtMs = agora; ag.atualizadoEm = agora; estado.configEquipe._ts = agora; sincronizarAgentesComSemanaAtiva(agora, true); salvar("tudo", { imediato: true }); renderizar(); atualizarTotais(); renderizarConfigEquipe(); } });
+          tr.querySelector(".input-nome-ag-cfg").addEventListener("change", e => { const agAlvo = resolverAgCfg(); const nv = e.target.value.trim(); if (nv) { const agora = agoraSyncMs(agAlvo.atualizadoEm); agAlvo.nome = nv; agAlvo.atualizadoEm = agora; estado.configEquipe._ts = agora; sincronizarAgentesComSemanaAtiva(agora, false); salvar("tudo"); renderizar(); atualizarTotais(); renderizarConfigEquipe(); } });
+          tr.querySelector('[data-acao="toggle"]').addEventListener("click", () => { const agAlvo = resolverAgCfg(); const agora = agoraSyncMs(agAlvo.atualizadoEm); agAlvo.ativo = !agAlvo.ativo; agAlvo.atualizadoEm = agora; estado.configEquipe._ts = agora; sincronizarAgentesComSemanaAtiva(agora, false); salvar("tudo"); renderizar(); atualizarTotais(); renderizarConfigEquipe(); });
+          tr.querySelector('[data-acao="excluir"]').addEventListener("click", () => { const agAlvo = resolverAgCfg(); if (confirm(`Excluir "${agAlvo.nome}"?`)) { const agora = agoraSyncMs(Math.max(Number(agAlvo.atualizadoEm) || 0, Number(estado.configEquipe?._ts) || 0)); agAlvo._deleted = true; agAlvo._deletedAtMs = agora; agAlvo.atualizadoEm = agora; estado.configEquipe._ts = agora; sincronizarAgentesComSemanaAtiva(agora, true); salvar("tudo", { imediato: true }); renderizar(); atualizarTotais(); renderizarConfigEquipe(); } });
           tb.appendChild(tr);
         });
       }
@@ -14032,7 +14218,7 @@
         if (!relatorioCampoAtivoId && ativos.length > 0) relatorioCampoAtivoId = ativos[ativos.length - 1].id;
         if (!relatorioCampoAtivoId) { const n = criarRelatorioCampoVazio(); estado.relatoriosCampo.push(n); relatorioCampoAtivoId = n.id; }
         const rel = obterRelatorioCampoAtivo();
-        document.querySelectorAll("[data-rc]").forEach(inp => { const k = inp.dataset.rc; if (inp.type === "checkbox") inp.checked = !!rel[k]; else inp.value = (rel[k] !== undefined && rel[k] !== null) ? rel[k] : ""; });
+        document.querySelectorAll("[data-rc]").forEach(inp => { const k = inp.dataset.rc; if (document.activeElement === inp) return; if (inp.type === "checkbox") inp.checked = !!rel[k]; else inp.value = (rel[k] !== undefined && rel[k] !== null) ? rel[k] : ""; });
         renderizarListaRelatoriosCampo();
         const st = document.getElementById("rcStatus"); if (st) st.textContent = rel.atualizadoEm ? "Última alteração: " + new Date(rel.atualizadoEm).toLocaleString("pt-BR") : "Novo relatório (não salvo)";
       }
@@ -14240,7 +14426,7 @@
 
         document.querySelectorAll("[data-rec-cab]").forEach(inp => {
           const k = inp.dataset.recCab;
-          inp.value = (cab[k] !== undefined && cab[k] !== null) ? cab[k] : "";
+          if (document.activeElement !== inp) inp.value = (cab[k] !== undefined && cab[k] !== null) ? cab[k] : "";
         });
 
         const totais1 = calcularTotaisTabelaReconhecimento(rec.tabela1);
@@ -14299,25 +14485,44 @@
           const tfoot = document.getElementById(tfootId);
           if (!tbody || !tfoot) return;
 
-          tbody.innerHTML = "";
-          listaLinhas.forEach((linha, i) => {
-            const tr = document.createElement("tr");
-            const r = num(linha.r), c = num(linha.c), tb = num(linha.tb), pe = num(linha.pe), o = num(linha.o);
-            const linhaTemValor = (linha.r !== "" && linha.r !== undefined) || (linha.c !== "" && linha.c !== undefined) || (linha.tb !== "" && linha.tb !== undefined) || (linha.pe !== "" && linha.pe !== undefined) || (linha.o !== "" && linha.o !== undefined);
-            const totalLinha = r + c + tb + pe + o;
-            const totalExibido = linhaTemValor ? formatarNumeroMilhar(totalLinha) : "";
+          const podeAtualizarEmLugar = tbody.dataset.tabelaNome === tabelaNome && tbody.rows.length === listaLinhas.length;
+          if (podeAtualizarEmLugar) {
+            listaLinhas.forEach((linha, i) => {
+              const tr = tbody.rows[i];
+              if (!tr) return;
+              tr.querySelectorAll("input[data-rec-col]").forEach(inp => {
+                if (document.activeElement === inp) return;
+                const col = inp.dataset.recCol;
+                inp.value = linha[col] ?? "";
+              });
+              const r = num(linha.r), c = num(linha.c), tb = num(linha.tb), pe = num(linha.pe), o = num(linha.o);
+              const linhaTemValor = (linha.r !== "" && linha.r !== undefined) || (linha.c !== "" && linha.c !== undefined) || (linha.tb !== "" && linha.tb !== undefined) || (linha.pe !== "" && linha.pe !== undefined) || (linha.o !== "" && linha.o !== undefined);
+              const totalLinha = r + c + tb + pe + o;
+              const totEl = document.getElementById(`recTot_${tabelaNome}_${i}`);
+              if (totEl) totEl.textContent = linhaTemValor ? formatarNumeroMilhar(totalLinha) : "";
+            });
+          } else {
+            tbody.innerHTML = "";
+            tbody.dataset.tabelaNome = tabelaNome;
+            listaLinhas.forEach((linha, i) => {
+              const tr = document.createElement("tr");
+              const r = num(linha.r), c = num(linha.c), tb = num(linha.tb), pe = num(linha.pe), o = num(linha.o);
+              const linhaTemValor = (linha.r !== "" && linha.r !== undefined) || (linha.c !== "" && linha.c !== undefined) || (linha.tb !== "" && linha.tb !== undefined) || (linha.pe !== "" && linha.pe !== undefined) || (linha.o !== "" && linha.o !== undefined);
+              const totalLinha = r + c + tb + pe + o;
+              const totalExibido = linhaTemValor ? formatarNumeroMilhar(totalLinha) : "";
 
-            tr.innerHTML = `
-              <td><input type="text" class="input-quarteirao" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="quarteirao" value="${linha.quarteirao ?? ''}" placeholder="${tabelaNome === 'tabela1' ? (i + 1) : (i + 33)}" /></td>
-              <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="r" value="${linha.r ?? ''}" /></td>
-              <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="c" value="${linha.c ?? ''}" /></td>
-              <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="tb" value="${linha.tb ?? ''}" /></td>
-              <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="pe" value="${linha.pe ?? ''}" /></td>
-              <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="o" value="${linha.o ?? ''}" /></td>
-              <td class="td-total" id="recTot_${tabelaNome}_${i}">${totalExibido}</td>
-            `;
-            tbody.appendChild(tr);
-          });
+              tr.innerHTML = `
+                <td><input type="text" class="input-quarteirao" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="quarteirao" value="${linha.quarteirao ?? ''}" placeholder="${tabelaNome === 'tabela1' ? (i + 1) : (i + 33)}" /></td>
+                <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="r" value="${linha.r ?? ''}" /></td>
+                <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="c" value="${linha.c ?? ''}" /></td>
+                <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="tb" value="${linha.tb ?? ''}" /></td>
+                <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="pe" value="${linha.pe ?? ''}" /></td>
+                <td><input type="text" inputmode="numeric" data-rec-tab="${tabelaNome}" data-rec-row="${i}" data-rec-col="o" value="${linha.o ?? ''}" /></td>
+                <td class="td-total" id="recTot_${tabelaNome}_${i}">${totalExibido}</td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
 
           tfoot.innerHTML = `
             <tr>
@@ -14339,6 +14544,18 @@
       function configurarListenersResumoReconhecimento() {
         const area = document.getElementById("aba-resumo-reconhecimento");
         if (!area) return;
+
+        if (!area.dataset.boundCellClick) {
+          area.dataset.boundCellClick = "1";
+          area.addEventListener("click", (e) => {
+            const td = e.target?.closest?.(".reconhecimento-tabela tbody td:not(.td-total)");
+            if (!td || e.target !== td) return;
+            const inp = td.querySelector("input");
+            if (inp && !inp.disabled && !inp.readOnly && document.activeElement !== inp) {
+              try { inp.focus({ preventScroll: true }); } catch (_) { try { inp.focus(); } catch (__) {} }
+            }
+          });
+        }
 
         area.querySelectorAll("[data-rec-cab]").forEach(inp => {
           const k = inp.dataset.recCab;
@@ -15869,7 +16086,7 @@
               if (dados.cabecalho) {
                 Object.keys(dados.cabecalho).forEach(chave => {
                   secQL.querySelectorAll(`[data-sync="${chave}"]`).forEach(campo => {
-                    campo.textContent = dados.cabecalho[chave];
+                    if (document.activeElement !== campo) campo.textContent = dados.cabecalho[chave];
                   });
                 });
               }
@@ -15881,7 +16098,8 @@
                   if (!tr) return;
 
                   item.celulas.forEach((val, idx) => {
-                    tr.children[idx + 1].textContent = val;
+                    const celula = tr.children[idx + 1];
+                    if (celula && document.activeElement !== celula) celula.textContent = val;
                   });
 
                   recalcularTotalLinha(tr);
@@ -15967,7 +16185,16 @@
               tabela.addEventListener("keydown", e => {
                 const td = e.target.closest("td.editavel");
                 if (!td) return;
-                if (e.key === "Enter") { e.preventDefault(); td.blur(); }
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const trAtual = td.parentElement;
+                  const colIdx = trAtual ? Array.from(trAtual.children).indexOf(td) : -1;
+                  const proxTr = trAtual?.nextElementSibling;
+                  const proxTd = (proxTr && !proxTr.classList.contains("total") && colIdx >= 0) ? proxTr.children[colIdx] : null;
+                  if (proxTd && proxTd.classList.contains("editavel")) {
+                    proxTd.focus();
+                  }
+                }
               });
 
               tabela.addEventListener("paste", e => {

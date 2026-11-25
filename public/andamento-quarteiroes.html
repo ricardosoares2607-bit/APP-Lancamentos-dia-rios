@@ -87,8 +87,10 @@
   th { background: #e0e0e0; font-weight: bold; font-size: 11px; }
   input { width: 100%; border: none; outline: none; text-align: center; font-size: 12px; background: transparent; box-sizing: border-box; }
   input:focus { background: #fff9c4; }
-  .agente input { text-align: left; }
-  .quarteirao input { text-align: center; }
+  .dia td { padding: 0; height: 1px; }
+  .dia td input { width: 100%; height: 100%; min-height: 22px; display: block; padding: 2px 3px; touch-action: manipulation; }
+  .agente input, .dia td.agente input { text-align: left; }
+  .quarteirao input, .dia td.quarteirao input { text-align: center; }
   input.num.vazio-visual { color: #999; }
   td.calculado.vazio-visual { color: #999; }
   .total { font-weight: bold; background: #f0f0f0; }
@@ -149,7 +151,10 @@
   .tabela-dupla { flex: 1 1 0; min-width: 0; }
   .tabela-dupla table { font-size: 10px; table-layout: fixed; width: 100%; }
   .tabela-dupla th, .tabela-dupla td { border: 1px solid #333; padding: 2px 1px; text-align: center; height: 18px; line-height: 1.1; overflow: hidden; word-break: break-word; }
-  .tabela-dupla td input { width: 100%; height: 100%; border: none; outline: none; text-align: center; font-size: 10px; background: transparent; padding: 0; margin: 0; box-sizing: border-box; font-family: inherit; }
+  #painel-coflagrados .tabela-dupla td.col-q,
+  #painel-coflagrados .tabela-dupla td.col-n,
+  #painel-boletins .tabela-dupla td { padding: 0; }
+  .tabela-dupla td input { width: 100%; height: 100%; display: block; border: none; outline: none; text-align: center; font-size: 10px; background: transparent; padding: 0; margin: 0; box-sizing: border-box; font-family: inherit; touch-action: manipulation; }
   .tabela-dupla td input:focus { background: #fff9c4; }
   .tabela-dupla td.col-q input { text-align: center; padding-left: 0; }
   .tabela-dupla thead th { background: #555; color: #fff; font-size: 9px; font-weight: bold; }
@@ -377,9 +382,8 @@
   .info-regra-bases b { color: #01396b; }
 
   /* ===== Boletins de Reconhecimento ===== */
-  .tabela-boletins-imoveis th,
-  .tabela-boletins-imoveis td { font-size: 11px; padding: 3px 1px; height: 24px; line-height: 1.2; }
-  .tabela-boletins-imoveis th { text-align: center; font-size: 10px; white-space: nowrap; }
+  .tabela-boletins-imoveis th { font-size: 10px; padding: 3px 1px; height: 24px; line-height: 1.2; text-align: center; white-space: nowrap; }
+  .tabela-boletins-imoveis td { font-size: 11px; padding: 0; height: 24px; line-height: 1.2; }
   .tabela-boletins-imoveis .col-rua    { width: 30%; }
   .tabela-boletins-imoveis .col-numero { width: 8%; }
   .tabela-boletins-imoveis .col-comp   { width: 22%; }
@@ -387,7 +391,7 @@
   .tabela-boletins-imoveis .col-tipo   { width: 15%; }
   .tabela-boletins-imoveis td.col-rua input { text-align: left; padding-left: 3px; }
   .tabela-boletins-imoveis td.col-comp input { text-align: center; padding-left: 0; }
-  .tabela-boletins-imoveis td input { font-size: 11px; }
+  .tabela-boletins-imoveis td input { width: 100%; height: 100%; display: block; padding: 2px 3px; font-size: 11px; box-sizing: border-box; touch-action: manipulation; }
 
   .legenda-codigos { text-align: center; font-size: 10px; color: #555; margin-bottom: 6px; padding: 4px 6px; background: #fff8e1; border: 1px dashed #ffb300; border-radius: 3px; line-height: 1.4; }
   .legenda-codigos b { color: #333; }
@@ -1072,6 +1076,11 @@
       padding: 3px 2px !important;
       font-size: 11.5px !important;
     }
+    #painel-boletins .tabela-boletins-imoveis td,
+    #painel-coflagrados .tabela-dupla td.col-q,
+    #painel-coflagrados .tabela-dupla td.col-n {
+      padding: 0 !important;
+    }
 
     #painel-andamento .tabela-dupla td input,
     #painel-concluidos .tabela-dupla td input,
@@ -1082,6 +1091,8 @@
     #painel-coflagrados .tabela-dupla td input,
     #painel-resumogeral .tabela-dupla td input {
       font-size: 12px !important;
+      height: 28px !important;
+      padding: 2px 3px !important;
     }
 
     /* Otimização de colunas específicas para não espremer textos */
@@ -1187,7 +1198,8 @@
       width: 55px !important;
     }
     #painel-boletins .tabela-boletins-imoveis td input {
-      height: 26px !important;
+      height: 28px !important;
+      padding: 2px 4px !important;
       font-size: 12px !important;
     }
 
@@ -1280,8 +1292,10 @@
       gap: 6px;
       font-size: 13px;
     }
+    .dia td input,
     .dia input {
       min-height: 28px;
+      height: 28px;
       font-size: 13px;
     }
     .card-resumo-liraa,
@@ -1664,6 +1678,9 @@
     background-color: transparent !important;
     color: #1e3a8a !important;
     font-weight: 700 !important;
+    user-select: text;
+    -webkit-user-select: text;
+    touch-action: manipulation;
   }
   .modo-selecao-ativo table tbody td,
   .modo-selecao-ativo table tbody td input {
@@ -3129,16 +3146,12 @@
       salvarFormularios();
       salvarSelecaoLiraa();
 
-      const focoId = document.activeElement && document.activeElement.id ? document.activeElement.id : null;
-      const focoVal = document.activeElement && typeof document.activeElement.value === "string" ? document.activeElement.value : null;
+      const semContainer = document.getElementById("semanas");
+      const focoElAntes = document.activeElement;
+      const focoId = focoElAntes && focoElAntes.id ? focoElAntes.id : null;
+      const focoDentroSemanas = Boolean(focoElAntes && semContainer && semContainer.contains(focoElAntes));
 
-      document.getElementById("semanas").innerHTML = "";
-      semanaCount = 0;
-      if (semsAtivas.length > 0) {
-        semsAtivas.forEach(s => criarSemana(s));
-      } else {
-        criarSemana();
-      }
+      sincronizarSemanasDiarioEmLugar(semsAtivas);
 
       recalcular();
       atualizarResumoSemanal();
@@ -3153,15 +3166,119 @@
       renderizarCoflagrados();
       renderizarResumoGeral();
 
-      if (focoId && !document.getElementById(focoId)?.disabled) {
+      if (focoId && focoDentroSemanas && document.activeElement !== document.getElementById(focoId)) {
         try {
           const elFoco = document.getElementById(focoId);
-          if (elFoco && elFoco.value === focoVal) elFoco.focus();
+          if (elFoco && !elFoco.disabled) elFoco.focus({ preventScroll: true });
         } catch (e) {}
       }
     } finally {
       _v2ApplyingRemote = false;
     }
+  }
+
+  let _reconstrucaoDiarioPendente = null;
+  function sincronizarSemanasDiarioEmLugar(semsAtivas) {
+    const semContainer = document.getElementById("semanas");
+    if (!semContainer) return;
+    const divsAtuais = Array.from(semContainer.querySelectorAll(".semana"));
+    const lista = Array.isArray(semsAtivas) ? semsAtivas : [];
+    const idsAtuais = divsAtuais.map(d => String(d.dataset.semana || ""));
+    const idsNovos = lista.map(s => String(s.id));
+
+    const mesmaEstrutura = lista.length > 0 && idsAtuais.length === idsNovos.length && idsAtuais.every((id, i) => id === idsNovos[i]);
+    if (!mesmaEstrutura) {
+      if (semContainer.contains(document.activeElement)) {
+        _reconstrucaoDiarioPendente = lista.slice();
+        if (!semContainer.dataset.boundDeferRebuild) {
+          semContainer.dataset.boundDeferRebuild = "1";
+          semContainer.addEventListener("focusout", () => {
+            setTimeout(() => {
+              if (_reconstrucaoDiarioPendente && !semContainer.contains(document.activeElement)) {
+                const pend = _reconstrucaoDiarioPendente;
+                _reconstrucaoDiarioPendente = null;
+                sincronizarSemanasDiarioEmLugar(pend);
+                recalcular();
+                atualizarResumoSemanal();
+                atualizarTotalImoveis();
+                atualizarInformados();
+              }
+            }, 60);
+          });
+        }
+        return;
+      }
+      semContainer.innerHTML = "";
+      semanaCount = 0;
+      if (lista.length > 0) lista.forEach(s => criarSemana(s));
+      else criarSemana();
+      return;
+    }
+
+    _reconstrucaoDiarioPendente = null;
+    lista.forEach((dadosSemana, idx) => {
+      const divSemana = divsAtuais[idx];
+      const idSemana = dadosSemana.id;
+      semanaCount = Math.max(semanaCount, Number(idSemana) || 0);
+      const selSem = divSemana.querySelector(".select-semana");
+      if (selSem && document.activeElement !== selSem) {
+        const tit = dadosSemana.titulo || "";
+        if (tit.trim() !== "") {
+          const existe = Array.from(selSem.options).some(o => o.value === tit);
+          if (!existe) {
+            const optCustom = selSem.querySelector('option[value="__custom__"]');
+            const customOpt = document.createElement("option");
+            customOpt.value = tit;
+            customOpt.textContent = tit;
+            if (optCustom) selSem.insertBefore(customOpt, optCustom);
+            else selSem.appendChild(customOpt);
+          }
+        }
+        if (selSem.value !== tit) selSem.value = tit;
+      }
+
+      divSemana.querySelectorAll(".dia").forEach((bloco, dIdx) => {
+        const inpData = bloco.querySelector('input[type="date"]');
+        const novaData = (dadosSemana.datas && dadosSemana.datas[dIdx]) || "";
+        if (inpData && document.activeElement !== inpData && inpData.value !== novaData) {
+          inpData.value = novaData;
+        }
+        const vals = dadosSemana.valores || {};
+        bloco.querySelectorAll("tbody input:not([data-formula])").forEach(inp => {
+          if (!inp.id || document.activeElement === inp) return;
+          const rawVal = vals[inp.id] !== undefined ? String(vals[inp.id]) : "";
+          if (inp.classList.contains("num")) {
+            const vTrim = rawVal.trim();
+            if (vTrim === "") {
+              inp.value = "00";
+              inp.dataset.realVazio = "1";
+              inp.classList.add("vazio-visual");
+              delete inp.dataset.usuarioDigitou;
+            } else if (vTrim === "0" || vTrim === "00") {
+              inp.value = "00";
+              delete inp.dataset.realVazio;
+              inp.classList.remove("vazio-visual");
+              inp.dataset.usuarioDigitou = "1";
+            } else {
+              const n = parseInt(vTrim.replace(/\D/g, ""), 10);
+              if (!isNaN(n)) {
+                inp.value = String(n).padStart(2, "0");
+                delete inp.dataset.realVazio;
+                inp.classList.remove("vazio-visual");
+              } else {
+                inp.value = "00";
+                inp.dataset.realVazio = "1";
+                inp.classList.add("vazio-visual");
+              }
+            }
+          } else {
+            if (inp.value !== rawVal) inp.value = rawVal;
+          }
+        });
+      });
+
+      verificarBloqueioSemana(divSemana);
+    });
   }
 
   function aplicarMetaDocV2(docData) {
@@ -3946,8 +4063,22 @@
               verificarBloqueioSemana(divSemana);
               salvarComAtraso({ scope: "meta" });
               mostrarAviso(`📅 Data e semana definidas. Lançamentos liberados!`);
-              if (e.target && e.target.tagName === 'INPUT' && !e.target.disabled) {
-                e.target.focus();
+              let inpAlvo = (e.target && e.target.tagName === "INPUT")
+                ? e.target
+                : (e.target && e.target.closest ? e.target.closest("td")?.querySelector("input") : null);
+              if (!inpAlvo && (e.clientX || e.clientY) && typeof document.elementFromPoint === "function") {
+                const sobToque = document.elementFromPoint(e.clientX, e.clientY);
+                if (sobToque && bloco.contains(sobToque)) {
+                  inpAlvo = sobToque.tagName === "INPUT"
+                    ? sobToque
+                    : sobToque.closest?.("td")?.querySelector("input");
+                }
+              }
+              if (!inpAlvo) {
+                inpAlvo = bloco.querySelector("tbody input:not([disabled]):not([readonly])");
+              }
+              if (inpAlvo && !inpAlvo.disabled && !inpAlvo.readOnly) {
+                inpAlvo.focus({ preventScroll: true });
               }
             }
           }
@@ -5470,10 +5601,10 @@
     if (tipo === "resumogeral") return renderizarResumoGeral();
   }
 
+  let _reconstrucaoCoflagradosPendente = false;
   function renderizarCoflagrados() {
     const container = document.getElementById("tabelaCoflagrados");
     if (!container) return;
-    container.innerHTML = "";
 
     if (!dadosFormularios.coflagrados || typeof dadosFormularios.coflagrados !== "object") {
       dadosFormularios.coflagrados = {};
@@ -5481,6 +5612,114 @@
 
     const tipo = "coflagrados";
     const numPaginas = paginas[tipo] || 1;
+    const paginasExistentes = Array.from(container.querySelectorAll(".pagina-a4"));
+
+    if (paginasExistentes.length === numPaginas) {
+      let totalQuarteiroesGlobais = 0;
+      for (let p = 0; p < numPaginas; p++) {
+        const divPagina = paginasExistentes[p];
+        const dadosCab = (cabecalhos[tipo] && cabecalhos[tipo][p]) || {};
+        divPagina.querySelectorAll(".cabecalho-tabelas input").forEach(inp => {
+          const c = inp.dataset.campo;
+          if (c && document.activeElement !== inp) {
+            const val = dadosCab[c] || "";
+            if (inp.value !== val) inp.value = val;
+          }
+        });
+        const dadosRod = (rodapes[tipo] && rodapes[tipo][p]) || {};
+        divPagina.querySelectorAll(".rodape-pagina input").forEach(inp => {
+          const c = inp.dataset.campo;
+          if (c && document.activeElement !== inp) {
+            const val = dadosRod[c] || "";
+            if (inp.value !== val) inp.value = val;
+          }
+        });
+
+        let totalPaginaQ = 0;
+        const tabelas = divPagina.querySelectorAll(".tabela-dupla table");
+        tabelas.forEach(table => {
+          const geral = { R: 0, C: 0, TB: 0, PE: 0, O: 0 };
+          let contagem = 0;
+          const rows = Array.from(table.querySelectorAll("tbody tr:not(.linha-total)"));
+          rows.forEach(tr => {
+            const inputs = tr.querySelectorAll(`input[data-tipo="${tipo}"]`);
+            if (inputs.length === 0) return;
+            const rowKey = inputs[0].dataset.key;
+            const dadosLinha = (dadosFormularios[tipo] && dadosFormularios[tipo][rowKey]) || {};
+            inputs.forEach(inp => {
+              const campo = inp.dataset.campo;
+              const raw = dadosLinha[campo] || "";
+              if (document.activeElement !== inp) {
+                if (inp.classList.contains("num")) {
+                  if (raw === "" || raw === undefined) {
+                    inp.value = "00"; inp.dataset.realVazio = "1"; inp.classList.add("vazio-visual");
+                  } else {
+                    const n = parseInt(String(raw).replace(/\D/g, ""), 10);
+                    if (!isNaN(n)) {
+                      inp.value = String(n).padStart(2, "0");
+                      delete inp.dataset.realVazio;
+                      inp.classList.remove("vazio-visual");
+                    }
+                  }
+                } else {
+                  if (inp.value !== raw) inp.value = raw;
+                }
+              }
+            });
+            const qVal = String(inputs[0].value || dadosLinha.q || "").trim();
+            if (qVal !== "") contagem++;
+            const valCampo = (f, idxInp) => {
+              const el = inputs[idxInp];
+              const s = (el && document.activeElement === el) ? el.value : (dadosLinha[f] || "");
+              return parseInt(String(s).replace(/\D/g, ""), 10) || 0;
+            };
+            const rNum = valCampo("r", 1), cNum = valCampo("c", 2), tbNum = valCampo("tb", 3), peNum = valCampo("pe", 4), oNum = valCampo("o", 5);
+            const totalLinha = rNum + cNum + tbNum + oNum;
+            geral.R += rNum; geral.C += cNum; geral.TB += tbNum; geral.PE += peNum; geral.O += oNum;
+            const tdTot = tr.querySelector(".col-t.calculado");
+            if (tdTot) tdTot.textContent = formatarInteiro2Digitos(totalLinha);
+          });
+          table.dataset.contagem = contagem;
+          totalPaginaQ += contagem;
+          const trTotal = table.querySelector("tbody tr.linha-total");
+          if (trTotal) {
+            const cells = trTotal.cells;
+            if (cells.length >= 8) {
+              cells[2].textContent = formatarInteiro2Digitos(geral.R);
+              cells[3].textContent = formatarInteiro2Digitos(geral.C);
+              cells[4].textContent = formatarInteiro2Digitos(geral.TB);
+              cells[5].textContent = formatarInteiro2Digitos(geral.PE);
+              cells[6].textContent = formatarInteiro2Digitos(geral.O);
+              cells[7].textContent = formatarInteiro2Digitos(geral.R + geral.C + geral.TB + geral.O);
+            }
+          }
+        });
+        totalQuarteiroesGlobais += totalPaginaQ;
+        const spanTotal = divPagina.querySelector(`[data-total-quarteiroes="${tipo}-${p}"]`);
+        if (spanTotal) spanTotal.textContent = totalPaginaQ;
+      }
+      const contadorEl = document.getElementById("contadorCoflagrados");
+      if (contadorEl) contadorEl.textContent = `${totalQuarteiroesGlobais} quarteirão(ões) preenchido(s)`;
+      return;
+    }
+
+    if (container.contains(document.activeElement)) {
+      _reconstrucaoCoflagradosPendente = true;
+      if (!container.dataset.boundDeferRebuild) {
+        container.dataset.boundDeferRebuild = "1";
+        container.addEventListener("focusout", () => {
+          setTimeout(() => {
+            if (_reconstrucaoCoflagradosPendente && !container.contains(document.activeElement)) {
+              _reconstrucaoCoflagradosPendente = false;
+              renderizarCoflagrados();
+            }
+          }, 60);
+        });
+      }
+      return;
+    }
+    _reconstrucaoCoflagradosPendente = false;
+    container.innerHTML = "";
     let totalQuarteiroesGlobais = 0;
 
     for (let p = 0; p < numPaginas; p++) {
@@ -6348,10 +6587,10 @@
     }
   }
 
+  let _reconstrucaoBoletinsPendente = false;
   function renderizarFormularioBoletins() {
     const container = document.getElementById("tabelaBoletins");
     if (!container) return;
-    container.innerHTML = "";
 
     garantirEstruturaBoletins();
     sincronizarQuarteiroesInformados();
@@ -6362,6 +6601,76 @@
       if (b === "_legacy") return -1;
       return a.localeCompare(b, "pt-BR", { numeric: true });
     });
+
+    if (quarteiroes.length > 0) {
+      const blocosAtuais = Array.from(container.querySelectorAll(".bloco-quarteirao"));
+      const mesmaEstruturaBoletins = blocosAtuais.length === quarteiroes.length && blocosAtuais.every((b, idx) => {
+        const q = quarteiroes[idx];
+        const f = pQ[q];
+        return b.dataset.quarteirao === q && f && b.querySelectorAll(".pagina-a4").length === (f.paginas || 1);
+      });
+      if (mesmaEstruturaBoletins) {
+        blocosAtuais.forEach((bloco, idx) => {
+          const q = quarteiroes[idx];
+          const form = pQ[q];
+          if (!form) return;
+          const dadosCab = (cabecalhos.boletins && cabecalhos.boletins.porQuarteirao && cabecalhos.boletins.porQuarteirao[q]) || {};
+          bloco.querySelectorAll('.cabecalho-tabelas input:not([readonly])').forEach(inp => {
+            const campo = inp.dataset.campo;
+            if (campo && document.activeElement !== inp) {
+              const val = dadosCab[campo] || "";
+              if (inp.value !== val) inp.value = val;
+            }
+          });
+          const dadosRod = (rodapes.boletins && rodapes.boletins.porQuarteirao && rodapes.boletins.porQuarteirao[q]) || {};
+          bloco.querySelectorAll('.rodape-pagina input').forEach(inp => {
+            const campo = inp.dataset.campo;
+            if (campo && document.activeElement !== inp) {
+              const val = dadosRod[campo] || "";
+              if (inp.value !== val) inp.value = val;
+            }
+          });
+          bloco.querySelectorAll('input[data-boletins-imovel="1"]').forEach(inp => {
+            if (document.activeElement === inp) return;
+            const k = inp.dataset.key;
+            const campo = inp.dataset.campo;
+            const dadosLinha = (form.imoveis && form.imoveis[k]) || {};
+            const val = campo === "seq" ? formatarSeq2Digitos(dadosLinha.seq || "") : String(dadosLinha[campo] || "");
+            if (inp.value !== val) inp.value = val;
+            if (campo === "tipo") {
+              if (val.trim() !== "" && !isTipoBoletimValido(val)) inp.classList.add("invalido");
+              else inp.classList.remove("invalido");
+            }
+          });
+          for (let p = 0; p < (form.paginas || 1); p++) recalcularResumoBoletins(q, p);
+          atualizarTotaisQuarteirao(q);
+        });
+        atualizarContadorBoletins();
+        popularSelectQuarteiroes();
+        aplicarVisibilidadeQuarteirao();
+        salvarFormularios();
+        return;
+      }
+    }
+
+    if (container.contains(document.activeElement)) {
+      _reconstrucaoBoletinsPendente = true;
+      if (!container.dataset.boundDeferRebuild) {
+        container.dataset.boundDeferRebuild = "1";
+        container.addEventListener("focusout", () => {
+          setTimeout(() => {
+            if (_reconstrucaoBoletinsPendente && !container.contains(document.activeElement)) {
+              _reconstrucaoBoletinsPendente = false;
+              renderizarFormularioBoletins();
+            }
+          }, 60);
+        });
+      }
+      return;
+    }
+
+    _reconstrucaoBoletinsPendente = false;
+    container.innerHTML = "";
 
     if (quarteiroes.length === 0) {
       container.innerHTML = `<div class="info-vazia">Nenhum quarteirão encontrado na aba Informados.<br>Lance quarteirões no Diário para gerar os formulários automaticamente.</div>`;
@@ -8083,6 +8392,9 @@
   let modoSelecaoAtivo = false;
   let dragInicioCoord = null;
   let touchHoldTimer = null;
+  let _ultimoToqueTs = 0;
+  let _navegacaoTecladoAtiva = false;
+  let _forcarBarraTouch = false;
 
   function obterInfoCelula(target) {
     if (!target) return null;
@@ -8170,6 +8482,7 @@
     celulaAncora = null;
     celulaFocoAtual = null;
     isDraggingSelecao = false;
+    _forcarBarraTouch = false;
     atualizarBarraFlutuanteSelecao();
   }
 
@@ -8457,11 +8770,15 @@
     limparSelecaoCelulas();
     celulaAncora = prox;
     celulaFocoAtual = prox;
-    prox.inp.focus({ preventScroll: false });
+    _navegacaoTecladoAtiva = true;
     try {
+      prox.inp.focus({ preventScroll: false });
       prox.inp.scrollIntoView({ block: "nearest", inline: "nearest" });
       prox.inp.select();
-    } catch (err) {}
+    } catch (err) {
+    } finally {
+      _navegacaoTecladoAtiva = false;
+    }
   }
 
   function expandirSelecaoComTeclado(direcao) {
@@ -8984,6 +9301,18 @@
 
   function atualizarBarraFlutuanteSelecao() {
     let barra = document.getElementById("barraFlutuanteSelecao");
+    const qtd = celulasSelecionadas.size;
+    const toqueRecenteUnico = !modoSelecaoAtivo && !_forcarBarraTouch && qtd <= 1 && (Date.now() - _ultimoToqueTs <= 1200);
+
+    document.querySelectorAll(".btn-toggle-selecao.ativo").forEach(btn => {
+      btn.innerHTML = `✅ Seleção Ativa (${qtd})`;
+    });
+
+    if (qtd === 0 || toqueRecenteUnico) {
+      if (barra) barra.style.display = "none";
+      return;
+    }
+
     if (!barra) {
       barra = document.createElement("div");
       barra.id = "barraFlutuanteSelecao";
@@ -8991,7 +9320,6 @@
       document.body.appendChild(barra);
     }
 
-    const qtd = celulasSelecionadas.size;
     barra.innerHTML = `
       <span class="badge-contador" id="qtdCelulasSelecionadas">${qtd} célula${qtd > 1 ? "s" : ""}</span>
       <button type="button" class="btn-copiar" onclick="copiarCelulasSelecionadas()" title="Copiar (Ctrl+C)">📋 Copiar</button>
@@ -9001,16 +9329,7 @@
       <button type="button" class="btn-sucesso btn-preencher" onclick="preencherCelulasSelecionadas()" title="Preencher com valor">✏️ Preencher...</button>
       <button type="button" class="btn-fechar" onclick="limparSelecaoCelulas()" title="Desmarcar seleção (Esc)">✕</button>
     `;
-
-    if (qtd >= 1) {
-      barra.style.display = "flex";
-    } else {
-      barra.style.display = "none";
-    }
-
-    document.querySelectorAll(".btn-toggle-selecao.ativo").forEach(btn => {
-      btn.innerHTML = `✅ Seleção Ativa (${qtd})`;
-    });
+    barra.style.display = "flex";
   }
 
   // Interações de Mouse estilo Excel (Clique para selecionar, Arraste para selecionar faixa, Shift+Clique, Ctrl+Clique)
@@ -9110,18 +9429,33 @@
     abrirMenuContextoPlanilha(e.clientX, e.clientY);
   });
 
-  // Fechar menu de contexto ao clicar fora ou rolar
+  // Fechar menu de contexto ao clicar fora ou rolar, e encaminhar clique em TD para o input filho
   document.addEventListener("click", (e) => {
     if (!e.target.closest("#menuContextoPlanilha")) {
       fecharMenuContextoPlanilha();
+    }
+    if (!modoSelecaoAtivo && !isDraggingSelecao && e.target && e.target.tagName === "TD") {
+      const info = obterInfoCelula(e.target);
+      if (info && info.inp && document.activeElement !== info.inp) {
+        info.inp.focus({ preventScroll: true });
+      }
     }
   });
   window.addEventListener("scroll", fecharMenuContextoPlanilha, true);
   window.addEventListener("resize", fecharMenuContextoPlanilha);
 
+  document.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "touch") {
+      _ultimoToqueTs = Date.now();
+      _forcarBarraTouch = false;
+    }
+  }, { passive: true });
+
   // Interações de Toque (Mobile / Tablet)
   document.addEventListener("touchstart", (e) => {
     if (e.touches.length !== 1) return;
+    _ultimoToqueTs = Date.now();
+    _forcarBarraTouch = false;
     if (e.target.closest("#barraFlutuanteSelecao")) return;
     if (e.target.closest("#menuContextoPlanilha")) return;
     if (e.target.closest(".btn-toggle-selecao")) return;
@@ -9148,6 +9482,7 @@
     const ty = touch.clientY;
     touchHoldTimer = setTimeout(() => {
       try { if (navigator.vibrate) navigator.vibrate(40); } catch (v) {}
+      _forcarBarraTouch = true;
       if (!celulasSelecionadas.has(info.td)) {
         celulasSelecionadas.forEach(td => td.classList.remove("celula-selecionada"));
         celulasSelecionadas.clear();
@@ -9155,6 +9490,8 @@
         celulasSelecionadas.add(info.td);
         celulaAncora = info;
         celulaFocoAtual = info;
+        atualizarBarraFlutuanteSelecao();
+      } else {
         atualizarBarraFlutuanteSelecao();
       }
       abrirMenuContextoPlanilha(tx, ty);
@@ -9320,7 +9657,15 @@
         return;
       }
       if (val !== "" && val !== "00") {
-        setTimeout(() => { try { e.target.select(); } catch (err) {} }, 0);
+        const ehFocoPorTecladoOuMouse = _navegacaoTecladoAtiva || (Date.now() - _ultimoToqueTs > 700);
+        if (ehFocoPorTecladoOuMouse) {
+          setTimeout(() => { try { e.target.select(); } catch (err) {} }, 0);
+        } else {
+          try {
+            const posFim = e.target.value.length;
+            e.target.setSelectionRange(posFim, posFim);
+          } catch (err) {}
+        }
       }
     }
   });
