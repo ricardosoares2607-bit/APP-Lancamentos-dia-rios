@@ -103,75 +103,312 @@
 
   .tabela-semanal { max-width: 700px; margin: 0 auto; }
   .tabela-semanal table { font-size: 13px; }
-  .tabela-semanal th, .tabela-semanal td { padding: 5px 4px; }
+  .tabela-semanal th, .tabela-semanal td { padding: 5px; }
   .tabela-semanal .col-quart-sem { width: 130px; text-align: center; }
   .tabela-semanal .col-num-sem   { width: 50px; }
-  .tabela-semanal .col-total-sem { width: 60px; }
-  .tabela-semanal tr.linha-total td { background: #333; color: #fff; font-weight: bold; font-size: 14px; }
+  .tabela-semanal .col-total-sem { width: 60px; font-weight: bold; }
+  .tabela-semanal tr.linha-total td { background: #e0e0e0; font-weight: bold; font-size: 14px; }
   .tabela-semanal td.calculado { font-weight: bold; }
 
   .tabela-total { max-width: 1100px; margin: 0 auto; }
   .tabela-total table { font-size: 13px; }
-  .tabela-total th, .tabela-total td { padding: 5px 4px; }
+  .tabela-total th, .tabela-total td { padding: 5px; }
   .tabela-total .col-data  { width: 100px; }
   .tabela-total .col-ag    { width: 110px; text-align: left; }
   .tabela-total .col-quart { width: 100px; text-align: center; }
   .tabela-total .col-num   { width: 55px; }
-  .tabela-total .col-total { width: 65px; }
-  .tabela-total tr.linha-total td { background: #333; color: #fff; font-weight: bold; font-size: 14px; }
-  .tabela-total thead th { background: #555; color: #fff; }
+  .tabela-total .col-total { width: 65px; font-weight: bold; }
+  .tabela-total tr.linha-total td { background: #e0e0e0; font-weight: bold; font-size: 14px; }
+  .tabela-total thead th { background: #e0e0e0; }
 
   .tabela-informados { max-width: 1400px; margin: 0 auto; }
   .tabela-informados table { font-size: 14px; }
-  .tabela-informados th, .tabela-informados td { padding: 7px 5px; }
+  .tabela-informados th, .tabela-informados td { padding: 7px; }
   .tabela-informados .col-agente-informado { width: 210px; text-align: left; font-size: 12px; }
   .tabela-informados .col-quart { width: 130px; text-align: center; }
   .tabela-informados .col-num   { width: 55px; }
-  .tabela-informados .col-total { width: 65px; }
-  .tabela-informados .col-data-informado { width: 110px; text-align: center; }
-  .tabela-informados tr.linha-total td { background: #333; color: #fff; font-weight: bold; font-size: 15px; }
-  .tabela-informados thead th { background: #555; color: #fff; font-size: 13px; }
+  .tabela-informados .col-total { width: 65px; font-weight: bold; }
+  .tabela-informados .col-data-informado { width: 110px; text-align: center; font-weight: bold; }
+  .tabela-informados tr.linha-total td { background: #e0e0e0; font-weight: bold; font-size: 15px; }
+  .tabela-informados thead th { background: #e0e0e0; font-size: 13px; }
   .tabela-informados td.calculado { font-weight: bold; }
 
-  .pagina-a4 { background: #fff; border: 2px dashed #999; border-radius: 6px; padding: 14px; margin-bottom: 20px; box-sizing: border-box; }
-  .pagina-a4 .titulo-pagina { text-align: center; font-size: 13px; color: #666; margin-bottom: 8px; font-style: italic; }
-  .titulo-principal { text-align: center; font-size: 15px; font-weight: bold; color: #000; margin: 4px 0 2px 0; letter-spacing: 0.3px; }
-  .subtitulo { text-align: center; font-size: 13px; font-weight: bold; color: #333; margin: 0 0 8px 0; padding-bottom: 6px; border-bottom: 2px solid #333; letter-spacing: 0.2px; }
+  .pagina-a4 { background: #fff; border: 2px solid #ccc; border-radius: 6px; padding: 15px; margin-bottom: 20px; box-sizing: border-box; }
+  .pagina-a4 .titulo-pagina { text-align: center; font-size: 12px; color: #666; margin-bottom: 10px; font-weight: bold; }
+  .titulo-principal { text-align: center; font-size: 16px; font-weight: bold; color: #222; margin: 5px 0 3px 0; }
+  .subtitulo { text-align: center; font-size: 13px; font-weight: bold; color: #444; margin: 0 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #333; }
 
-  .cabecalho-tabelas { background: #f0f0f0; border: 1px solid #333; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 12px; }
-  .cabecalho-tabelas .campo { display: flex; align-items: center; gap: 4px; font-size: 12px; }
-  .cabecalho-tabelas .campo label { font-weight: bold; color: #333; white-space: nowrap; }
-  .cabecalho-tabelas .campo input { border: none; border-bottom: 1px solid #666; background: #fff; padding: 3px 5px; font-size: 12px; text-align: left; border-radius: 2px 2px 0 0; min-width: 0; }
-  .cabecalho-tabelas .campo input:focus { background: #fff9c4; }
-  .cabecalho-tabelas .campo-total { grid-column: span 4; justify-content: center; background: #333; color: #fff; padding: 4px 8px; border-radius: 3px; font-weight: bold; font-size: 12px; margin-top: 2px; }
-  .cabecalho-tabelas .campo-total span { color: #ffd54f; margin-left: 5px; }
-  .cabecalho-tabelas .campo-quarteirao-fixo input { background: #e0f7fa; font-weight: bold; border-bottom: 2px solid #0277bd; text-align: center; }
+  .cabecalho-tabelas { background: #f5f5f5; border: 1px solid #999; border-radius: 4px; padding: 8px; margin-bottom: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .cabecalho-tabelas .campo { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+  .cabecalho-tabelas .campo label { font-weight: bold; white-space: nowrap; }
+  .cabecalho-tabelas .campo input { border: none; border-bottom: 1px solid #999; background: #fff; padding: 2px 4px; font-size: 11px; text-align: left; }
+  .cabecalho-tabelas .campo-total { grid-column: span 4; justify-content: center; background: #e8f5e9; padding: 4px; border-radius: 3px; border: 1px solid #a5d6a7; font-weight: bold; margin-top: 2px; }
+  .cabecalho-tabelas .campo-total span { color: #2e7d32; margin-left: 5px; }
+  .cabecalho-tabelas .campo-quarteirao-fixo input { background: #e1f5fe; font-weight: bold; color: #01579b; text-align: center; }
 
   .dupla-tabelas { display: flex; gap: 12px; justify-content: center; align-items: flex-start; margin-bottom: 8px; }
   .tabela-dupla { flex: 1 1 0; min-width: 0; }
   .tabela-dupla table { font-size: 10px; table-layout: fixed; width: 100%; }
-  .tabela-dupla th, .tabela-dupla td { border: 1px solid #333; padding: 2px 1px; text-align: center; height: 18px; line-height: 1.1; overflow: hidden; word-break: break-word; }
+  .tabela-dupla th, .tabela-dupla td { border: 1px solid #777; padding: 2px 1px; text-align: center; height: 18px; line-height: 1.1; overflow: hidden; word-break: break-word; }
   #painel-coflagrados .tabela-dupla td.col-q,
   #painel-coflagrados .tabela-dupla td.col-n,
   #painel-boletins .tabela-dupla td { padding: 0; }
   .tabela-dupla td input { width: 100%; height: 100%; display: block; border: none; outline: none; text-align: center; font-size: 10px; background: transparent; padding: 0; margin: 0; box-sizing: border-box; font-family: inherit; touch-action: manipulation; }
-  .tabela-dupla td input:focus { background: #fff9c4; }
   .tabela-dupla td.col-q input { text-align: center; padding-left: 0; }
-  .tabela-dupla thead th { background: #555; color: #fff; font-size: 9px; font-weight: bold; }
-  .tabela-dupla .col-num-linha { width: 8%; font-weight: bold; background: #f5f5f5; }
+  .tabela-dupla thead th { background: #e0e0e0; font-size: 9px; font-weight: bold; }
+  .tabela-dupla .col-num-linha { width: 8%; background: #f0f0f0; font-weight: bold; }
   .tabela-dupla .col-q { width: 28%; text-align: center; padding-left: 0; }
   .tabela-dupla .col-n { width: 9%; }
-  .tabela-dupla .col-t { width: 12%; }
-  .tabela-dupla tr.linha-total td { background: #333; color: #fff; font-weight: bold; }
+  .tabela-dupla .col-t { width: 12%; font-weight: bold; }
+  .tabela-dupla tr.linha-total td { background: #e0e0e0; font-weight: bold; }
   .tabela-dupla td.calculado { font-weight: bold; }
   .tabela-dupla td.vazio { color: #ccc; }
 
+  /* ===== PADRÃO VISUAL EXCLUSIVO DAS 7 ABAS SOLICITADAS (MODELO QUARTEIRÕES PARA O LIRAA) ===== */
+  #painel-andamento .pagina-a4,
+  #painel-concluidos .pagina-a4,
+  #painel-resumo .pagina-a4,
+  #painel-bases .pagina-a4,
+  #painel-basesliraa .pagina-a4,
+  #painel-coflagrados .pagina-a4,
+  #painel-resumogeral .pagina-a4 {
+    background: #fff;
+    border: 1.5px solid #0f172a;
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+  }
+  .folha-cabecalho-titulo {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 6px;
+  }
+  .folha-cabecalho-titulo h2 {
+    font-size: 14px;
+    margin: 0;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border: none;
+    padding: 0;
+    color: #000;
+    background: transparent;
+  }
+  .folha-cabecalho-titulo span {
+    font-size: 10.5px;
+    font-weight: bold;
+    color: #334155;
+  }
+  table.tabela-identificacao {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1.5px solid #000;
+    margin-bottom: 8px;
+    font-size: 9px;
+    background: #fff;
+  }
+  table.tabela-identificacao td {
+    border: 1px solid #000;
+    padding: 0;
+    vertical-align: middle;
+    text-align: left;
+    font-size: 9px;
+    color: #000;
+  }
+  table.tabela-identificacao td.campo-label {
+    background: #f1f5f9;
+    font-weight: bold;
+    color: #000;
+    width: 17%;
+    padding: 2.5px 5px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-size: 9px;
+  }
+  table.tabela-identificacao td.campo-valor {
+    background: #fff;
+    width: 33%;
+    font-weight: 600;
+  }
+  table.tabela-identificacao td.campo-valor input {
+    width: 100%;
+    border: none;
+    background: #fff;
+    padding: 2.5px 5px;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #000;
+    text-align: left;
+    outline: none;
+    border-radius: 0;
+  }
+  table.tabela-identificacao td.campo-valor input:focus {
+    background: #eff6ff;
+  }
+  table.tabela-identificacao td.campo-total-quarteiroes {
+    font-weight: 800;
+    color: #14532d;
+    background: #f0fdf4;
+    padding: 2.5px 5px;
+  }
+
+  #painel-andamento .tabela-dupla table,
+  #painel-concluidos .tabela-dupla table,
+  #painel-resumo .tabela-dupla table,
+  #painel-bases .tabela-dupla table,
+  #painel-basesliraa .tabela-dupla table,
+  #painel-coflagrados .tabela-dupla table,
+  #painel-resumogeral .tabela-dupla table,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla table {
+    border: 1.5px solid #000;
+    font-variant-numeric: tabular-nums;
+    background: #fff;
+  }
+  #painel-andamento .tabela-dupla th, #painel-andamento .tabela-dupla td,
+  #painel-concluidos .tabela-dupla th, #painel-concluidos .tabela-dupla td,
+  #painel-resumo .tabela-dupla th, #painel-resumo .tabela-dupla td,
+  #painel-bases .tabela-dupla th, #painel-bases .tabela-dupla td,
+  #painel-basesliraa .tabela-dupla th, #painel-basesliraa .tabela-dupla td,
+  #painel-coflagrados .tabela-dupla th, #painel-coflagrados .tabela-dupla td,
+  #painel-resumogeral .tabela-dupla th, #painel-resumogeral .tabela-dupla td,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla th,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla td {
+    border: 1px solid #000;
+    color: #000;
+  }
+  #painel-andamento .tabela-dupla td input,
+  #painel-concluidos .tabela-dupla td input,
+  #painel-resumo .tabela-dupla td input,
+  #painel-bases .tabela-dupla td input,
+  #painel-basesliraa .tabela-dupla td input,
+  #painel-coflagrados .tabela-dupla td input,
+  #painel-resumogeral .tabela-dupla td input,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla td input {
+    color: #000;
+  }
+  #painel-coflagrados .tabela-dupla td input:focus {
+    background: #eff6ff;
+    outline: 1.5px solid #0f172a;
+    outline-offset: -1.5px;
+  }
+  #painel-coflagrados .tabela-dupla td.col-q input {
+    font-weight: 700;
+  }
+  #painel-andamento .tabela-dupla thead th,
+  #painel-concluidos .tabela-dupla thead th,
+  #painel-resumo .tabela-dupla thead th,
+  #painel-bases .tabela-dupla thead th,
+  #painel-basesliraa .tabela-dupla thead th,
+  #painel-coflagrados .tabela-dupla thead th,
+  #painel-resumogeral .tabela-dupla thead th,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla thead th {
+    background: #1e293b;
+    color: #fff;
+    font-weight: 700;
+    border: 1px solid #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  #painel-andamento .tabela-dupla thead th.col-t,
+  #painel-concluidos .tabela-dupla thead th.col-t,
+  #painel-resumo .tabela-dupla thead th.col-t,
+  #painel-bases .tabela-dupla thead th.col-t,
+  #painel-basesliraa .tabela-dupla thead th.col-t,
+  #painel-coflagrados .tabela-dupla thead th.col-t,
+  #painel-resumogeral .tabela-dupla thead th.col-t,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla thead th.col-t {
+    background: #334155;
+    color: #fff;
+  }
+  #painel-andamento .tabela-dupla tbody tr:nth-child(even):not(.linha-total):not(.linha-liraa-selecionada) td,
+  #painel-concluidos .tabela-dupla tbody tr:nth-child(even):not(.linha-total):not(.linha-liraa-selecionada) td,
+  #painel-resumo .tabela-dupla tbody tr:nth-child(even):not(.linha-total):not(.linha-liraa-selecionada) td,
+  #painel-bases .tabela-dupla tbody tr:nth-child(even):not(.linha-total):not(.linha-liraa-selecionada) td,
+  #painel-basesliraa .tabela-dupla tbody tr:nth-child(even):not(.linha-total):not(.linha-liraa-selecionada) td,
+  #painel-coflagrados .tabela-dupla tbody tr:nth-child(even):not(.linha-total):not(.linha-liraa-selecionada) td,
+  #painel-resumogeral .tabela-dupla tbody tr:nth-child(even):not(.linha-total):not(.linha-liraa-selecionada) td,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla tbody tr:nth-child(even):not(.linha-total):not(.linha-liraa-selecionada) td {
+    background: #f8fafc;
+  }
+  #painel-andamento .tabela-dupla td.col-num-linha,
+  #painel-concluidos .tabela-dupla td.col-num-linha,
+  #painel-resumo .tabela-dupla td.col-num-linha,
+  #painel-bases .tabela-dupla td.col-num-linha,
+  #painel-basesliraa .tabela-dupla td.col-num-linha,
+  #painel-coflagrados .tabela-dupla td.col-num-linha,
+  #painel-resumogeral .tabela-dupla td.col-num-linha,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla td.col-num-linha {
+    background: #f1f5f9;
+    color: #000;
+    font-weight: 800;
+  }
+  #painel-andamento .tabela-dupla .col-q,
+  #painel-concluidos .tabela-dupla .col-q,
+  #painel-resumo .tabela-dupla .col-q,
+  #painel-bases .tabela-dupla .col-q,
+  #painel-coflagrados .tabela-dupla .col-q,
+  #painel-resumogeral .tabela-dupla .col-q,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla .col-q {
+    font-weight: 700;
+  }
+  #painel-andamento .tabela-dupla td.col-t,
+  #painel-concluidos .tabela-dupla td.col-t,
+  #painel-resumo .tabela-dupla td.col-t,
+  #painel-bases .tabela-dupla td.col-t,
+  #painel-basesliraa .tabela-dupla td.col-t,
+  #painel-coflagrados .tabela-dupla td.col-t,
+  #painel-resumogeral .tabela-dupla td.col-t,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla td.col-t {
+    background: #e2e8f0;
+    color: #000;
+    font-weight: 800;
+  }
+  #painel-andamento .tabela-dupla tr.linha-total td,
+  #painel-concluidos .tabela-dupla tr.linha-total td,
+  #painel-resumo .tabela-dupla tr.linha-total td,
+  #painel-bases .tabela-dupla tr.linha-total td,
+  #painel-basesliraa .tabela-dupla tr.linha-total td,
+  #painel-coflagrados .tabela-dupla tr.linha-total td,
+  #painel-resumogeral .tabela-dupla tr.linha-total td,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla tr.linha-total td {
+    background: #0f172a !important;
+    color: #fff !important;
+    font-weight: bold;
+    border: 1px solid #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  #painel-andamento .tabela-dupla tr.linha-total td.col-t,
+  #painel-concluidos .tabela-dupla tr.linha-total td.col-t,
+  #painel-resumo .tabela-dupla tr.linha-total td.col-t,
+  #painel-bases .tabela-dupla tr.linha-total td.col-t,
+  #painel-basesliraa .tabela-dupla tr.linha-total td.col-t,
+  #painel-coflagrados .tabela-dupla tr.linha-total td.col-t,
+  #painel-resumogeral .tabela-dupla tr.linha-total td.col-t,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla tr.linha-total td.col-t {
+    background: #334155 !important;
+    color: #fff !important;
+  }
+  #painel-andamento .tabela-dupla td.vazio,
+  #painel-concluidos .tabela-dupla td.vazio,
+  #painel-resumo .tabela-dupla td.vazio,
+  #painel-bases .tabela-dupla td.vazio,
+  #painel-basesliraa .tabela-dupla td.vazio,
+  #painel-coflagrados .tabela-dupla td.vazio,
+  #painel-resumogeral .tabela-dupla td.vazio,
+  .pdf-export-wrapper.pdf-modelo-liraa .tabela-dupla td.vazio {
+    color: #cbd5e1;
+  }
+
   .tabela-dupla.com-liraa .col-num-linha { width: 10%; font-size: 8.5px; font-weight: bold; }
   .tabela-dupla.com-liraa thead th.col-num-linha {
-    background: #1b5e20 !important;
+    background: #1e293b !important;
     color: #ffffff !important;
     font-size: 8.5px !important;
-    font-weight: 900 !important;
+    font-weight: 700 !important;
     padding: 3px 1px !important;
     text-transform: uppercase;
     letter-spacing: 0.3px;
@@ -181,9 +418,10 @@
   .tabela-dupla.com-liraa .col-q { width: 19%; }
   .tabela-dupla.com-liraa .col-n { width: 8.5%; }
   .tabela-dupla.com-liraa .col-t { width: 12%; }
-  .tabela-dupla.com-liraa .col-liraa { width: 16.5%; font-weight: bold; background: #f1f8e9; }
-  .tabela-dupla.com-liraa thead th.col-liraa { background: #1b5e20; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .tabela-dupla.com-liraa tr.linha-total td.col-liraa { background: #1b5e20; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .tabela-dupla.com-liraa .col-liraa { width: 16.5%; font-weight: 800; }
+  .tabela-dupla.com-liraa td.col-liraa { background: #fef3c7; color: #9a3412; }
+  .tabela-dupla.com-liraa thead th.col-liraa { background: #c2410c; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .tabela-dupla.com-liraa tr.linha-total td.col-liraa { background: #c2410c !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
   /* Seleção clicável pela coluna Posição */
   .col-posicao-clicavel {
@@ -202,20 +440,20 @@
     min-height: 18px;
     font-weight: bold;
     font-size: 10px;
-    color: #333;
-    background: #f5f5f5;
+    color: #000;
+    background: #f1f5f9;
     transition: all 0.15s ease-in-out;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   .col-posicao-clicavel:hover .col-posicao-btn {
-    background: #c8e6c9 !important;
-    color: #1b5e20 !important;
+    background: #cbd5e1 !important;
+    color: #0f172a !important;
     font-weight: 900;
   }
   /* Posição SELECIONADA */
   .col-posicao-btn.ativo {
-    background: #1b5e20 !important;
+    background: #059669 !important;
     color: #ffffff !important;
     font-weight: 900 !important;
     -webkit-print-color-adjust: exact;
@@ -227,28 +465,32 @@
     margin-right: 1px;
   }
   .col-posicao-clicavel:hover .col-posicao-btn.ativo {
-    background: #c62828 !important;
+    background: #dc2626 !important;
     color: #ffffff !important;
   }
   tr.linha-liraa-selecionada {
-    background-color: #e8f5e9 !important;
+    background-color: #ecfdf5 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  tr.linha-liraa-selecionada td {
+    background-color: #ecfdf5 !important;
+    color: #064e3b;
+  }
   tr.linha-liraa-selecionada td.col-q {
-    font-weight: bold;
-    color: #1b5e20;
+    font-weight: 800;
+    color: #064e3b;
   }
   tr.linha-liraa-selecionada td.col-liraa {
-    background-color: #c8e6c9 !important;
-    color: #1b5e20 !important;
+    background-color: #fde68a !important;
+    color: #78350f !important;
     font-weight: 900;
   }
 
   /* Cartão de Resumo e Seletor de Visualização LIRAa */
   .card-resumo-liraa {
-    background: #e8f5e9;
-    border: 1px solid #81c784;
+    background: #f8fafc;
+    border: 1.5px solid #0f172a;
     border-radius: 6px;
     padding: 10px 14px;
     margin-bottom: 15px;
@@ -258,8 +500,9 @@
     gap: 15px;
     flex-wrap: wrap;
     font-size: 12px;
+    color: #1e293b;
   }
-  .card-resumo-liraa b { color: #1b5e20; }
+  .card-resumo-liraa b { color: #0f172a; }
 
   .seletor-visualizacao-liraa {
     display: flex;
@@ -272,28 +515,28 @@
   .label-seletor-vis {
     font-size: 12px;
     font-weight: bold;
-    color: #333;
+    color: #0f172a;
   }
   .btn-vis-liraa {
-    background: #f5f5f5;
-    border: 1px solid #ccc;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
     border-radius: 4px;
     padding: 6px 12px;
     font-size: 11px;
     font-weight: bold;
     cursor: pointer;
-    color: #444;
+    color: #334155;
     transition: all 0.2s;
   }
-  .btn-vis-liraa:hover { background: #e0e0e0; }
+  .btn-vis-liraa:hover { background: #e2e8f0; }
   .btn-vis-liraa.ativo {
-    background: #1b5e20;
+    background: #1e293b;
     color: #fff;
-    border-color: #1b5e20;
+    border-color: #0f172a;
   }
 
   .titulo-secao-liraa {
-    background: #2e7d32;
+    background: #1e293b;
     color: #fff;
     padding: 8px 14px;
     font-size: 13px;
@@ -306,8 +549,8 @@
     letter-spacing: 0.5px;
   }
   .titulo-secao-liraa.destaque-selecionados {
-    background: #1b5e20;
-    border-left: 6px solid #81c784;
+    background: #0f172a;
+    border-left: 6px solid #c2410c;
   }
 
   /* Tabela Exclusiva para os Quarteirões Selecionados no LIRAa */
@@ -319,40 +562,112 @@
     border-collapse: collapse;
     font-size: 11px;
     table-layout: fixed;
+    border: 1.5px solid #000;
+    font-variant-numeric: tabular-nums;
+    background: #fff;
   }
   .tabela-liraa-exclusiva th, .tabela-liraa-exclusiva td {
-    border: 1px solid #333;
+    border: 1px solid #000;
     padding: 3px 2px;
     text-align: center;
     height: 22px;
     line-height: 1.2;
     overflow: hidden;
     word-break: break-word;
+    color: #000;
   }
   .tabela-liraa-exclusiva thead th {
-    background: #1b5e20;
+    background: #1e293b;
     color: #fff;
     font-size: 10px;
+    font-weight: 700;
+  }
+  .tabela-liraa-exclusiva thead th.col-t {
+    background: #334155;
+    color: #fff;
+  }
+  .tabela-liraa-exclusiva thead th.col-liraa {
+    background: #c2410c;
+    color: #fff;
+  }
+  .tabela-liraa-exclusiva tbody tr:nth-child(even):not(.linha-total) td {
+    background: #f8fafc;
+  }
+  .tabela-liraa-exclusiva .col-pos { width: 9%; font-weight: 800; }
+  .tabela-liraa-exclusiva td.col-pos { background: #f1f5f9; color: #0f172a; }
+  .tabela-liraa-exclusiva .col-q { width: 21%; font-weight: 800; }
+  .tabela-liraa-exclusiva .col-n { width: 9%; }
+  .tabela-liraa-exclusiva .col-t { width: 12%; font-weight: 800; }
+  .tabela-liraa-exclusiva td.col-t { background: #e2e8f0; color: #000; }
+  .tabela-liraa-exclusiva .col-liraa { width: 13%; font-weight: 800; }
+  .tabela-liraa-exclusiva td.col-liraa { background: #fef3c7; color: #9a3412; }
+  .tabela-liraa-exclusiva tr.linha-total td {
+    background: #0f172a !important;
+    color: #fff !important;
     font-weight: bold;
   }
-  .tabela-liraa-exclusiva .col-pos { width: 9%; font-weight: bold; background: #e8f5e9; color: #1b5e20; }
-  .tabela-liraa-exclusiva .col-q { width: 21%; font-weight: bold; }
-  .tabela-liraa-exclusiva .col-n { width: 9%; }
-  .tabela-liraa-exclusiva .col-t { width: 12%; font-weight: bold; background: #f9f9f9; }
-  .tabela-liraa-exclusiva .col-liraa { width: 13%; font-weight: bold; background: #e8f5e9; color: #1b5e20; }
-  .tabela-liraa-exclusiva tr.linha-total td {
-    background: #1b5e20;
-    color: #fff;
-    font-weight: bold;
+  .tabela-liraa-exclusiva tr.linha-total td.col-t {
+    background: #334155 !important;
+    color: #fff !important;
+  }
+  .tabela-liraa-exclusiva tr.linha-total td.col-liraa {
+    background: #c2410c !important;
+    color: #fff !important;
   }
 
   .barra-botoes-tabelas { display: flex; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
 
-  .rodape-pagina { margin-top: 14px; padding-top: 10px; border-top: 1px solid #333; display: flex; justify-content: space-around; gap: 20px; flex-wrap: wrap; }
+  .rodape-pagina { margin-top: 12px; padding-top: 8px; border-top: 1px solid #999; display: flex; justify-content: space-around; gap: 20px; flex-wrap: wrap; }
   .rodape-pagina .campo-rodape { display: flex; align-items: center; gap: 6px; font-size: 12px; flex: 1 1 40%; min-width: 200px; }
-  .rodape-pagina .campo-rodape label { font-weight: bold; color: #333; white-space: nowrap; }
-  .rodape-pagina .campo-rodape input { border: none; border-bottom: 1px solid #333; background: #fff; padding: 3px 6px; font-size: 12px; text-align: left; flex: 1; border-radius: 2px 2px 0 0; }
-  .rodape-pagina .campo-rodape input:focus { background: #fff9c4; }
+  .rodape-pagina .campo-rodape label { font-weight: bold; white-space: nowrap; }
+  .rodape-pagina .campo-rodape input { border: none; border-bottom: 1px solid #666; background: #fff; padding: 3px 4px; font-size: 12px; text-align: left; flex: 1; }
+  #painel-andamento .rodape-pagina,
+  #painel-concluidos .rodape-pagina,
+  #painel-resumo .rodape-pagina,
+  #painel-bases .rodape-pagina,
+  #painel-basesliraa .rodape-pagina,
+  #painel-coflagrados .rodape-pagina,
+  #painel-resumogeral .rodape-pagina,
+  .pdf-export-wrapper.pdf-modelo-liraa .rodape-pagina {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1.5px solid #000;
+  }
+  #painel-andamento .rodape-pagina .campo-rodape label,
+  #painel-concluidos .rodape-pagina .campo-rodape label,
+  #painel-resumo .rodape-pagina .campo-rodape label,
+  #painel-bases .rodape-pagina .campo-rodape label,
+  #painel-basesliraa .rodape-pagina .campo-rodape label,
+  #painel-coflagrados .rodape-pagina .campo-rodape label,
+  #painel-resumogeral .rodape-pagina .campo-rodape label,
+  .pdf-export-wrapper.pdf-modelo-liraa .rodape-pagina .campo-rodape label {
+    font-weight: 800;
+    color: #000;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+  #painel-andamento .rodape-pagina .campo-rodape input,
+  #painel-concluidos .rodape-pagina .campo-rodape input,
+  #painel-resumo .rodape-pagina .campo-rodape input,
+  #painel-bases .rodape-pagina .campo-rodape input,
+  #painel-basesliraa .rodape-pagina .campo-rodape input,
+  #painel-coflagrados .rodape-pagina .campo-rodape input,
+  #painel-resumogeral .rodape-pagina .campo-rodape input,
+  .pdf-export-wrapper.pdf-modelo-liraa .rodape-pagina .campo-rodape input {
+    border: none;
+    border-bottom: 1px solid #0f172a;
+    color: #000;
+    font-weight: 600;
+  }
+  #painel-andamento .rodape-pagina .campo-rodape input:focus,
+  #painel-concluidos .rodape-pagina .campo-rodape input:focus,
+  #painel-resumo .rodape-pagina .campo-rodape input:focus,
+  #painel-bases .rodape-pagina .campo-rodape input:focus,
+  #painel-basesliraa .rodape-pagina .campo-rodape input:focus,
+  #painel-coflagrados .rodape-pagina .campo-rodape input:focus,
+  #painel-resumogeral .rodape-pagina .campo-rodape input:focus {
+    background: #eff6ff;
+  }
 
   .btn-status-mini { padding: 1px 5px; font-size: 9px; font-weight: bold; border: none; border-radius: 3px; cursor: pointer; margin: 0 1px; transition: 0.15s; }
   .btn-sim { background: #2e7d32; color: #fff; }
@@ -401,13 +716,13 @@
   .tabela-boletins-imoveis td.col-tipo input.invalido { background: #ffebee; color: #c62828; }
 
   .tabela-boletins-resumo { font-size: 12px; }
-  .tabela-boletins-resumo th, .tabela-boletins-resumo td { padding: 6px 8px; height: 32px; font-size: 13px; border: 1px solid #333; }
-  .tabela-boletins-resumo thead th { background: #555; color: #fff; font-size: 12px; text-align: center; }
-  .tabela-boletins-resumo .col-desc { text-align: left; width: 65%; }
+  .tabela-boletins-resumo th, .tabela-boletins-resumo td { padding: 6px 8px; height: 32px; font-size: 13px; }
+  .tabela-boletins-resumo thead th { background: #e0e0e0; font-size: 12px; text-align: center; }
+  .tabela-boletins-resumo .col-desc { text-align: left; width: 65%; background: #f5f5f5; font-weight: bold; }
   .tabela-boletins-resumo .col-qtd  { width: 35%; text-align: center; }
   .tabela-boletins-resumo td input { width: 100%; border: none; outline: none; text-align: center; font-size: 13px; background: transparent; padding: 0; margin: 0; box-sizing: border-box; font-family: inherit; }
-  .tabela-boletins-resumo td input[readonly] { background: #f0f0f0; cursor: default; font-weight: bold; color: #222; }
-  .tabela-boletins-resumo tr.linha-total td { background: #333; color: #fff; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .tabela-boletins-resumo td input[readonly] { background: #fff; cursor: default; font-weight: bold; }
+  .tabela-boletins-resumo tr.linha-total td { background: #333; color: #fff; font-weight: bold; }
   .tabela-boletins-resumo tr.linha-total input { color: #fff; font-weight: bold; }
   .tabela-boletins-resumo tr.linha-total input[readonly] { background: transparent; color: #fff; }
 
@@ -594,7 +909,7 @@
     font-weight: 700;
     text-align: center;
     padding: 7px 10px;
-    border-bottom: 1px solid #cbd5e1;
+    border-bottom: 2px solid #cbd5e1;
     font-size: 11.5px;
     white-space: nowrap;
   }
@@ -630,7 +945,7 @@
   .tabela-comparativo-concluidos tr.linha-total-comparativo {
     background-color: #f8fafc;
     border-top: 2px solid #cbd5e1;
-    font-weight: 700;
+    font-weight: 800;
   }
   .tabela-comparativo-concluidos tr.linha-total-comparativo.linha-divergente {
     background-color: #fee2e2 !important;
@@ -820,7 +1135,7 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: #a5d6a7 #f5f5f5;
+    scrollbar-color: #94a3b8 #f1f5f9;
   }
   #painel-concluidos .tabela-dupla::-webkit-scrollbar,
   #painel-boletins .tabela-dupla::-webkit-scrollbar,
@@ -840,7 +1155,7 @@
   #painel-basesliraa .tabela-liraa-exclusiva-wrapper::-webkit-scrollbar-track,
   #painel-coflagrados .tabela-dupla::-webkit-scrollbar-track,
   #painel-resumogeral .tabela-dupla::-webkit-scrollbar-track {
-    background: #f0f0f0;
+    background: #f1f5f9;
     border-radius: 3px;
   }
   #painel-concluidos .tabela-dupla::-webkit-scrollbar-thumb,
@@ -851,7 +1166,7 @@
   #painel-basesliraa .tabela-liraa-exclusiva-wrapper::-webkit-scrollbar-thumb,
   #painel-coflagrados .tabela-dupla::-webkit-scrollbar-thumb,
   #painel-resumogeral .tabela-dupla::-webkit-scrollbar-thumb {
-    background: #a5d6a7;
+    background: #94a3b8;
     border-radius: 3px;
   }
 
@@ -880,7 +1195,7 @@
     position: sticky;
     left: 0;
     z-index: 2;
-    background: #f5f5f5;
+    background: #f1f5f9;
   }
   #painel-concluidos .tabela-dupla tr.linha-total td.col-num-linha,
   #painel-resumo .tabela-dupla tr.linha-total td.col-num-linha,
@@ -889,11 +1204,13 @@
   #painel-basesliraa .tabela-liraa-exclusiva tr.linha-total td.col-pos,
   #painel-coflagrados .tabela-dupla tr.linha-total td.col-num-linha,
   #painel-resumogeral .tabela-dupla tr.linha-total td.col-num-linha {
-    background: #333 !important;
+    background: #0f172a !important;
   }
-  #painel-basesliraa .tabela-dupla tr.linha-liraa-selecionada td.col-num-linha,
+  #painel-basesliraa .tabela-dupla tr.linha-liraa-selecionada td.col-num-linha {
+    background: #059669 !important;
+  }
   #painel-basesliraa .tabela-liraa-exclusiva td.col-pos {
-    background: #e8f5e9 !important;
+    background: #f1f5f9 !important;
   }
   #painel-concluidos .tabela-dupla thead th.col-num-linha,
   #painel-resumo .tabela-dupla thead th.col-num-linha,
@@ -983,9 +1300,9 @@
       justify-content: center;
       gap: 6px;
       font-size: 11px;
-      color: #1b5e20;
-      background: #e8f5e9;
-      border: 1px solid #a5d6a7;
+      color: #0f172a;
+      background: #f1f5f9;
+      border: 1px solid #94a3b8;
       border-radius: 5px;
       padding: 6px 10px;
       margin: 8px 0 12px 0;
@@ -1203,28 +1520,40 @@
       font-size: 12px !important;
     }
 
-    /* Cabeçalhos de formulário em 2 colunas nos celulares */
-    #painel-andamento .cabecalho-tabelas,
-    #painel-concluidos .cabecalho-tabelas,
-    #painel-boletins .cabecalho-tabelas,
-    #painel-resumo .cabecalho-tabelas,
-    #painel-bases .cabecalho-tabelas,
-    #painel-basesliraa .cabecalho-tabelas,
-    #painel-coflagrados .cabecalho-tabelas,
-    #painel-resumogeral .cabecalho-tabelas {
+    /* Cabeçalhos de formulário nos celulares */
+    #painel-boletins .cabecalho-tabelas {
       grid-template-columns: repeat(2, 1fr) !important;
-      gap: 6px 10px !important;
+      gap: 8px !important;
       padding: 8px !important;
     }
-    #painel-andamento .cabecalho-tabelas .campo-total,
-    #painel-concluidos .cabecalho-tabelas .campo-total,
-    #painel-boletins .cabecalho-tabelas .campo-total,
-    #painel-resumo .cabecalho-tabelas .campo-total,
-    #painel-bases .cabecalho-tabelas .campo-total,
-    #painel-basesliraa .cabecalho-tabelas .campo-total,
-    #painel-coflagrados .cabecalho-tabelas .campo-total,
-    #painel-resumogeral .cabecalho-tabelas .campo-total {
+    #painel-boletins .cabecalho-tabelas .campo-total {
       grid-column: span 2 !important;
+    }
+    #painel-andamento table.tabela-identificacao tr,
+    #painel-concluidos table.tabela-identificacao tr,
+    #painel-resumo table.tabela-identificacao tr,
+    #painel-bases table.tabela-identificacao tr,
+    #painel-basesliraa table.tabela-identificacao tr,
+    #painel-coflagrados table.tabela-identificacao tr,
+    #painel-resumogeral table.tabela-identificacao tr {
+      display: grid;
+      grid-template-columns: 42% 58%;
+    }
+    #painel-andamento table.tabela-identificacao td.campo-label,
+    #painel-andamento table.tabela-identificacao td.campo-valor,
+    #painel-concluidos table.tabela-identificacao td.campo-label,
+    #painel-concluidos table.tabela-identificacao td.campo-valor,
+    #painel-resumo table.tabela-identificacao td.campo-label,
+    #painel-resumo table.tabela-identificacao td.campo-valor,
+    #painel-bases table.tabela-identificacao td.campo-label,
+    #painel-bases table.tabela-identificacao td.campo-valor,
+    #painel-basesliraa table.tabela-identificacao td.campo-label,
+    #painel-basesliraa table.tabela-identificacao td.campo-valor,
+    #painel-coflagrados table.tabela-identificacao td.campo-label,
+    #painel-coflagrados table.tabela-identificacao td.campo-valor,
+    #painel-resumogeral table.tabela-identificacao td.campo-label,
+    #painel-resumogeral table.tabela-identificacao td.campo-valor {
+      width: 100% !important;
     }
 
     /* Rodapés de página no mobile */
@@ -1416,24 +1745,10 @@
   }
 
   @media screen and (max-width: 480px) {
-    #painel-andamento .cabecalho-tabelas,
-    #painel-concluidos .cabecalho-tabelas,
-    #painel-boletins .cabecalho-tabelas,
-    #painel-resumo .cabecalho-tabelas,
-    #painel-bases .cabecalho-tabelas,
-    #painel-basesliraa .cabecalho-tabelas,
-    #painel-coflagrados .cabecalho-tabelas,
-    #painel-resumogeral .cabecalho-tabelas {
+    #painel-boletins .cabecalho-tabelas {
       grid-template-columns: 1fr !important;
     }
-    #painel-andamento .cabecalho-tabelas .campo-total,
-    #painel-concluidos .cabecalho-tabelas .campo-total,
-    #painel-boletins .cabecalho-tabelas .campo-total,
-    #painel-resumo .cabecalho-tabelas .campo-total,
-    #painel-bases .cabecalho-tabelas .campo-total,
-    #painel-basesliraa .cabecalho-tabelas .campo-total,
-    #painel-coflagrados .cabecalho-tabelas .campo-total,
-    #painel-resumogeral .cabecalho-tabelas .campo-total {
+    #painel-boletins .cabecalho-tabelas .campo-total {
       grid-column: span 1 !important;
     }
     .barra-filtro {
@@ -1508,9 +1823,18 @@
 
   .pdf-export-wrapper .titulo-principal { font-size: 13px !important; margin: 1px 0 2px 0 !important; text-align: center !important; }
   .pdf-export-wrapper .subtitulo { font-size: 11px !important; margin: 0 0 5px 0 !important; padding-bottom: 3px !important; text-align: center !important; }
-  .pdf-export-wrapper .cabecalho-tabelas { padding: 4px 6px !important; gap: 4px 8px !important; margin-bottom: 5px !important; width: 100% !important; box-sizing: border-box !important; }
-  .pdf-export-wrapper .cabecalho-tabelas .campo { font-size: 10px !important; }
-  .pdf-export-wrapper .cabecalho-tabelas .campo input { font-size: 10px !important; padding: 2px 4px !important; background: transparent !important; }
+  .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) { padding: 4px 6px !important; gap: 4px !important; margin-bottom: 5px !important; width: 100% !important; box-sizing: border-box !important; }
+  .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) .campo { font-size: 9.5px !important; }
+  .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) .campo input { font-size: 9.5px !important; }
+  .pdf-export-wrapper .folha-cabecalho-titulo { text-align: center !important; border-bottom: 2px solid #000 !important; padding-bottom: 3px !important; margin-bottom: 5px !important; }
+  .pdf-export-wrapper .folha-cabecalho-titulo h2 { font-size: 13px !important; margin: 0 !important; font-weight: 900 !important; text-transform: uppercase !important; color: #000 !important; background: transparent !important; }
+  .pdf-export-wrapper .folha-cabecalho-titulo span { font-size: 10px !important; font-weight: bold !important; color: #334155 !important; }
+  .pdf-export-wrapper table.tabela-identificacao { width: 100% !important; border-collapse: collapse !important; border: 1.5px solid #000 !important; margin-bottom: 5px !important; font-size: 9px !important; }
+  .pdf-export-wrapper table.tabela-identificacao td { border: 1px solid #000 !important; padding: 0 !important; font-size: 9px !important; }
+  .pdf-export-wrapper table.tabela-identificacao td.campo-label { background: #f1f5f9 !important; padding: 2px 4px !important; font-size: 8.5px !important; width: 17% !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pdf-export-wrapper table.tabela-identificacao td.campo-valor { width: 33% !important; }
+  .pdf-export-wrapper table.tabela-identificacao td.campo-valor input { padding: 2px 4px !important; font-size: 9px !important; background: #fff !important; }
+  .pdf-export-wrapper table.tabela-identificacao td.campo-total-quarteiroes { padding: 2px 4px !important; background: #f0fdf4 !important; color: #14532d !important; font-weight: 800 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .pdf-export-wrapper .dupla-tabelas { gap: 3.5mm !important; margin-bottom: 4px !important; width: 100% !important; box-sizing: border-box !important; }
   .pdf-export-wrapper .tabela-dupla { flex: 1 1 0 !important; min-width: 0 !important; width: 50% !important; box-sizing: border-box !important; }
   .pdf-export-wrapper .tabela-dupla table { width: 100% !important; table-layout: fixed !important; font-size: 9.5px !important; box-sizing: border-box !important; }
@@ -1522,14 +1846,15 @@
   .pdf-export-wrapper .tabela-dupla.com-liraa .col-t { width: 12.5% !important; }
   .pdf-export-wrapper .tabela-dupla.com-liraa .col-liraa {
     width: 13% !important;
-    background: #f1f8e9 !important;
+    background: #fef3c7 !important;
+    color: #9a3412 !important;
     font-weight: bold !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   .pdf-export-wrapper .tabela-dupla.com-liraa thead th.col-liraa,
   .pdf-export-wrapper .tabela-dupla.com-liraa tr.linha-total td.col-liraa {
-    background: #1b5e20 !important;
+    background: #c2410c !important;
     color: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -1591,10 +1916,18 @@
     .titulo-principal { font-size: 12px; margin: 1px 0 2px 0; }
     .subtitulo { font-size: 10px; margin: 0 0 4px 0; padding-bottom: 3px; }
 
-    .cabecalho-tabelas { background: #fff; border: 1px solid #333; padding: 5px 8px; margin-bottom: 5px; gap: 4px 8px; }
-    .cabecalho-tabelas .campo { font-size: 9px; }
-    .cabecalho-tabelas .campo input { background: #fff; border-bottom: 1px solid #333; font-size: 9px; padding: 2px 4px; }
-    .cabecalho-tabelas .campo-total { font-size: 10px; padding: 2px 6px; background: #333 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cabecalho-tabelas:not(.tabela-identificacao) { background: #fff; border: 1px solid #999; padding: 4px; margin-bottom: 6px; gap: 4px; }
+    .cabecalho-tabelas:not(.tabela-identificacao) .campo { font-size: 9px; }
+    .cabecalho-tabelas:not(.tabela-identificacao) .campo input { background: transparent; border-bottom: 1px solid #888; font-size: 9px; }
+    .cabecalho-tabelas:not(.tabela-identificacao) .campo-total { font-size: 9px; padding: 2px; }
+    .folha-cabecalho-titulo { border-bottom: 2px solid #000; padding-bottom: 2px; margin-bottom: 4px; }
+    .folha-cabecalho-titulo h2 { font-size: 12px; }
+    .folha-cabecalho-titulo span { font-size: 9.5px; }
+    table.tabela-identificacao { border: 1.5px solid #000; margin-bottom: 5px; font-size: 8.5px; }
+    table.tabela-identificacao td { border: 1px solid #000; font-size: 8.5px; }
+    table.tabela-identificacao td.campo-label { background: #f1f5f9 !important; padding: 2px 4px; font-size: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    table.tabela-identificacao td.campo-valor input { padding: 2px 4px; font-size: 8.5px; background: #fff; }
+    table.tabela-identificacao td.campo-total-quarteiroes { padding: 2px 4px; background: #f0fdf4 !important; color: #14532d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
     .dupla-tabelas { gap: 4mm; margin-bottom: 4px; }
 
@@ -1650,9 +1983,9 @@
     .tabela-dupla.com-liraa .col-q { width: 22% !important; }
     .tabela-dupla.com-liraa .col-n { width: 8.5% !important; }
     .tabela-dupla.com-liraa .col-t { width: 12.5% !important; }
-    .tabela-dupla.com-liraa .col-liraa { width: 13% !important; font-weight: bold !important; background: #f1f8e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tabela-dupla.com-liraa .col-liraa { width: 13% !important; font-weight: bold !important; background: #fef3c7 !important; color: #9a3412 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .tabela-dupla.com-liraa thead th.col-liraa,
-    .tabela-dupla.com-liraa tr.linha-total td.col-liraa { background: #1b5e20 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tabela-dupla.com-liraa tr.linha-total td.col-liraa { background: #c2410c !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .barra-flutuante-selecao, .btn-toggle-selecao, .menu-contexto-planilha { display: none !important; }
     td.celula-selecionada { background-color: transparent !important; outline: none !important; }
   }
@@ -4229,7 +4562,7 @@
       divSemana.className = "semana";
       const h2 = document.createElement("h2");
       h2.textContent = titulo;
-      h2.style.textAlign = "center"; h2.style.background = "#333"; h2.style.color = "#fff";
+      h2.style.textAlign = "center"; h2.style.background = "#2e7d32"; h2.style.color = "#fff";
       h2.style.padding = "8px"; h2.style.borderRadius = "5px";
       divSemana.appendChild(h2);
       const divTabela = document.createElement("div");
@@ -4578,15 +4911,17 @@
   function criarCabecalho(tipo, indexPagina, camposParam, opcoesParam) {
     const listaCampos = camposParam || CAMPOS_CABECALHO;
     const opcoes = opcoesParam || {};
-    const divCab = document.createElement("div");
-    divCab.className = "cabecalho-tabelas";
+    const tableCab = document.createElement("table");
+    tableCab.className = "cabecalho-tabelas tabela-identificacao";
+    const tbody = document.createElement("tbody");
     const dadosCab = (cabecalhos[tipo] && cabecalhos[tipo][indexPagina]) || {};
-    listaCampos.forEach(campo => {
-      const div = document.createElement("div");
-      div.className = "campo";
-      const label = document.createElement("label");
-      label.textContent = campo.label + ":";
-      div.appendChild(label);
+
+    const criarCelulasCampo = (campo) => {
+      const tdLbl = document.createElement("td");
+      tdLbl.className = "campo-label";
+      tdLbl.textContent = campo.label + ":";
+      const tdVal = document.createElement("td");
+      tdVal.className = "campo-valor";
       const inp = document.createElement("input");
       inp.type = "text";
       inp.dataset.campo = campo.id;
@@ -4594,16 +4929,68 @@
       inp.dataset.pagina = indexPagina;
       inp.value = dadosCab[campo.id] || "";
       inp.placeholder = "—";
-      div.appendChild(inp);
-      divCab.appendChild(div);
-    });
-    if (opcoes.mostrarTotal !== false) {
-      const divTotal = document.createElement("div");
-      divTotal.className = "campo campo-total";
-      divTotal.innerHTML = `Total de Quarteirões: <span data-total-quarteiroes="${tipo}-${indexPagina}">0</span>`;
-      divCab.appendChild(divTotal);
+      tdVal.appendChild(inp);
+      return [tdLbl, tdVal];
+    };
+
+    const porId = {};
+    listaCampos.forEach(c => { porId[c.id] = c; });
+    const usaLayoutLiraa = porId.uf && porId.subdistrito && porId.distrito && porId.sublocal && porId.municipio && porId.categoria && porId.localidade;
+
+    if (usaLayoutLiraa) {
+      const pares = [
+        [porId.uf, porId.subdistrito],
+        [porId.distrito, porId.sublocal],
+        [porId.municipio, porId.categoria]
+      ];
+      pares.forEach(([esq, dir]) => {
+        const tr = document.createElement("tr");
+        criarCelulasCampo(esq).forEach(td => tr.appendChild(td));
+        criarCelulasCampo(dir).forEach(td => tr.appendChild(td));
+        tbody.appendChild(tr);
+      });
+      const tr4 = document.createElement("tr");
+      criarCelulasCampo(porId.localidade).forEach(td => tr4.appendChild(td));
+      if (opcoes.mostrarTotal !== false) {
+        const tdTotLbl = document.createElement("td");
+        tdTotLbl.className = "campo-label";
+        tdTotLbl.textContent = "Total de Quarteirões:";
+        const tdTotVal = document.createElement("td");
+        tdTotVal.className = "campo-valor campo-total-quarteiroes";
+        tdTotVal.innerHTML = `<span data-total-quarteiroes="${tipo}-${indexPagina}">0</span>`;
+        tr4.appendChild(tdTotLbl);
+        tr4.appendChild(tdTotVal);
+      } else {
+        const tdV1 = document.createElement("td");
+        tdV1.className = "campo-label";
+        const tdV2 = document.createElement("td");
+        tdV2.className = "campo-valor";
+        tr4.appendChild(tdV1);
+        tr4.appendChild(tdV2);
+      }
+      tbody.appendChild(tr4);
+    } else {
+      for (let i = 0; i < listaCampos.length; i += 2) {
+        const tr = document.createElement("tr");
+        criarCelulasCampo(listaCampos[i]).forEach(td => tr.appendChild(td));
+        if (listaCampos[i + 1]) {
+          criarCelulasCampo(listaCampos[i + 1]).forEach(td => tr.appendChild(td));
+        } else if (opcoes.mostrarTotal !== false) {
+          const tdTotLbl = document.createElement("td");
+          tdTotLbl.className = "campo-label";
+          tdTotLbl.textContent = "Total de Quarteirões:";
+          const tdTotVal = document.createElement("td");
+          tdTotVal.className = "campo-valor campo-total-quarteiroes";
+          tdTotVal.innerHTML = `<span data-total-quarteiroes="${tipo}-${indexPagina}">0</span>`;
+          tr.appendChild(tdTotLbl);
+          tr.appendChild(tdTotVal);
+        }
+        tbody.appendChild(tr);
+      }
     }
-    return divCab;
+
+    tableCab.appendChild(tbody);
+    return tableCab;
   }
 
   function criarRodape(tipo, indexPagina) {
@@ -4646,18 +5033,15 @@
     for (let p = 0; p < numPaginas; p++) {
       const divPagina = document.createElement("div");
       divPagina.className = "pagina-a4";
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS[tipo] || "Resumo de Reconhecimento";
-      divPagina.appendChild(hSub);
+      const divCabTitulo = document.createElement("div");
+      divCabTitulo.className = "folha-cabecalho-titulo";
+      const h2Titulo = document.createElement("h2");
+      h2Titulo.textContent = TITULO_PRINCIPAL;
+      const spanSub = document.createElement("span");
+      spanSub.textContent = `${SUBTITULOS[tipo] || "Resumo de Reconhecimento"} • Página ${p + 1} de ${numPaginas}`;
+      divCabTitulo.appendChild(h2Titulo);
+      divCabTitulo.appendChild(spanSub);
+      divPagina.appendChild(divCabTitulo);
       const cabecalho = criarCabecalho(tipo, p);
       divPagina.appendChild(cabecalho);
       const divDupla = document.createElement("div");
@@ -4959,20 +5343,15 @@
       const divPagina = document.createElement("div");
       divPagina.className = "pagina-a4";
 
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS.resumo || "Resumo de Reconhecimento";
-      divPagina.appendChild(hSub);
+      const divCabTitulo = document.createElement("div");
+      divCabTitulo.className = "folha-cabecalho-titulo";
+      const h2Titulo = document.createElement("h2");
+      h2Titulo.textContent = TITULO_PRINCIPAL;
+      const spanSub = document.createElement("span");
+      spanSub.textContent = `${SUBTITULOS.resumo || "Resumo de Reconhecimento"} • Página ${p + 1} de ${numPaginas}`;
+      divCabTitulo.appendChild(h2Titulo);
+      divCabTitulo.appendChild(spanSub);
+      divPagina.appendChild(divCabTitulo);
 
       const cabecalho = criarCabecalho("resumo", p);
       divPagina.appendChild(cabecalho);
@@ -5076,20 +5455,15 @@
       const divPagina = document.createElement("div");
       divPagina.className = "pagina-a4";
 
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS.bases || "Resumo de Reconhecimento - Bases";
-      divPagina.appendChild(hSub);
+      const divCabTitulo = document.createElement("div");
+      divCabTitulo.className = "folha-cabecalho-titulo";
+      const h2Titulo = document.createElement("h2");
+      h2Titulo.textContent = TITULO_PRINCIPAL;
+      const spanSub = document.createElement("span");
+      spanSub.textContent = `${SUBTITULOS.bases || "Resumo de Reconhecimento - Bases"} • Página ${p + 1} de ${numPaginas}`;
+      divCabTitulo.appendChild(h2Titulo);
+      divCabTitulo.appendChild(spanSub);
+      divPagina.appendChild(divCabTitulo);
 
       const cabecalho = criarCabecalho("bases", p);
       divPagina.appendChild(cabecalho);
@@ -5217,20 +5591,15 @@
       const divPagina = document.createElement("div");
       divPagina.className = "pagina-a4";
 
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS.basesliraa || "Resumo de Reconhecimento - Bases + LIRAa";
-      divPagina.appendChild(hSub);
+      const divCabTitulo = document.createElement("div");
+      divCabTitulo.className = "folha-cabecalho-titulo";
+      const h2Titulo = document.createElement("h2");
+      h2Titulo.textContent = TITULO_PRINCIPAL;
+      const spanSub = document.createElement("span");
+      spanSub.textContent = `${SUBTITULOS.basesliraa || "Resumo de Reconhecimento - Bases + LIRAa"} • Página ${p + 1} de ${numPaginas}`;
+      divCabTitulo.appendChild(h2Titulo);
+      divCabTitulo.appendChild(spanSub);
+      divPagina.appendChild(divCabTitulo);
 
       const cabecalho = criarCabecalho("basesliraa", p);
       divPagina.appendChild(cabecalho);
@@ -5354,9 +5723,9 @@
       card.innerHTML = `
         <div style="flex: 1;">
           🎯 <b>Amostra LIRAa:</b> Nenhum quarteirão selecionado ainda.
-          <span style="color: #555; font-size: 11px; margin-left: 6px;">(Clique no número da coluna <b>Posição</b> dos quarteirões definidos pela coordenação)</span>
+          <span style="color: #475569; font-size: 11px; margin-left: 6px;">(Clique no número da coluna <b>Posição</b> dos quarteirões definidos pela coordenação)</span>
         </div>
-        <div style="font-size: 11px; color: #777;">0 quarteirões selecionados</div>
+        <div style="font-size: 11px; color: #475569;">0 quarteirões selecionados</div>
       `;
     } else {
       const posicoesStr = selecionadas.map(s => s.posicao).join(", ");
@@ -5367,7 +5736,7 @@
           <span><b>${formatarInteiro2Digitos(somaTotaisSel)}</b> imóveis totais</span> |
           <span><b>${formatarInteiro2Digitos(somaLiraaSel)}</b> imóveis a visitar no LIRAa</span>
         </div>
-        <div style="font-size: 11px; color: #1b5e20;">
+        <div style="font-size: 11px; color: #0f172a;">
           Posições selecionadas: <b>${escapeHtmlAttr(posicoesStr)}</b>
         </div>
       `;
@@ -5384,7 +5753,7 @@
 
     if (selecionadas.length === 0) {
       container.innerHTML = `
-        <div class="info-vazia" style="padding: 24px 15px; background: #fafafa; border: 1px dashed #4caf50; border-radius: 6px; margin: 10px 0;">
+        <div class="info-vazia" style="padding: 24px 15px; background: #f8fafc; border: 1.5px dashed #334155; color: #334155; border-radius: 6px; margin: 10px 0;">
           🎯 <b>Nenhum quarteirão selecionado para o LIRAa no momento.</b><br>
           Clique diretamente no número da coluna <b>Posição</b> na tabela geral acima para incluir os quarteirões definidos pela coordenação.
         </div>
@@ -5410,20 +5779,15 @@
       const divPagina = document.createElement("div");
       divPagina.className = "pagina-a4";
 
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginasSel} — Quarteirões Selecionados para o LIRAa`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = "Quarteirões Selecionados para o LIRAa — Amostra Oficial da Coordenação";
-      divPagina.appendChild(hSub);
+      const divCabTitulo = document.createElement("div");
+      divCabTitulo.className = "folha-cabecalho-titulo";
+      const h2Titulo = document.createElement("h2");
+      h2Titulo.textContent = TITULO_PRINCIPAL;
+      const spanSub = document.createElement("span");
+      spanSub.textContent = `Quarteirões Selecionados para o LIRAa — Amostra Oficial da Coordenação • Página ${p + 1} de ${numPaginasSel}`;
+      divCabTitulo.appendChild(h2Titulo);
+      divCabTitulo.appendChild(spanSub);
+      divPagina.appendChild(divCabTitulo);
 
       const cabecalho = criarCabecalho("basesliraa", p, null, { mostrarTotal: true });
       divPagina.appendChild(cabecalho);
@@ -5541,20 +5905,15 @@
       const divPagina = document.createElement("div");
       divPagina.className = "pagina-a4";
 
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS.resumogeral || "Resumo de Reconhecimento - Geral";
-      divPagina.appendChild(hSub);
+      const divCabTitulo = document.createElement("div");
+      divCabTitulo.className = "folha-cabecalho-titulo";
+      const h2Titulo = document.createElement("h2");
+      h2Titulo.textContent = TITULO_PRINCIPAL;
+      const spanSub = document.createElement("span");
+      spanSub.textContent = `${SUBTITULOS.resumogeral || "Resumo de Reconhecimento - Geral"} • Página ${p + 1} de ${numPaginas}`;
+      divCabTitulo.appendChild(h2Titulo);
+      divCabTitulo.appendChild(spanSub);
+      divPagina.appendChild(divCabTitulo);
 
       const cabecalho = criarCabecalho("resumogeral", p);
       divPagina.appendChild(cabecalho);
@@ -5726,20 +6085,15 @@
       const divPagina = document.createElement("div");
       divPagina.className = "pagina-a4";
 
-      const divTitulo = document.createElement("div");
-      divTitulo.className = "titulo-pagina";
-      divTitulo.textContent = `Página ${p + 1} de ${numPaginas}`;
-      divPagina.appendChild(divTitulo);
-
-      const hTitulo = document.createElement("div");
-      hTitulo.className = "titulo-principal";
-      hTitulo.textContent = TITULO_PRINCIPAL;
-      divPagina.appendChild(hTitulo);
-
-      const hSub = document.createElement("div");
-      hSub.className = "subtitulo";
-      hSub.textContent = SUBTITULOS[tipo] || "Resumo de Reconhecimento";
-      divPagina.appendChild(hSub);
+      const divCabTitulo = document.createElement("div");
+      divCabTitulo.className = "folha-cabecalho-titulo";
+      const h2Titulo = document.createElement("h2");
+      h2Titulo.textContent = TITULO_PRINCIPAL;
+      const spanSub = document.createElement("span");
+      spanSub.textContent = `${SUBTITULOS[tipo] || "Resumo de Reconhecimento"} • Página ${p + 1} de ${numPaginas}`;
+      divCabTitulo.appendChild(h2Titulo);
+      divCabTitulo.appendChild(spanSub);
+      divPagina.appendChild(divCabTitulo);
 
       const cabecalho = criarCabecalho(tipo, p);
       divPagina.appendChild(cabecalho);
@@ -8067,7 +8421,7 @@
     }
   }
 
-  async function exportarParaPDF(origemEl, nomeArquivo, orientacao = "portrait") {
+  async function exportarParaPDF(origemEl, nomeArquivo, orientacao = "portrait", usarModeloLiraa = false) {
     if (!origemEl || (!origemEl.children.length && !origemEl.innerHTML.trim())) {
       alert("Não há dados para gerar o PDF.");
       return;
@@ -8086,7 +8440,7 @@
 
     // Cria o wrapper isolado na resolução exata da folha A4 (em fluxo relativo normal)
     const wrapper = document.createElement("div");
-    wrapper.className = "pdf-export-wrapper " + orientacao;
+    wrapper.className = "pdf-export-wrapper " + orientacao + (usarModeloLiraa ? " pdf-modelo-liraa" : "");
 
     // Clona o elemento de forma profunda
     const clone = origemEl.cloneNode(true);
@@ -8167,8 +8521,9 @@
     }
 
     const orientacao = (tipo === "total" || tipo === "informados") ? "landscape" : "portrait";
+    const tiposPadraoLiraa = new Set(["andamento", "concluidos", "resumo", "bases", "basesliraa", "basesliraaselecionados", "coflagrados", "resumogeral"]);
     const nomeArquivo = `${tipo}_${new Date().toISOString().slice(0, 10)}.pdf`;
-    await exportarParaPDF(el, nomeArquivo, orientacao);
+    await exportarParaPDF(el, nomeArquivo, orientacao, tiposPadraoLiraa.has(tipo));
   }
 
   function exportarBackupJSON() {
