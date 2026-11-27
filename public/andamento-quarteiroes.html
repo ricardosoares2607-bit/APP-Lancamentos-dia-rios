@@ -27,6 +27,8 @@
 <script src="./pmcd-sync-engine.js"></script>
 <script type="module" src="./pmcd-firebase-bridge.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
   * { box-sizing: border-box; }
@@ -157,9 +159,9 @@
   .tabela-dupla td.col-q input { text-align: center; padding-left: 0; }
   .tabela-dupla thead th { background: #e0e0e0; font-size: 9px; font-weight: bold; }
   .tabela-dupla .col-num-linha { width: 8%; background: #f0f0f0; font-weight: bold; }
-  .tabela-dupla .col-q { width: 28%; text-align: center; padding-left: 0; }
+  .tabela-dupla .col-q { width: 32%; text-align: center; padding-left: 0; }
   .tabela-dupla .col-n { width: 9%; }
-  .tabela-dupla .col-t { width: 12%; font-weight: bold; }
+  .tabela-dupla .col-t { width: 15%; font-weight: bold; }
   .tabela-dupla tr.linha-total td { background: #e0e0e0; font-weight: bold; }
   .tabela-dupla td.calculado { font-weight: bold; }
   .tabela-dupla td.vazio { color: #ccc; }
@@ -204,6 +206,8 @@
   }
   table.tabela-identificacao {
     width: 100%;
+    table-layout: fixed;
+    box-sizing: border-box;
     border-collapse: collapse;
     border: 1.5px solid #000;
     margin-bottom: 8px;
@@ -222,15 +226,16 @@
     background: #f1f5f9;
     font-weight: bold;
     color: #000;
-    width: 17%;
+    width: 18%;
     padding: 2.5px 5px;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
     text-transform: uppercase;
     font-size: 9px;
   }
   table.tabela-identificacao td.campo-valor {
     background: #fff;
-    width: 33%;
+    width: 32%;
     font-weight: 600;
   }
   table.tabela-identificacao td.campo-valor input {
@@ -415,10 +420,10 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .tabela-dupla.com-liraa .col-q { width: 19%; }
-  .tabela-dupla.com-liraa .col-n { width: 8.5%; }
-  .tabela-dupla.com-liraa .col-t { width: 12%; }
-  .tabela-dupla.com-liraa .col-liraa { width: 16.5%; font-weight: 800; }
+  .tabela-dupla.com-liraa .col-q { width: 22%; }
+  .tabela-dupla.com-liraa .col-n { width: 8%; }
+  .tabela-dupla.com-liraa .col-t { width: 13%; }
+  .tabela-dupla.com-liraa .col-liraa { width: 15%; font-weight: 800; }
   .tabela-dupla.com-liraa td.col-liraa { background: #fef3c7; color: #9a3412; }
   .tabela-dupla.com-liraa thead th.col-liraa { background: #c2410c; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .tabela-dupla.com-liraa tr.linha-total td.col-liraa { background: #c2410c !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -697,13 +702,14 @@
   .info-regra-bases b { color: #01396b; }
 
   /* ===== Boletins de Reconhecimento ===== */
-  .tabela-boletins-imoveis th { font-size: 10px; padding: 3px 1px; height: 24px; line-height: 1.2; text-align: center; white-space: nowrap; }
+  .tabela-boletins-imoveis { width: 100%; table-layout: fixed; }
+  .tabela-boletins-imoveis th { font-size: 9px; padding: 3px 1px; height: 24px; line-height: 1.2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tabela-boletins-imoveis td { font-size: 11px; padding: 0; height: 24px; line-height: 1.2; }
-  .tabela-boletins-imoveis .col-rua    { width: 30%; }
-  .tabela-boletins-imoveis .col-numero { width: 8%; }
-  .tabela-boletins-imoveis .col-comp   { width: 22%; }
-  .tabela-boletins-imoveis .col-seq    { width: 13%; }
-  .tabela-boletins-imoveis .col-tipo   { width: 15%; }
+  .tabela-boletins-imoveis .col-rua    { width: 34%; }
+  .tabela-boletins-imoveis .col-numero { width: 10%; }
+  .tabela-boletins-imoveis .col-comp   { width: 24%; }
+  .tabela-boletins-imoveis .col-seq    { width: 16%; }
+  .tabela-boletins-imoveis .col-tipo   { width: 16%; }
   .tabela-boletins-imoveis td.col-rua input { text-align: left; padding-left: 3px; }
   .tabela-boletins-imoveis td.col-comp input { text-align: center; padding-left: 0; }
   .tabela-boletins-imoveis td input { width: 100%; height: 100%; display: block; padding: 2px 3px; font-size: 11px; box-sizing: border-box; touch-action: manipulation; }
@@ -1225,27 +1231,16 @@
     z-index: 5;
   }
 
-  /* Larguras mínimas adequadas ao conteúdo das colunas em telas de computador e tablet */
-  #painel-concluidos .tabela-dupla table,
-  #painel-resumo .tabela-dupla table,
-  #painel-bases .tabela-dupla table,
-  #painel-coflagrados .tabela-dupla table,
-  #painel-resumogeral .tabela-dupla table {
-    min-width: 480px;
-    width: 100%;
-  }
-  #painel-basesliraa .tabela-dupla.com-liraa table,
-  #painel-basesliraa .tabela-liraa-exclusiva {
-    min-width: 530px;
-    width: 100%;
-  }
-  #painel-boletins .tabela-boletins-imoveis {
-    min-width: 530px;
-    width: 100%;
-  }
-  #painel-boletins .tabela-boletins-resumo {
-    min-width: 260px;
-    width: 100%;
+  /* Em telas maiores (> 850px), as tabelas acompanham exatamente 100% da largura do cabeçalho */
+  @media screen and (min-width: 851px) {
+    .dupla-tabelas .tabela-dupla table,
+    .tabela-liraa-exclusiva,
+    .tabela-boletins-imoveis,
+    .tabela-boletins-resumo {
+      min-width: 0 !important;
+      width: 100% !important;
+      table-layout: fixed;
+    }
   }
 
   /* Espaçamento aprimorado para linhas e células */
@@ -1344,8 +1339,26 @@
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
-    #painel-andamento .tabela-dupla table {
+    #painel-andamento .tabela-dupla table,
+    #painel-concluidos .tabela-dupla table,
+    #painel-resumo .tabela-dupla table,
+    #painel-bases .tabela-dupla table,
+    #painel-coflagrados .tabela-dupla table,
+    #painel-resumogeral .tabela-dupla table {
       min-width: 480px;
+      width: 100%;
+    }
+    #painel-basesliraa .tabela-dupla.com-liraa table,
+    #painel-basesliraa .tabela-liraa-exclusiva {
+      min-width: 530px;
+      width: 100%;
+    }
+    #painel-boletins .tabela-boletins-imoveis {
+      min-width: 530px;
+      width: 100%;
+    }
+    #painel-boletins .tabela-boletins-resumo {
+      min-width: 260px;
       width: 100%;
     }
 
@@ -1772,8 +1785,8 @@
     position: relative !important;
     left: auto !important;
     top: auto !important;
-    width: 194mm !important;
-    max-width: 194mm !important;
+    width: 750px !important;
+    max-width: 750px !important;
     background: #ffffff !important;
     z-index: auto !important;
     pointer-events: none !important;
@@ -1782,8 +1795,8 @@
     padding: 0 !important;
   }
   .pdf-export-wrapper.landscape {
-    width: 280mm !important;
-    max-width: 280mm !important;
+    width: 1080px !important;
+    max-width: 1080px !important;
   }
   .pdf-export-wrapper .bloco-quarteirao { border: none !important; padding: 0 !important; margin: 0 !important; background: transparent !important; }
   .pdf-export-wrapper .titulo-bloco-quarteirao,
@@ -1799,53 +1812,65 @@
   .pdf-export-wrapper .info-regra-bases,
   .pdf-export-wrapper .badge-auto,
   .pdf-export-wrapper .badge-legado,
-  .pdf-export-wrapper .aviso-sincronizacao { display: none !important; }
+  .pdf-export-wrapper .aviso-sincronizacao,
+  .pdf-export-wrapper .dica-scroll-tabela,
+  .pdf-export-wrapper .seletor-visualizacao-liraa,
+  .pdf-export-wrapper .card-resumo-liraa,
+  .pdf-export-wrapper .titulo-secao-liraa,
+  .pdf-export-wrapper .rodape-dia { display: none !important; }
 
   .pdf-export-wrapper .pagina-a4 {
-    width: 194mm !important;
-    max-width: 194mm !important;
-    height: 279mm !important;
-    max-height: 279mm !important;
-    min-height: 270mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
-    padding: 2.5mm 3mm !important;
+    overflow: visible !important;
+    padding: 8px 10px !important;
     margin: 0 !important;
     border: none !important;
+    box-shadow: none !important;
     background: #fff !important;
     display: flex !important;
     flex-direction: column !important;
-    page-break-inside: avoid !important;
-    page-break-after: always !important;
   }
-  .pdf-export-wrapper .pagina-a4:last-child { page-break-after: auto !important; }
-  .pdf-export-wrapper .pagina-a4 + .pagina-a4 { page-break-before: always !important; }
 
   .pdf-export-wrapper .titulo-principal { font-size: 13px !important; margin: 1px 0 2px 0 !important; text-align: center !important; }
   .pdf-export-wrapper .subtitulo { font-size: 11px !important; margin: 0 0 5px 0 !important; padding-bottom: 3px !important; text-align: center !important; }
   .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) { padding: 4px 6px !important; gap: 4px !important; margin-bottom: 5px !important; width: 100% !important; box-sizing: border-box !important; }
-  .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) .campo { font-size: 9.5px !important; }
-  .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) .campo input { font-size: 9.5px !important; }
+  .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) .campo { font-size: 9.5px !important; min-width: 0 !important; }
+  .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) .campo input,
+  .pdf-export-wrapper .cabecalho-tabelas:not(.tabela-identificacao) .campo .pdf-text-mirror { font-size: 9.5px !important; min-width: 0 !important; flex: 1 1 0 !important; white-space: normal !important; word-break: break-word !important; }
   .pdf-export-wrapper .folha-cabecalho-titulo { text-align: center !important; border-bottom: 2px solid #000 !important; padding-bottom: 3px !important; margin-bottom: 5px !important; }
   .pdf-export-wrapper .folha-cabecalho-titulo h2 { font-size: 13px !important; margin: 0 !important; font-weight: 900 !important; text-transform: uppercase !important; color: #000 !important; background: transparent !important; }
   .pdf-export-wrapper .folha-cabecalho-titulo span { font-size: 10px !important; font-weight: bold !important; color: #334155 !important; }
-  .pdf-export-wrapper table.tabela-identificacao { width: 100% !important; border-collapse: collapse !important; border: 1.5px solid #000 !important; margin-bottom: 5px !important; font-size: 9px !important; }
+  .pdf-export-wrapper table.tabela-identificacao { width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; border: 1.5px solid #000 !important; margin-bottom: 5px !important; font-size: 9px !important; box-sizing: border-box !important; }
   .pdf-export-wrapper table.tabela-identificacao td { border: 1px solid #000 !important; padding: 0 !important; font-size: 9px !important; }
-  .pdf-export-wrapper table.tabela-identificacao td.campo-label { background: #f1f5f9 !important; padding: 2px 4px !important; font-size: 8.5px !important; width: 17% !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .pdf-export-wrapper table.tabela-identificacao td.campo-valor { width: 33% !important; }
-  .pdf-export-wrapper table.tabela-identificacao td.campo-valor input { padding: 2px 4px !important; font-size: 9px !important; background: #fff !important; }
+  .pdf-export-wrapper table.tabela-identificacao td.campo-label { background: #f1f5f9 !important; padding: 2px 4px !important; font-size: 8.5px !important; width: 18% !important; white-space: normal !important; word-break: break-word !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pdf-export-wrapper table.tabela-identificacao td.campo-valor { width: 32% !important; }
+  .pdf-export-wrapper table.tabela-identificacao td.campo-valor input,
+  .pdf-export-wrapper table.tabela-identificacao td.campo-valor .pdf-text-mirror { padding: 2px 4px !important; font-size: 9px !important; background: #fff !important; font-weight: 600 !important; color: #000 !important; white-space: normal !important; word-break: break-word !important; line-height: 1.2 !important; }
   .pdf-export-wrapper table.tabela-identificacao td.campo-total-quarteiroes { padding: 2px 4px !important; background: #f0fdf4 !important; color: #14532d !important; font-weight: 800 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .pdf-export-wrapper .dupla-tabelas { gap: 3.5mm !important; margin-bottom: 4px !important; width: 100% !important; box-sizing: border-box !important; }
-  .pdf-export-wrapper .tabela-dupla { flex: 1 1 0 !important; min-width: 0 !important; width: 50% !important; box-sizing: border-box !important; }
-  .pdf-export-wrapper .tabela-dupla table { width: 100% !important; table-layout: fixed !important; font-size: 9.5px !important; box-sizing: border-box !important; }
+  .pdf-export-wrapper .dupla-tabelas { gap: 10px !important; margin-bottom: 4px !important; width: 100% !important; box-sizing: border-box !important; align-items: flex-start !important; }
+  .pdf-export-wrapper .tabela-dupla { flex: 1 1 0 !important; min-width: 0 !important; width: auto !important; overflow: visible !important; box-sizing: border-box !important; }
+  .pdf-export-wrapper .tabela-dupla table,
+  .pdf-export-wrapper .tabela-liraa-exclusiva,
+  .pdf-export-wrapper .tabela-boletins-imoveis,
+  .pdf-export-wrapper .tabela-boletins-resumo { width: 100% !important; min-width: 0 !important; table-layout: fixed !important; font-size: 9.5px !important; box-sizing: border-box !important; }
   .pdf-export-wrapper .tabela-dupla th, .pdf-export-wrapper .tabela-dupla td { padding: 2px 1px !important; height: 18px !important; font-size: 9.5px !important; }
-  .pdf-export-wrapper .tabela-dupla td input { font-size: 9.5px !important; }
-  .pdf-export-wrapper .tabela-dupla.com-liraa .col-num-linha { width: 7% !important; }
+  .pdf-export-wrapper .tabela-dupla td input,
+  .pdf-export-wrapper .tabela-dupla td .pdf-text-mirror { font-size: 9.5px !important; line-height: 1.15 !important; white-space: normal !important; word-break: break-word !important; }
+  .pdf-export-wrapper .tabela-dupla .col-num-linha { width: 8% !important; }
+  .pdf-export-wrapper .tabela-dupla .col-q { width: 32% !important; }
+  .pdf-export-wrapper .tabela-dupla .col-n { width: 9% !important; }
+  .pdf-export-wrapper .tabela-dupla .col-t { width: 15% !important; }
+  .pdf-export-wrapper .tabela-dupla.com-liraa .col-num-linha { width: 10% !important; }
   .pdf-export-wrapper .tabela-dupla.com-liraa .col-q { width: 22% !important; }
-  .pdf-export-wrapper .tabela-dupla.com-liraa .col-n { width: 8.5% !important; }
-  .pdf-export-wrapper .tabela-dupla.com-liraa .col-t { width: 12.5% !important; }
+  .pdf-export-wrapper .tabela-dupla.com-liraa .col-n { width: 8% !important; }
+  .pdf-export-wrapper .tabela-dupla.com-liraa .col-t { width: 13% !important; }
   .pdf-export-wrapper .tabela-dupla.com-liraa .col-liraa {
-    width: 13% !important;
+    width: 15% !important;
     background: #fef3c7 !important;
     color: #9a3412 !important;
     font-weight: bold !important;
@@ -1858,6 +1883,29 @@
     color: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+  .pdf-export-wrapper .tabela-liraa-exclusiva-wrapper { width: 100% !important; overflow: visible !important; }
+  .pdf-export-wrapper .tabela-semanal,
+  .pdf-export-wrapper .tabela-total,
+  .pdf-export-wrapper .tabela-informados {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    margin: 0 !important;
+  }
+  .pdf-export-wrapper .tabela-semanal table,
+  .pdf-export-wrapper .tabela-total table,
+  .pdf-export-wrapper .tabela-informados table {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 9.5px !important;
+  }
+  .pdf-export-wrapper .tabela-semanal th, .pdf-export-wrapper .tabela-semanal td,
+  .pdf-export-wrapper .tabela-total th, .pdf-export-wrapper .tabela-total td,
+  .pdf-export-wrapper .tabela-informados th, .pdf-export-wrapper .tabela-informados td {
+    padding: 3px 2px !important;
+    font-size: 9px !important;
+    word-break: break-word !important;
   }
 
   .pdf-export-wrapper .totais-quarteirao {
@@ -1875,66 +1923,110 @@
   .pdf-export-wrapper .totais-quarteirao b { color: #01579b !important; }
 
   .pdf-export-wrapper .tabela-boletins-imoveis th,
-  .pdf-export-wrapper .tabela-boletins-imoveis td { height: 25px !important; font-size: 10px !important; padding: 1px !important; line-height: 1.15 !important; }
-  .pdf-export-wrapper .tabela-boletins-imoveis th { font-size: 9px !important; }
-  .pdf-export-wrapper .tabela-boletins-imoveis td input { font-size: 10px !important; }
-  .pdf-export-wrapper .tabela-boletins-imoveis td.col-tipo input { font-size: 10.5px !important; }
+  .pdf-export-wrapper .tabela-boletins-imoveis td { height: auto !important; min-height: 22px !important; font-size: 9.5px !important; padding: 2px 1px !important; line-height: 1.15 !important; }
+  .pdf-export-wrapper .tabela-boletins-imoveis th { font-size: 8.5px !important; }
+  .pdf-export-wrapper .tabela-boletins-imoveis td input,
+  .pdf-export-wrapper .tabela-boletins-imoveis td .pdf-text-mirror { font-size: 9.5px !important; white-space: normal !important; word-break: break-word !important; }
+  .pdf-export-wrapper .tabela-boletins-imoveis td.col-rua .pdf-text-mirror { text-align: left !important; padding-left: 3px !important; }
+  .pdf-export-wrapper .tabela-boletins-imoveis td.col-tipo input,
+  .pdf-export-wrapper .tabela-boletins-imoveis td.col-tipo .pdf-text-mirror { font-size: 10px !important; font-weight: bold !important; }
 
   .pdf-export-wrapper .tabela-boletins-resumo th,
-  .pdf-export-wrapper .tabela-boletins-resumo td { height: 25px !important; font-size: 10.5px !important; padding: 3px 5px !important; }
-  .pdf-export-wrapper .tabela-boletins-resumo thead th { font-size: 9.5px !important; }
-  .pdf-export-wrapper .tabela-boletins-resumo td input { font-size: 10.5px !important; }
+  .pdf-export-wrapper .tabela-boletins-resumo td { height: 24px !important; font-size: 10px !important; padding: 3px 5px !important; }
+  .pdf-export-wrapper .tabela-boletins-resumo thead th { font-size: 9px !important; }
+  .pdf-export-wrapper .tabela-boletins-resumo td input,
+  .pdf-export-wrapper .tabela-boletins-resumo td .pdf-text-mirror { font-size: 10px !important; font-weight: bold !important; }
 
-  .pdf-export-wrapper .rodape-pagina { margin-top: auto !important; padding-top: 5px !important; width: 100% !important; box-sizing: border-box !important; }
-  .pdf-export-wrapper .rodape-pagina .campo-rodape { font-size: 10px !important; }
-  .pdf-export-wrapper .rodape-pagina .campo-rodape input { font-size: 10px !important; }
+  .pdf-export-wrapper .rodape-pagina { margin-top: 8px !important; padding-top: 5px !important; width: 100% !important; box-sizing: border-box !important; }
+  .pdf-export-wrapper .rodape-pagina .campo-rodape { font-size: 10px !important; min-width: 0 !important; }
+  .pdf-export-wrapper .rodape-pagina .campo-rodape input,
+  .pdf-export-wrapper .rodape-pagina .campo-rodape .pdf-text-mirror { font-size: 10px !important; border-bottom: 1px solid #0f172a !important; padding: 2px 4px !important; flex: 1 1 0 !important; white-space: normal !important; word-break: break-word !important; }
 
   .pdf-export-wrapper .tabela-boletins-imoveis td.col-tipo input.invalido { background: #fff !important; color: inherit !important; }
   .pdf-export-wrapper .tabela-boletins-resumo td input[readonly] { background: #fff !important; }
-  .pdf-export-wrapper .tabela-boletins-resumo tr.linha-total input[readonly] { background: transparent !important; color: #fff !important; }
-
+  .pdf-export-wrapper .tabela-boletins-resumo tr.linha-total input[readonly],
+  .pdf-export-wrapper .tabela-boletins-resumo tr.linha-total .pdf-text-mirror { background: transparent !important; color: #fff !important; }
 
   @media print {
-    @page { size: A4 portrait; margin: 8mm; }
-    body { background: #fff; margin: 0; padding: 0; font-size: 10px; }
-    h1, .status-nuvem-container, .abas, .barra-topo, .barra-botoes-tabelas, .barra-filtro, .contador, .aviso, .barra-selecao-quarteirao, .info-regra-bases, .pdf-export-wrapper { display: none !important; }
+    @page { size: A4 portrait; margin: 6mm; }
+    body { background: #fff; margin: 0; padding: 0; font-size: 9.5px; }
+    h1, .status-nuvem-container, .abas, .barra-topo, .barra-botoes-tabelas, .barra-filtro, .contador, .aviso, .barra-selecao-quarteirao, .info-regra-bases, .dica-scroll-tabela, .seletor-visualizacao-liraa, .card-resumo-liraa, .titulo-secao-liraa, .pdf-export-wrapper { display: none !important; }
     .painel { border: none; padding: 0; box-shadow: none; }
     .painel.oculto { display: none !important; }
 
     .pagina-a4 {
-      width: 194mm !important; height: 281mm !important;
-      min-height: 0 !important; max-height: 281mm !important;
-      box-sizing: border-box !important; overflow: hidden !important;
-      margin: 0 !important; padding: 0 !important; border: none !important;
+      width: 100% !important; max-width: 100% !important;
+      height: auto !important; min-height: 0 !important; max-height: none !important;
+      box-sizing: border-box !important; overflow: visible !important;
+      margin: 0 !important; padding: 1.5mm 2mm !important; border: none !important;
+      box-shadow: none !important;
       background: #fff !important;
-      page-break-inside: avoid; page-break-after: always;
+      page-break-inside: avoid; break-inside: avoid;
+      page-break-after: always; break-after: page;
     }
-    .pagina-a4:last-child { page-break-after: auto; }
-    .pagina-a4 + .pagina-a4 { page-break-before: always; }
+    .pagina-a4:last-child { page-break-after: auto; break-after: auto; }
+    .pagina-a4 + .pagina-a4 { page-break-before: always; break-before: page; }
 
     .pagina-a4 .titulo-pagina { display: none; }
-    .titulo-principal { font-size: 12px; margin: 1px 0 2px 0; }
-    .subtitulo { font-size: 10px; margin: 0 0 4px 0; padding-bottom: 3px; }
+    .titulo-principal { font-size: 11.5px; margin: 1px 0 2px 0; }
+    .subtitulo { font-size: 9.5px; margin: 0 0 4px 0; padding-bottom: 2px; }
 
-    .cabecalho-tabelas:not(.tabela-identificacao) { background: #fff; border: 1px solid #999; padding: 4px; margin-bottom: 6px; gap: 4px; }
-    .cabecalho-tabelas:not(.tabela-identificacao) .campo { font-size: 9px; }
-    .cabecalho-tabelas:not(.tabela-identificacao) .campo input { background: transparent; border-bottom: 1px solid #888; font-size: 9px; }
-    .cabecalho-tabelas:not(.tabela-identificacao) .campo-total { font-size: 9px; padding: 2px; }
-    .folha-cabecalho-titulo { border-bottom: 2px solid #000; padding-bottom: 2px; margin-bottom: 4px; }
-    .folha-cabecalho-titulo h2 { font-size: 12px; }
-    .folha-cabecalho-titulo span { font-size: 9.5px; }
-    table.tabela-identificacao { border: 1.5px solid #000; margin-bottom: 5px; font-size: 8.5px; }
-    table.tabela-identificacao td { border: 1px solid #000; font-size: 8.5px; }
-    table.tabela-identificacao td.campo-label { background: #f1f5f9 !important; padding: 2px 4px; font-size: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    table.tabela-identificacao td.campo-valor input { padding: 2px 4px; font-size: 8.5px; background: #fff; }
-    table.tabela-identificacao td.campo-total-quarteiroes { padding: 2px 4px; background: #f0fdf4 !important; color: #14532d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cabecalho-tabelas:not(.tabela-identificacao) { background: #fff; border: 1px solid #999; padding: 3px 5px; margin-bottom: 5px; gap: 4px; width: 100%; box-sizing: border-box; }
+    .cabecalho-tabelas:not(.tabela-identificacao) .campo { font-size: 8.5px; min-width: 0; }
+    .cabecalho-tabelas:not(.tabela-identificacao) .campo input { background: transparent; border-bottom: 1px solid #888; font-size: 8.5px; min-width: 0; }
+    .cabecalho-tabelas:not(.tabela-identificacao) .campo-total { font-size: 8.5px; padding: 2px; }
+    .folha-cabecalho-titulo { border-bottom: 2px solid #000; padding-bottom: 2px; margin-bottom: 3px; }
+    .folha-cabecalho-titulo h2 { font-size: 11.5px; }
+    .folha-cabecalho-titulo span { font-size: 9px; }
+    table.tabela-identificacao { width: 100% !important; table-layout: fixed !important; border: 1.5px solid #000; margin-bottom: 4px; font-size: 8px; }
+    table.tabela-identificacao td { border: 1px solid #000; font-size: 8px; }
+    table.tabela-identificacao td.campo-label { background: #f1f5f9 !important; width: 18% !important; padding: 2px 4px; font-size: 7.8px; white-space: normal !important; word-break: break-word !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    table.tabela-identificacao td.campo-valor { width: 32% !important; }
+    table.tabela-identificacao td.campo-valor input { padding: 1.5px 4px; font-size: 8px; background: #fff; }
+    table.tabela-identificacao td.campo-total-quarteiroes { padding: 1.5px 4px; background: #f0fdf4 !important; color: #14532d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-    .dupla-tabelas { gap: 4mm; margin-bottom: 4px; }
+    .dupla-tabelas { gap: 3mm !important; margin-bottom: 3px !important; width: 100% !important; box-sizing: border-box !important; }
+    .tabela-dupla { flex: 1 1 0 !important; min-width: 0 !important; width: auto !important; overflow: visible !important; }
+    .tabela-dupla table,
+    .tabela-liraa-exclusiva,
+    .tabela-boletins-imoveis,
+    .tabela-boletins-resumo { width: 100% !important; min-width: 0 !important; table-layout: fixed !important; }
+    .tabela-dupla th { height: 21px !important; padding: 2px 1px !important; font-size: 8.5px !important; line-height: 1.1 !important; }
+    .tabela-dupla td { height: 17.5px !important; padding: 1px !important; font-size: 8.8px !important; line-height: 1.1 !important; }
+    .tabela-dupla td input { font-size: 8.8px !important; }
+    .tabela-liraa-exclusiva th { height: 21px !important; padding: 2px 1px !important; font-size: 8.5px !important; }
+    .tabela-liraa-exclusiva td { height: 18px !important; padding: 1.5px 1px !important; font-size: 8.8px !important; }
+    .tabela-liraa-exclusiva-wrapper { overflow: visible !important; width: 100% !important; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+
+    .tabela-semanal,
+    .tabela-total,
+    .tabela-informados {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      overflow: visible !important;
+    }
+    .tabela-semanal table,
+    .tabela-total table,
+    .tabela-informados table {
+      width: 100% !important;
+      min-width: 0 !important;
+      font-size: 9px !important;
+    }
+    .tabela-semanal th, .tabela-semanal td,
+    .tabela-total th, .tabela-total td,
+    .tabela-informados th, .tabela-informados td {
+      padding: 3px 2px !important;
+      font-size: 8.8px !important;
+      word-break: break-word;
+    }
+    .semana-resumo-bloco { break-inside: avoid; page-break-inside: avoid; }
 
     .totais-quarteirao {
       margin: 0 0 4px !important;
-      padding: 4px 6px !important;
-      font-size: 9px !important;
+      padding: 3px 6px !important;
+      font-size: 8.5px !important;
       background: #e1f5fe !important;
       border: 1px solid #0277bd !important;
       border-radius: 3px !important;
@@ -1946,24 +2038,24 @@
     .totais-quarteirao b { color: #01579b !important; }
 
     .tabela-boletins-imoveis th,
-    .tabela-boletins-imoveis td { height: 20px; font-size: 9px; padding: 1px; line-height: 1.1; }
-    .tabela-boletins-imoveis th { font-size: 9px; }
-    .tabela-boletins-imoveis td input { font-size: 9px; }
-    .tabela-boletins-imoveis td.col-tipo input { font-size: 10px; }
+    .tabela-boletins-imoveis td { height: 19px !important; font-size: 8.5px !important; padding: 1px !important; line-height: 1.1 !important; }
+    .tabela-boletins-imoveis th { font-size: 8px !important; }
+    .tabela-boletins-imoveis td input { font-size: 8.5px !important; }
+    .tabela-boletins-imoveis td.col-tipo input { font-size: 9.5px !important; }
     .tabela-boletins-imoveis td.col-tipo input.invalido { background: #fff; color: inherit; }
     .tabela-boletins-imoveis thead th,
     .tabela-boletins-imoveis tr.linha-total td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
     .tabela-boletins-resumo th,
-    .tabela-boletins-resumo td { height: 24px; font-size: 10px; padding: 3px 5px; }
-    .tabela-boletins-resumo thead th { font-size: 9px; }
-    .tabela-boletins-resumo td input { font-size: 10px; }
+    .tabela-boletins-resumo td { height: 21px !important; font-size: 9px !important; padding: 2px 4px !important; }
+    .tabela-boletins-resumo thead th { font-size: 8.5px !important; }
+    .tabela-boletins-resumo td input { font-size: 9px !important; }
     .tabela-boletins-resumo td input[readonly] { background: #fff; }
     .tabela-boletins-resumo tr.linha-total input[readonly] { background: transparent; color: #fff; }
 
-    .rodape-pagina { margin-top: 6px; padding-top: 4px; }
+    .rodape-pagina { margin-top: 5px !important; padding-top: 4px !important; }
     .rodape-pagina .campo-rodape,
-    .rodape-pagina .campo-rodape input { font-size: 10px; }
+    .rodape-pagina .campo-rodape input { font-size: 9px !important; }
 
     .btn-status-mini, .status-semana, .aviso-bloqueio-dia, .legenda-codigos, .legenda-colagem, .badge-auto, .badge-legado { display: none !important; }
 
@@ -1974,16 +2066,16 @@
     .cabecalho-tabelas .campo-quarteirao-fixo input { background: #fff; }
 
     body.print-individual .bloco-quarteirao.alvo-impressao,
-    body.print-individual .bloco-quarteirao.alvo-impressao .pagina-a4:last-child { page-break-after: auto !important; }
+    body.print-individual .bloco-quarteirao.alvo-impressao .pagina-a4:last-child { page-break-after: auto !important; break-after: auto !important; }
 
     .tabela-resumo-integrada td.auto { background: #fff; }
     .tabela-resumo-integrada td.legacy { background: #fff; }
 
-    .tabela-dupla.com-liraa .col-num-linha { width: 7% !important; }
+    .tabela-dupla.com-liraa .col-num-linha { width: 10% !important; }
     .tabela-dupla.com-liraa .col-q { width: 22% !important; }
-    .tabela-dupla.com-liraa .col-n { width: 8.5% !important; }
-    .tabela-dupla.com-liraa .col-t { width: 12.5% !important; }
-    .tabela-dupla.com-liraa .col-liraa { width: 13% !important; font-weight: bold !important; background: #fef3c7 !important; color: #9a3412 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tabela-dupla.com-liraa .col-n { width: 8% !important; }
+    .tabela-dupla.com-liraa .col-t { width: 13% !important; }
+    .tabela-dupla.com-liraa .col-liraa { width: 15% !important; font-weight: bold !important; background: #fef3c7 !important; color: #9a3412 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .tabela-dupla.com-liraa thead th.col-liraa,
     .tabela-dupla.com-liraa tr.linha-total td.col-liraa { background: #c2410c !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .barra-flutuante-selecao, .btn-toggle-selecao, .menu-contexto-planilha { display: none !important; }
@@ -4190,6 +4282,7 @@
     if (nome === "basesliraa") renderizarBasesLiraaIntegrado();
     if (nome === "coflagrados") renderizarCoflagrados();
     if (nome === "resumogeral") renderizarResumoGeral();
+    if (typeof atualizarOrientacaoImpressao === "function") atualizarOrientacaoImpressao(nome);
   }
 
   function criarSemana(dadosSemana) {
@@ -8395,7 +8488,30 @@
       .replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  function imprimir() { window.print(); }
+  function atualizarOrientacaoImpressao(abaNome) {
+    let nome = abaNome;
+    if (!nome) {
+      const painelAtivo = document.querySelector(".painel:not(.oculto)");
+      if (painelAtivo && painelAtivo.id) nome = painelAtivo.id.replace("painel-", "");
+    }
+    const paisagem = (nome === "total" || nome === "informados");
+    let st = document.getElementById("pmcd-print-page-style");
+    if (!st) {
+      st = document.createElement("style");
+      st.id = "pmcd-print-page-style";
+      document.head.appendChild(st);
+    }
+    st.textContent = paisagem
+      ? "@media print { @page { size: A4 landscape; margin: 6mm; } }"
+      : "@media print { @page { size: A4 portrait; margin: 6mm; } }";
+  }
+
+  window.addEventListener("beforeprint", () => { atualizarOrientacaoImpressao(); });
+
+  function imprimir() {
+    atualizarOrientacaoImpressao();
+    window.print();
+  }
 
   function sincronizarInputsNoClone(origem, clone) {
     const origInputs = origem.querySelectorAll("input, select, textarea");
@@ -8421,66 +8537,192 @@
     }
   }
 
+  function substituirInputsPorTextoNoClone(clone) {
+    clone.querySelectorAll("input").forEach(inp => {
+      if (inp.type === "hidden" || inp.type === "checkbox" || inp.type === "radio") return;
+      const div = document.createElement("div");
+      div.className = (inp.className ? inp.className + " " : "") + "pdf-text-mirror";
+      const val = (inp.value !== undefined && inp.value !== null) ? String(inp.value) : "";
+      const txt = val !== "" ? val : (inp.placeholder || "");
+      div.textContent = txt;
+      const cs = inp.style;
+      div.style.cssText = "width:100%;min-height:14px;box-sizing:border-box;display:block;font-family:inherit;white-space:normal;word-break:break-word;overflow-wrap:anywhere;";
+      if (inp.closest(".cabecalho-tabelas.tabela-identificacao") || inp.closest(".cabecalho-tabelas .campo")) {
+        div.style.textAlign = "left";
+        div.style.color = val !== "" ? "#000" : "#64748b";
+      } else if (inp.closest(".rodape-pagina")) {
+        div.style.textAlign = "left";
+        div.style.color = val !== "" ? "#000" : "#64748b";
+      } else if (inp.closest("td.col-rua")) {
+        div.style.textAlign = "left";
+      } else {
+        div.style.textAlign = "center";
+      }
+      if (cs.fontWeight) div.style.fontWeight = cs.fontWeight;
+      if (inp.parentNode) inp.parentNode.replaceChild(div, inp);
+    });
+  }
+
+  async function renderizarElementoParaCanvasPDF(el, orientacao, scale = 2) {
+    const winW = orientacao === "landscape" ? 1360 : 1280;
+    if (typeof window.html2canvas === "function") {
+      return await window.html2canvas(el, {
+        scale: scale,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: winW
+      });
+    }
+    return await html2pdf().set({
+      margin: 0,
+      image: { type: "jpeg", quality: 0.96 },
+      html2canvas: { scale: scale, useCORS: true, backgroundColor: "#ffffff", logging: false, scrollX: 0, scrollY: 0, windowWidth: winW }
+    }).from(el).toCanvas().get("canvas");
+  }
+
+  async function criarDocumentoJsPDF(orientacao) {
+    const JsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (JsPDFCtor) {
+      return new JsPDFCtor({ unit: "mm", format: "a4", orientation: orientacao, compress: true });
+    }
+    const probe = document.createElement("div");
+    probe.style.cssText = "width:10px;height:10px;background:#fff;";
+    const pdfInst = await html2pdf().set({
+      margin: 0,
+      jsPDF: { unit: "mm", format: "a4", orientation: orientacao, compress: true }
+    }).from(probe).toPdf().get("pdf");
+    const Ctor = pdfInst.constructor;
+    return new Ctor({ unit: "mm", format: "a4", orientation: orientacao, compress: true });
+  }
+
   async function exportarParaPDF(origemEl, nomeArquivo, orientacao = "portrait", usarModeloLiraa = false) {
     if (!origemEl || (!origemEl.children.length && !origemEl.innerHTML.trim())) {
       alert("Não há dados para gerar o PDF.");
       return;
     }
-    if (typeof html2pdf === "undefined") {
+    if (typeof html2pdf === "undefined" && typeof window.html2canvas === "undefined") {
       alert("Biblioteca de PDF não disponível. Usando a opção de impressão...");
-      window.print();
+      imprimir();
       return;
     }
 
     mostrarAviso("⏳ Gerando e baixando PDF completo...");
 
-    // Cria um contêiner hospedeiro fora da tela para evitar colapso de altura do html2pdf e não piscar na interface
     const host = document.createElement("div");
-    host.style.cssText = "position:fixed; left:-20000px; top:0; width:1200px; overflow:visible; pointer-events:none; z-index:-9999;";
-
-    // Cria o wrapper isolado na resolução exata da folha A4 (em fluxo relativo normal)
-    const wrapper = document.createElement("div");
-    wrapper.className = "pdf-export-wrapper " + orientacao + (usarModeloLiraa ? " pdf-modelo-liraa" : "");
-
-    // Clona o elemento de forma profunda
-    const clone = origemEl.cloneNode(true);
-
-    // Sincroniza todos os valores digitados em inputs, selects e textareas
-    sincronizarInputsNoClone(origemEl, clone);
-
-    // Garante que todos os blocos de quarteirões fiquem visíveis no PDF completo
-    clone.querySelectorAll(".bloco-quarteirao").forEach(b => b.classList.remove("oculto-por-selecao"));
-
-    // Remove botões de ação, badges desnecessários ("sem comp.", "geral", "auto") e elementos interativos da folha de PDF
-    clone.querySelectorAll(".btn-status-mini, .barra-botoes-quarteirao, .titulo-bloco-quarteirao, .barra-botoes-tabelas, .barra-filtro, .aviso-sincronizacao, .barra-selecao-quarteirao, .legenda-codigos, .legenda-colagem, .seletor-visualizacao-liraa, .card-resumo-liraa, .badge-auto, .badge-legado").forEach(el => el.remove());
-
-    wrapper.appendChild(clone);
-    host.appendChild(wrapper);
+    host.style.cssText = "position:fixed; left:-20000px; top:0; width:1400px; overflow:visible; pointer-events:none; z-index:-9999; background:#fff;";
     document.body.appendChild(host);
 
-    // Configuração com margens e viewport dimensionados para preenchimento total e sem corte lateral
-    const opt = {
-      margin: orientacao === "landscape" ? [6, 8, 6, 8] : [7, 8, 7, 8],
-      filename: nomeArquivo,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: orientacao === "landscape" ? 1120 : 800
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: orientacao
-      },
-      pagebreak: { mode: ["css", "legacy"] }
+    const limparNoClone = (alvo) => {
+      alvo.querySelectorAll(".bloco-quarteirao").forEach(b => b.classList.remove("oculto-por-selecao"));
+      alvo.querySelectorAll(".btn-status-mini, .barra-botoes-quarteirao, .titulo-bloco-quarteirao, .barra-botoes-tabelas, .barra-filtro, .aviso-sincronizacao, .barra-selecao-quarteirao, .legenda-codigos, .legenda-colagem, .seletor-visualizacao-liraa, .card-resumo-liraa, .titulo-secao-liraa, .dica-scroll-tabela, .badge-auto, .badge-legado, .rodape-dia").forEach(el => el.remove());
+      substituirInputsPorTextoNoClone(alvo);
     };
 
     try {
-      await html2pdf().set(opt).from(wrapper).save();
+      const pdf = await criarDocumentoJsPDF(orientacao);
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const marginX = 6;
+      const marginY = 6;
+      const maxW = pw - (marginX * 2);
+      const maxH = ph - (marginY * 2);
+
+      const cloneRaiz = origemEl.cloneNode(true);
+      sincronizarInputsNoClone(origemEl, cloneRaiz);
+      limparNoClone(cloneRaiz);
+
+      const paginasA4 = Array.from(cloneRaiz.querySelectorAll(".pagina-a4")).filter(p => {
+        const st = p.getAttribute("style") || "";
+        return !/display\s*:\s*none/i.test(st);
+      });
+
+      if (paginasA4.length > 0) {
+        let paginaPdfIdx = 0;
+        for (let i = 0; i < paginasA4.length; i++) {
+          const singleWrapper = document.createElement("div");
+          singleWrapper.className = "pdf-export-wrapper " + orientacao + (usarModeloLiraa ? " pdf-modelo-liraa" : "");
+          singleWrapper.appendChild(paginasA4[i]);
+          host.innerHTML = "";
+          host.appendChild(singleWrapper);
+
+          const canvas = await renderizarElementoParaCanvasPDF(singleWrapper, orientacao, 2);
+          if (!canvas || !canvas.width || !canvas.height) continue;
+
+          const fitScale = Math.min(maxW / canvas.width, maxH / canvas.height);
+          const drawW = canvas.width * fitScale;
+          const drawH = canvas.height * fitScale;
+          const drawX = (pw - drawW) / 2;
+          const drawY = marginY;
+
+          if (paginaPdfIdx > 0) pdf.addPage();
+          const imgData = canvas.toDataURL("image/jpeg", 0.96);
+          pdf.addImage(imgData, "JPEG", drawX, drawY, drawW, drawH, undefined, "FAST");
+          paginaPdfIdx++;
+        }
+      } else {
+        const wrapper = document.createElement("div");
+        wrapper.className = "pdf-export-wrapper " + orientacao + (usarModeloLiraa ? " pdf-modelo-liraa" : "");
+        wrapper.appendChild(cloneRaiz);
+        host.innerHTML = "";
+        host.appendChild(wrapper);
+
+        const wrapRect = wrapper.getBoundingClientRect();
+        const domH = Math.max(wrapper.scrollHeight || 0, wrapRect.height || 0, 1);
+        const breakpointsDom = new Set();
+        wrapper.querySelectorAll("tr, .semana-resumo-bloco, h2, h3").forEach(el => {
+          const r = el.getBoundingClientRect();
+          const bottom = r.bottom - wrapRect.top;
+          if (bottom > 10 && bottom < domH) breakpointsDom.add(Math.round(bottom));
+        });
+
+        const safeScale = (domH * 2 > 14000) ? 1.5 : 2;
+        const canvas = await renderizarElementoParaCanvasPDF(wrapper, orientacao, safeScale);
+        const pxScale = canvas.height / domH;
+        const breakpointsPx = Array.from(breakpointsDom)
+          .map(y => Math.round(y * pxScale))
+          .filter(y => y > 0 && y < canvas.height)
+          .sort((a, b) => a - b);
+
+        const pdfScale = maxW / canvas.width;
+        const totalPdfH = canvas.height * pdfScale;
+
+        if (totalPdfH <= maxH) {
+          pdf.addImage(canvas.toDataURL("image/jpeg", 0.96), "JPEG", marginX, marginY, maxW, totalPdfH, undefined, "FAST");
+        } else {
+          const maxSlicePx = Math.floor(maxH / pdfScale);
+          let sourceY = 0;
+          let pageIdx = 0;
+          while (sourceY < canvas.height) {
+            if (pageIdx > 0) pdf.addPage();
+            let targetEnd = Math.min(sourceY + maxSlicePx, canvas.height);
+            if (targetEnd < canvas.height) {
+              const minAcceptable = sourceY + Math.floor(maxSlicePx * 0.45);
+              let bestCut = null;
+              for (let bIdx = 0; bIdx < breakpointsPx.length; bIdx++) {
+                const bp = breakpointsPx[bIdx];
+                if (bp > minAcceptable && bp <= targetEnd) bestCut = bp;
+              }
+              if (bestCut !== null) targetEnd = bestCut;
+            }
+            const sliceH = Math.max(1, targetEnd - sourceY);
+            const sliceCanvas = document.createElement("canvas");
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = sliceH;
+            const sctx = sliceCanvas.getContext("2d");
+            sctx.fillStyle = "#ffffff";
+            sctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+            sctx.drawImage(canvas, 0, sourceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+            pdf.addImage(sliceCanvas.toDataURL("image/jpeg", 0.96), "JPEG", marginX, marginY, maxW, sliceH * pdfScale, undefined, "FAST");
+            sourceY = targetEnd;
+            pageIdx++;
+          }
+        }
+      }
+
+      pdf.save(nomeArquivo);
       mostrarAviso("✅ PDF gerado e baixado com sucesso!");
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
