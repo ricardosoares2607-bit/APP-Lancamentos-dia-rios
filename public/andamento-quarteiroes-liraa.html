@@ -3393,6 +3393,9 @@
       if (typeof sincronizarBoletinsDoCicloLocal === "function") {
         sincronizarBoletinsDoCicloLocal({ salvarNuvem: false });
       }
+      if (!document.getElementById("tabelaBoletins")?.contains(document.activeElement)) {
+        ordenarTodosBoletinsPorNumero({ salvar: false, syncTimestamps: false, atualizarDom: false, preservarFoco: false });
+      }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(semsAtivas));
       salvarV2Meta();
@@ -3531,6 +3534,11 @@
       });
 
       verificarBloqueioSemana(divSemana);
+      if (!divSemana.contains(document.activeElement)) {
+        divSemana.querySelectorAll(".dia").forEach(b => {
+          ordenarDiaPorAgente(b, { salvar: false, syncTimestamps: false, recalcular: false, atualizarPaineis: false, preservarFoco: false });
+        });
+      }
     });
   }
 
@@ -4092,6 +4100,8 @@
   }
 
   function trocarAba(nome) {
+    flushOrdenacoesPendentesDia();
+    flushOrdenacoesPendentesBoletins();
     if (typeof limparSelecaoCelulas === "function") limparSelecaoCelulas();
     if (typeof desativarModoSelecao === "function") desativarModoSelecao();
     const abasPermitidas = ["diario", "semanal", "total", "informados", "andamento", "concluidos", "boletins", "resumo"];
@@ -4347,6 +4357,214 @@
     document.getElementById("semanas").appendChild(divSemana);
     aplicarFormatacaoInicialNosInputsNumericos(divSemana);
     verificarBloqueioSemana(divSemana);
+    divSemana.querySelectorAll(".dia").forEach(b => {
+      ordenarDiaPorAgente(b, { salvar: false, syncTimestamps: false, recalcular: false, atualizarPaineis: false, preservarFoco: false });
+    });
+  }
+
+  let _timerOrdenacaoDiario = null;
+  let _diaPendenteOrdenacao = null;
+
+  function ordenarDiaPorAgente(blocoDia, opcoes = {}) {
+    if (!blocoDia) return false;
+    const divSemana = blocoDia.closest(".semana");
+    const idSemana = divSemana ? divSemana.dataset.semana : null;
+    const dIdx = blocoDia.dataset.diaIndex;
+    if (!idSemana || dIdx === undefined) return false;
+
+    const numPrefixes = ["r", "c", "tb", "pe", "o"];
+    const linhasOriginais = [];
+
+    for (let i = 0; i < linhas; i++) {
+      const inpAg = document.getElementById(`ag-${idSemana}-${dIdx}-${i}`);
+      const inpQ = document.getElementById(`q-${idSemana}-${dIdx}-${i}`);
+      const ag = inpAg ? inpAg.value : "";
+      const q = inpQ ? inpQ.value : "";
+      const nums = {};
+      let temNumeroComDado = false;
+      numPrefixes.forEach(p => {
+        const inp = document.getElementById(`${p}-${idSemana}-${dIdx}-${i}`);
+        const val = inp ? inp.value : "00";
+        const realVazio = Boolean(inp && inp.dataset.realVazio === "1");
+        const usuarioDigitou = Boolean(inp && inp.dataset.usuarioDigitou === "1");
+        if (!realVazio && (usuarioDigitou || (val !== "" && val !== "00" && val !== "0"))) {
+          temNumeroComDado = true;
+        }
+        nums[p] = { value: val, realVazio, usuarioDigitou };
+      });
+
+      const agTrim = ag.trim();
+      const temAgente = agTrim !== "";
+      const temOutroDado = q.trim() !== "" || temNumeroComDado;
+      const grupo = temAgente ? 0 : (temOutroDado ? 1 : 2);
+
+      linhasOriginais.push({
+        origIdx: i,
+        ag,
+        agTrim,
+        q,
+        nums,
+        grupo
+      });
+    }
+
+    if (linhasOriginais.every(r => r.grupo === 2)) return false;
+
+    const ordenadas = linhasOriginais.slice().sort((a, b) => {
+      if (a.grupo !== b.grupo) return a.grupo - b.grupo;
+      if (a.grupo === 0) {
+        const cmpBase = a.agTrim.localeCompare(b.agTrim, "pt-BR", { sensitivity: "base", numeric: true });
+        if (cmpBase !== 0) return cmpBase;
+        const cmpAccent = a.agTrim.localeCompare(b.agTrim, "pt-BR", { sensitivity: "accent", numeric: true });
+        if (cmpAccent !== 0) return cmpAccent;
+      }
+      return a.origIdx - b.origIdx;
+    });
+
+    const mudouOrdem = ordenadas.some((r, idx) => r.origIdx !== idx);
+    if (!mudouOrdem) return false;
+
+    const preservarFoco = opcoes.preservarFoco !== false;
+    let focoAtivoInfo = null;
+    const selecoesAntes = [];
+
+    if (preservarFoco) {
+      const ae = document.activeElement;
+      if (ae instanceof HTMLInputElement && blocoDia.contains(ae) && ae.id) {
+        const mAe = ae.id.match(/^(ag|q|r|c|tb|pe|o)-(\d+)-(\d+)-(\d+)$/);
+        if (mAe && mAe[2] === String(idSemana) && mAe[3] === String(dIdx)) {
+          focoAtivoInfo = { col: mAe[1], origIdx: parseInt(mAe[4], 10) };
+        }
+      }
+      if (typeof celulasSelecionadas !== "undefined" && celulasSelecionadas.size > 0) {
+        Array.from(celulasSelecionadas).forEach(td => {
+          if (!blocoDia.contains(td)) return;
+          const inp = td.querySelector("input");
+          const mSel = inp && inp.id ? inp.id.match(/^(ag|q|r|c|tb|pe|o)-(\d+)-(\d+)-(\d+)$/) : null;
+          if (mSel && mSel[2] === String(idSemana) && mSel[3] === String(dIdx)) {
+            selecoesAntes.push({ col: mSel[1], origIdx: parseInt(mSel[4], 10) });
+          }
+          td.classList.remove("celula-selecionada");
+          celulasSelecionadas.delete(td);
+        });
+      }
+    }
+
+    const syncTs = opcoes.syncTimestamps !== false && !_v2ApplyingRemote;
+    const agoraSort = syncTs ? agoraSyncMs() : 0;
+
+    for (let i = 0; i < linhas; i++) {
+      const orig = linhasOriginais[i];
+      const novo = ordenadas[i];
+
+      const inpAg = document.getElementById(`ag-${idSemana}-${dIdx}-${i}`);
+      if (inpAg) {
+        inpAg.value = novo.ag;
+        if (syncTs && orig.ag !== novo.ag) {
+          marcarCarimboDiario(idSemana, "valor", inpAg.id, agoraSort);
+        }
+      }
+
+      const inpQ = document.getElementById(`q-${idSemana}-${dIdx}-${i}`);
+      if (inpQ) {
+        inpQ.value = novo.q;
+        if (syncTs && orig.q !== novo.q) {
+          marcarCarimboDiario(idSemana, "valor", inpQ.id, agoraSort);
+        }
+      }
+
+      numPrefixes.forEach(p => {
+        const inp = document.getElementById(`${p}-${idSemana}-${dIdx}-${i}`);
+        if (!inp) return;
+        const nObj = novo.nums[p];
+        const oObj = orig.nums[p];
+        inp.value = nObj.value;
+        if (nObj.realVazio) {
+          inp.dataset.realVazio = "1";
+          inp.classList.add("vazio-visual");
+        } else {
+          delete inp.dataset.realVazio;
+          inp.classList.remove("vazio-visual");
+        }
+        if (nObj.usuarioDigitou) inp.dataset.usuarioDigitou = "1";
+        else delete inp.dataset.usuarioDigitou;
+
+        const mudouCelula = oObj.value !== nObj.value || oObj.realVazio !== nObj.realVazio || oObj.usuarioDigitou !== nObj.usuarioDigitou;
+        if (syncTs && mudouCelula) {
+          marcarCarimboDiario(idSemana, "valor", inp.id, agoraSort);
+        }
+      });
+    }
+
+    if (preservarFoco && selecoesAntes.length > 0 && typeof celulasSelecionadas !== "undefined") {
+      selecoesAntes.forEach(s => {
+        const newIdx = ordenadas.findIndex(r => r.origIdx === s.origIdx);
+        if (newIdx !== -1) {
+          const inpNovo = document.getElementById(`${s.col}-${idSemana}-${dIdx}-${newIdx}`);
+          const tdNovo = inpNovo ? inpNovo.closest("td") : null;
+          if (tdNovo) {
+            tdNovo.classList.add("celula-selecionada");
+            celulasSelecionadas.add(tdNovo);
+          }
+        }
+      });
+      if (typeof atualizarBarraFlutuanteSelecao === "function") atualizarBarraFlutuanteSelecao();
+    }
+
+    if (preservarFoco && focoAtivoInfo) {
+      const newIdx = ordenadas.findIndex(r => r.origIdx === focoAtivoInfo.origIdx);
+      if (newIdx !== -1) {
+        const inpDestino = document.getElementById(`${focoAtivoInfo.col}-${idSemana}-${dIdx}-${newIdx}`);
+        if (inpDestino && !inpDestino.disabled) {
+          try {
+            inpDestino.focus({ preventScroll: true });
+            if (typeof obterInfoCelula === "function") {
+              const infoDest = obterInfoCelula(inpDestino);
+              if (infoDest) {
+                celulaFocoAtual = infoDest;
+                if (celulasSelecionadas.size <= 1) celulaAncora = infoDest;
+              }
+            }
+          } catch (err) {}
+        }
+      }
+    }
+
+    if (opcoes.recalcular !== false) recalcular();
+    if (opcoes.atualizarPaineis !== false) {
+      atualizarResumoSemanal();
+      atualizarTotalImoveis();
+      atualizarInformados();
+    }
+    if (opcoes.salvar !== false && !_v2ApplyingRemote) {
+      salvarComAtraso({ scope: "meta" });
+    }
+    return true;
+  }
+
+  function agendarOrdenacaoDiaPorAgente(blocoDia, inputOrigem) {
+    if (!blocoDia) return;
+    _diaPendenteOrdenacao = { blocoDia, inputOrigem };
+    clearTimeout(_timerOrdenacaoDiario);
+    _timerOrdenacaoDiario = setTimeout(() => {
+      const pendente = _diaPendenteOrdenacao;
+      _diaPendenteOrdenacao = null;
+      _timerOrdenacaoDiario = null;
+      if (!pendente || !pendente.blocoDia || !document.body.contains(pendente.blocoDia)) return;
+      if (document.activeElement === pendente.inputOrigem && !document.hasFocus()) return;
+      if (document.activeElement === pendente.inputOrigem) return;
+      ordenarDiaPorAgente(pendente.blocoDia, { preservarFoco: true });
+    }, 0);
+  }
+
+  function flushOrdenacoesPendentesDia() {
+    if (_diaPendenteOrdenacao && _diaPendenteOrdenacao.blocoDia && document.body.contains(_diaPendenteOrdenacao.blocoDia)) {
+      const b = _diaPendenteOrdenacao.blocoDia;
+      _diaPendenteOrdenacao = null;
+      clearTimeout(_timerOrdenacaoDiario);
+      _timerOrdenacaoDiario = null;
+      ordenarDiaPorAgente(b, { preservarFoco: false });
+    }
   }
 
   function verificarBloqueioSemana(divSemana) {
@@ -5789,6 +6007,9 @@
     );
     const mudou = mesclarBoletinsDoCiclo(normRemoto, { salvarNuvem: true });
     if (mudou) {
+      if (!document.getElementById("tabelaBoletins")?.contains(document.activeElement)) {
+        ordenarTodosBoletinsPorNumero({ salvar: false, syncTimestamps: false, atualizarDom: false, preservarFoco: false });
+      }
       renderizarFormularioBoletins();
       renderizarResumoIntegrado();
       mostrarAviso("🔄 Boletins atualizados a partir do Ciclo!");
@@ -6697,6 +6918,7 @@
       barraQ.innerHTML = `
         <button class="acao info" onclick="adicionarPaginaQuarteirao('${escapeAttr(q)}')">➕ Adicionar Página</button>
         ${numPaginas > 1 ? `<button class="acao perigo" onclick="removerPaginaQuarteirao('${escapeAttr(q)}')">🗑️ Remover Última Página</button>` : ""}
+        <button class="acao info" onclick="ordenarBoletinsPorNumeroBotao('${escapeAttr(q)}')" title="Organizar as linhas em ordem crescente pelo Nº do imóvel">🔢 Ordenar por Nº</button>
         <button class="acao sucesso" onclick="gerarPDFQuarteirao('${escapeAttr(q)}')">📄 PDF deste Quarteirão</button>
         <button class="acao" onclick="imprimirQuarteirao('${escapeAttr(q)}')">🖨️ Imprimir este Quarteirão</button>
       `;
@@ -7003,9 +7225,284 @@
           });
         }
       }
+
+      if (campo === "numero") {
+        inp.addEventListener("input", () => {
+          const trLinha = inp.closest("tr");
+          if (trLinha) trLinha.dataset.numeroAlterado = "1";
+          _boletimLinhaPendenteNumero = { qKey: q, tr: trLinha };
+        });
+      }
+
+      inp.addEventListener("focusout", () => {
+        const trLinha = inp.closest("tr");
+        if (_boletimLinhaPendenteNumero && _boletimLinhaPendenteNumero.tr === trLinha) {
+          agendarOrdenacaoBoletimPorFocusout(q, trLinha);
+        }
+      });
     });
 
     return table;
+  }
+
+  let _boletimLinhaPendenteNumero = null;
+  let _timerOrdenacaoBoletim = null;
+
+  function analisarNumeroBoletim(val) {
+    const raw = String(val == null ? "" : val).trim();
+    if (raw === "") return { cat: 2, num: Number.MAX_SAFE_INTEGER, raw: "" };
+    const m = raw.match(/^\d+/);
+    if (m) return { cat: 0, num: parseInt(m[0], 10), raw };
+    return { cat: 1, num: Number.MAX_SAFE_INTEGER, raw };
+  }
+
+  function compararNumeroImovelBoletim(a, b) {
+    if (a.vazia !== b.vazia) return a.vazia ? 1 : -1;
+    if (a.vazia && b.vazia) return a.origIdx - b.origIdx;
+
+    const infoA = analisarNumeroBoletim(a.numero);
+    const infoB = analisarNumeroBoletim(b.numero);
+    if (infoA.cat !== infoB.cat) return infoA.cat - infoB.cat;
+
+    if (infoA.cat === 0) {
+      if (infoA.num !== infoB.num) return infoA.num - infoB.num;
+      const cmp = infoA.raw.localeCompare(infoB.raw, "pt-BR", { sensitivity: "base", numeric: true });
+      if (cmp !== 0) return cmp;
+      const cmpAcc = infoA.raw.localeCompare(infoB.raw, "pt-BR", { sensitivity: "accent", numeric: true });
+      if (cmpAcc !== 0) return cmpAcc;
+    } else if (infoA.cat === 1) {
+      const cmp = infoA.raw.localeCompare(infoB.raw, "pt-BR", { sensitivity: "base", numeric: true });
+      if (cmp !== 0) return cmp;
+      const cmpAcc = infoA.raw.localeCompare(infoB.raw, "pt-BR", { sensitivity: "accent", numeric: true });
+      if (cmpAcc !== 0) return cmpAcc;
+    }
+
+    return a.origIdx - b.origIdx;
+  }
+
+  function obterBlocoQuarteiraoBoletim(qKey) {
+    try {
+      return document.querySelector(`.bloco-quarteirao[data-quarteirao="${CSS.escape(qKey)}"]`);
+    } catch (e) {
+      return Array.from(document.querySelectorAll(".bloco-quarteirao")).find(b => b.dataset.quarteirao === qKey) || null;
+    }
+  }
+
+  function ordenarBoletinsPorNumero(qKey, opcoes = {}) {
+    const form = dadosFormularios.boletins &&
+                 dadosFormularios.boletins.porQuarteirao &&
+                 dadosFormularios.boletins.porQuarteirao[qKey];
+    if (!form) return false;
+    if (!form.imoveis) form.imoveis = {};
+
+    const numPaginas = Math.max(1, form.paginas || 1);
+    const porPagina = 2 * LINHAS_IMOVEIS_BOLETINS;
+    const totalSlots = numPaginas * porPagina;
+    const slots = [];
+
+    for (let idx = 0; idx < totalSlots; idx++) {
+      const p = Math.floor(idx / porPagina);
+      const rem = idx % porPagina;
+      const t = Math.floor(rem / LINHAS_IMOVEIS_BOLETINS) + 1;
+      const i = rem % LINHAS_IMOVEIS_BOLETINS;
+      const rowKey = `${p}_${t}_${i}`;
+      const reg = form.imoveis[rowKey] || {};
+      const rua = String(reg.rua || "");
+      const numero = String(reg.numero || "");
+      const comp = String(reg.comp || "");
+      const seq = String(reg.seq || "");
+      const tipo = String(reg.tipo || "");
+      const vazia = !rua.trim() && !numero.trim() && !comp.trim() && !seq.trim() && !tipo.trim();
+      slots.push({
+        origIdx: idx,
+        rowKey,
+        rua,
+        numero,
+        comp,
+        seq,
+        tipo,
+        vazia,
+        tinhaObj: Boolean(form.imoveis[rowKey])
+      });
+    }
+
+    if (slots.every(s => s.vazia)) return false;
+
+    const ordenadas = slots.slice().sort(compararNumeroImovelBoletim);
+    const mudouOrdem = ordenadas.some((item, idx) => item.origIdx !== idx);
+    if (!mudouOrdem) return false;
+
+    const bloco = obterBlocoQuarteiraoBoletim(qKey);
+    const preservarFoco = opcoes.preservarFoco !== false;
+    let focoAtivoInfo = null;
+    const selecoesAntes = [];
+
+    if (preservarFoco && bloco) {
+      const ae = document.activeElement;
+      if (ae instanceof HTMLInputElement && bloco.contains(ae) && ae.dataset.boletinsImovel === "1") {
+        const origSlot = slots.findIndex(s => s.rowKey === ae.dataset.key);
+        if (origSlot !== -1) {
+          focoAtivoInfo = { origSlot, campo: ae.dataset.campo };
+        }
+      }
+      if (typeof celulasSelecionadas !== "undefined" && celulasSelecionadas.size > 0) {
+        Array.from(celulasSelecionadas).forEach(td => {
+          if (!bloco.contains(td)) return;
+          const inp = td.querySelector('input[data-boletins-imovel="1"]');
+          if (inp) {
+            const origSlot = slots.findIndex(s => s.rowKey === inp.dataset.key);
+            if (origSlot !== -1) {
+              selecoesAntes.push({ origSlot, campo: inp.dataset.campo });
+            }
+          }
+          td.classList.remove("celula-selecionada");
+          celulasSelecionadas.delete(td);
+        });
+      }
+    }
+
+    const syncTs = opcoes.syncTimestamps !== false && !_v2ApplyingRemote;
+    const agoraSort = syncTs ? agoraSyncMs() : 0;
+    if (!form._imoveisTs) form._imoveisTs = {};
+
+    for (let idx = 0; idx < totalSlots; idx++) {
+      const slotOrig = slots[idx];
+      const item = ordenadas[idx];
+      const rk = slotOrig.rowKey;
+      const mudouConteudo = slotOrig.rua !== item.rua || slotOrig.numero !== item.numero ||
+        slotOrig.comp !== item.comp || slotOrig.seq !== item.seq || slotOrig.tipo !== item.tipo;
+
+      if (item.vazia) {
+        if (!slotOrig.vazia || slotOrig.tinhaObj) {
+          form.imoveis[rk] = { rua: "", numero: "", comp: "", seq: "", tipo: "", _clearedAtMs: agoraSort || Date.now() };
+          if (syncTs) form._imoveisTs[rk] = agoraSort;
+        }
+      } else {
+        form.imoveis[rk] = {
+          rua: item.rua,
+          numero: item.numero,
+          comp: item.comp,
+          seq: item.seq,
+          tipo: item.tipo
+        };
+        if (syncTs && mudouConteudo) {
+          form._imoveisTs[rk] = agoraSort;
+        }
+      }
+    }
+
+    if (syncTs) {
+      form._resumoTs = agoraSort;
+      form._ts = agoraSort;
+      if (_v2Meta.boletinsTombstones) delete _v2Meta.boletinsTombstones[qKey];
+    }
+
+    if (bloco && opcoes.atualizarDom !== false) {
+      bloco.querySelectorAll('input[data-boletins-imovel="1"]').forEach(inp => {
+        const k = inp.dataset.key;
+        const campo = inp.dataset.campo;
+        const dadosLinha = (form.imoveis && form.imoveis[k]) || {};
+        const val = campo === "seq" ? formatarSeq2Digitos(dadosLinha.seq || "") : String(dadosLinha[campo] || "");
+        if (inp.value !== val) inp.value = val;
+        if (campo === "tipo") {
+          if (val.trim() !== "" && !isTipoBoletimValido(val)) inp.classList.add("invalido");
+          else inp.classList.remove("invalido");
+        }
+      });
+      bloco.querySelectorAll("tr[data-numero-alterado]").forEach(tr => {
+        delete tr.dataset.numeroAlterado;
+      });
+      for (let p = 0; p < numPaginas; p++) {
+        recalcularResumoBoletins(qKey, p);
+      }
+      atualizarTotaisQuarteirao(qKey);
+      atualizarContadorBoletins();
+    }
+
+    if (preservarFoco && bloco && selecoesAntes.length > 0 && typeof celulasSelecionadas !== "undefined") {
+      selecoesAntes.forEach(s => {
+        const newSlot = ordenadas.findIndex(item => item.origIdx === s.origSlot);
+        if (newSlot !== -1) {
+          const newKey = slots[newSlot].rowKey;
+          const inpNovo = bloco.querySelector(`input[data-boletins-imovel="1"][data-key="${newKey}"][data-campo="${s.campo}"]`);
+          const tdNovo = inpNovo ? inpNovo.closest("td") : null;
+          if (tdNovo) {
+            tdNovo.classList.add("celula-selecionada");
+            celulasSelecionadas.add(tdNovo);
+          }
+        }
+      });
+      if (typeof atualizarBarraFlutuanteSelecao === "function") atualizarBarraFlutuanteSelecao();
+    }
+
+    if (preservarFoco && bloco && focoAtivoInfo) {
+      const newSlot = ordenadas.findIndex(item => item.origIdx === focoAtivoInfo.origSlot);
+      if (newSlot !== -1) {
+        const newKey = slots[newSlot].rowKey;
+        const inpDest = bloco.querySelector(`input[data-boletins-imovel="1"][data-key="${newKey}"][data-campo="${focoAtivoInfo.campo}"]`);
+        if (inpDest) {
+          try {
+            inpDest.focus({ preventScroll: true });
+            if (typeof obterInfoCelula === "function") {
+              const infoDest = obterInfoCelula(inpDest);
+              if (infoDest) {
+                celulaFocoAtual = infoDest;
+                if (celulasSelecionadas.size <= 1) celulaAncora = infoDest;
+              }
+            }
+          } catch (err) {}
+        }
+      }
+    }
+
+    if (opcoes.salvar !== false && !_v2ApplyingRemote) {
+      salvarFormularios();
+      salvarComAtraso({ scope: "bucket", qKey, resumo: true });
+    }
+    if (opcoes.mostrarFeedback) {
+      mostrarAviso(`🔢 Quarteirão ${qKey === "_legacy" ? "(legado)" : qKey} ordenado por Nº!`);
+    }
+    return true;
+  }
+
+  function ordenarBoletinsPorNumeroBotao(qKey) {
+    _boletimLinhaPendenteNumero = null;
+    clearTimeout(_timerOrdenacaoBoletim);
+    const ordenou = ordenarBoletinsPorNumero(qKey, { preservarFoco: false, mostrarFeedback: true });
+    if (!ordenou) {
+      mostrarAviso("ℹ️ Os imóveis deste quarteirão já estão em ordem crescente por Nº.");
+    }
+  }
+
+  function ordenarTodosBoletinsPorNumero(opcoes = {}) {
+    const pQ = (dadosFormularios.boletins && dadosFormularios.boletins.porQuarteirao) || {};
+    Object.keys(pQ).forEach(qKey => {
+      ordenarBoletinsPorNumero(qKey, opcoes);
+    });
+  }
+
+  function agendarOrdenacaoBoletimPorFocusout(qKey, trLinha) {
+    clearTimeout(_timerOrdenacaoBoletim);
+    _timerOrdenacaoBoletim = setTimeout(() => {
+      _timerOrdenacaoBoletim = null;
+      if (!trLinha || !document.body.contains(trLinha)) return;
+      const ae = document.activeElement;
+      if (trLinha.contains(ae)) return;
+      _boletimLinhaPendenteNumero = null;
+      delete trLinha.dataset.numeroAlterado;
+      ordenarBoletinsPorNumero(qKey, { preservarFoco: true });
+    }, 0);
+  }
+
+  function flushOrdenacoesPendentesBoletins() {
+    if (_boletimLinhaPendenteNumero) {
+      const { qKey, tr } = _boletimLinhaPendenteNumero;
+      _boletimLinhaPendenteNumero = null;
+      clearTimeout(_timerOrdenacaoBoletim);
+      _timerOrdenacaoBoletim = null;
+      if (tr) delete tr.dataset.numeroAlterado;
+      if (qKey) ordenarBoletinsPorNumero(qKey, { preservarFoco: false });
+    }
   }
 
   function criarResumoBoletins(qKey, paginaIdx, campos) {
@@ -7231,6 +7728,8 @@
     form._ts = agoraCol;
     if (_v2Meta.boletinsTombstones) delete _v2Meta.boletinsTombstones[qKey];
 
+    ordenarBoletinsPorNumero(qKey, { salvar: false, atualizarDom: false, preservarFoco: false });
+
     salvarFormularios();
     salvarComAtraso({ scope: "bucket", qKey, resumo: true });
 
@@ -7380,6 +7879,9 @@
     }
 
     if (celulasPreenchidas > 0) {
+      if (diaBloco) {
+        ordenarDiaPorAgente(diaBloco, { recalcular: false, atualizarPaineis: false, salvar: false, preservarFoco: false });
+      }
       recalcular();
       atualizarResumoSemanal();
       atualizarTotalImoveis();
@@ -7412,6 +7914,7 @@
   }
 
   async function gerarPDFQuarteirao(qKey) {
+    flushOrdenacoesPendentesBoletins();
     let bloco = Array.from(document.querySelectorAll(".bloco-quarteirao")).find(b => b.dataset.quarteirao === qKey);
     if (!bloco) return;
     const nomeArquivo = `boletim_${qKey === "_legacy" ? "legado" : qKey}_${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -7419,6 +7922,7 @@
   }
 
   function imprimirQuarteirao(qKey) {
+    flushOrdenacoesPendentesBoletins();
     const blocos = document.querySelectorAll("#tabelaBoletins .bloco-quarteirao");
     const escondidos = [];
     let alvo = null;
@@ -7924,6 +8428,8 @@
   window.addEventListener("beforeprint", () => { atualizarOrientacaoImpressao(); });
 
   function imprimir() {
+    flushOrdenacoesPendentesDia();
+    flushOrdenacoesPendentesBoletins();
     atualizarOrientacaoImpressao();
     window.print();
   }
@@ -8150,6 +8656,8 @@
   }
 
   async function gerarPDF(tipo) {
+    flushOrdenacoesPendentesDia();
+    flushOrdenacoesPendentesBoletins();
     const idMapa = {
       andamento: "tabelaAndamento",
       concluidos: "tabelaConcluidos",
@@ -8776,6 +9284,7 @@
     if (!silencioso && count > 50 && !confirm(`Deseja realmente apagar as ${count} células selecionadas?`)) return;
 
     const quarteiroesAfetadosBoletins = new Set();
+    const diasAfetadosDiario = new Set();
     let alterouDiario = false;
     let alterouSecoesMeta = false;
     let alterouResumo = false;
@@ -8797,6 +9306,8 @@
       if (inp.id && (inp.id.startsWith("ag-") || inp.id.startsWith("q-") || inp.classList.contains("num"))) {
         const mDia = inp.id.match(/^(?:ag|q|r|c|tb|pe|o)-(\d+)-\d+-\d+$/);
         if (mDia) marcarCarimboDiario(mDia[1], "valor", inp.id, agoraLimp);
+        const blocoDia = inp.closest(".dia");
+        if (blocoDia) diasAfetadosDiario.add(blocoDia);
         alterouDiario = true;
       }
 
@@ -8847,6 +9358,9 @@
     });
 
     if (alterouDiario) {
+      diasAfetadosDiario.forEach(blocoDia => {
+        ordenarDiaPorAgente(blocoDia, { recalcular: false, atualizarPaineis: false, salvar: false, preservarFoco: true });
+      });
       recalcular();
       atualizarResumoSemanal();
       atualizarTotalImoveis();
@@ -8855,6 +9369,7 @@
 
     if (quarteiroesAfetadosBoletins.size > 0) {
       quarteiroesAfetadosBoletins.forEach(q => {
+        ordenarBoletinsPorNumero(q, { salvar: false, preservarFoco: true });
         const form = dadosFormularios.boletins.porQuarteirao[q];
         const numPaginas = form ? (form.paginas || 1) : 1;
         for (let p = 0; p < numPaginas; p++) {
@@ -8901,6 +9416,7 @@
 
     const valTrim = digitado.trim();
     const quarteiroesAfetadosBoletins = new Set();
+    const diasAfetadosDiario = new Set();
     let alterouDiario = false;
     const agoraPre = agoraSyncMs();
 
@@ -8944,6 +9460,8 @@
       if (inp.id && (inp.id.startsWith("ag-") || inp.id.startsWith("q-") || inp.classList.contains("num"))) {
         const mDia = inp.id.match(/^(?:ag|q|r|c|tb|pe|o)-(\d+)-\d+-\d+$/);
         if (mDia) marcarCarimboDiario(mDia[1], "valor", inp.id, agoraPre);
+        const blocoDia = inp.closest(".dia");
+        if (blocoDia) diasAfetadosDiario.add(blocoDia);
         alterouDiario = true;
       }
 
@@ -8966,12 +9484,19 @@
     });
 
     if (alterouDiario) {
+      diasAfetadosDiario.forEach(blocoDia => {
+        ordenarDiaPorAgente(blocoDia, { recalcular: false, atualizarPaineis: false, salvar: false, preservarFoco: true });
+      });
       recalcular();
+      atualizarResumoSemanal();
+      atualizarTotalImoveis();
+      atualizarInformados();
       salvarComAtraso({ scope: "meta" });
     }
 
     if (quarteiroesAfetadosBoletins.size > 0) {
       quarteiroesAfetadosBoletins.forEach(q => {
+        ordenarBoletinsPorNumero(q, { salvar: false, preservarFoco: true });
         const form = dadosFormularios.boletins.porQuarteirao[q];
         const numPaginas = form ? (form.paginas || 1) : 1;
         for (let p = 0; p < numPaginas; p++) {
@@ -9610,6 +10135,9 @@
           }
         }
       }
+    } else if (e.target.id && /^ag-\d+-\d+-\d+$/.test(e.target.id)) {
+      const blocoDia = e.target.closest(".dia");
+      if (blocoDia) agendarOrdenacaoDiaPorAgente(blocoDia, e.target);
     }
   });
 
@@ -9711,6 +10239,8 @@
   }
 
   function exportarCSV() {
+    flushOrdenacoesPendentesDia();
+    flushOrdenacoesPendentesBoletins();
     let csv = "=== DIÁRIO ===\n\n";
     document.querySelectorAll("#semanas .semana").forEach(semana => {
       const selSem = semana.querySelector(".select-semana");
@@ -9864,6 +10394,7 @@
   garantirEstruturaBoletins();
   sanitizarBoletinsLiraaSemComplemento();
   sincronizarBoletinsDoCicloLocal({ salvarNuvem: false });
+  ordenarTodosBoletinsPorNumero({ salvar: false, syncTimestamps: false, atualizarDom: false, preservarFoco: false });
   aplicarFormatacaoInicialNosInputsNumericos(document);
 
   recalcular();
@@ -9919,6 +10450,8 @@
 
   function flushPendenteAoSairAndamento() {
     try {
+      flushOrdenacoesPendentesDia();
+      flushOrdenacoesPendentesBoletins();
       if (timeoutSalvar) {
         clearTimeout(timeoutSalvar);
         timeoutSalvar = null;
